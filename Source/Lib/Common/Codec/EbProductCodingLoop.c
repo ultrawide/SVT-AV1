@@ -1666,6 +1666,71 @@ void compute_obmc_cost(
 
 }
 #endif
+// Structure to store the max number of input candidates for mode decisioning.
+// Candidate numbers have an inverse relationship between quality and speed.
+// Increasing candidate count will improve quality as a trade off for speed.
+// Members:
+// num_intra_candidates: intra-only candidates
+// num_base_layer_referenced_candidates: base layer referenced candidates
+// num_non_base_layer_referenced_candidates: non-base layer referenced candidates
+// num_non_referenced_candidates: non referenced candidates
+typedef struct num_input_candidates_md_stage_count {
+	uint8_t num_intra_candidates;
+	uint8_t num_base_layer_referenced_candidates;
+	uint8_t num_non_base_layer_referenced_candidates;
+	uint8_t num_non_referenced_candidates;
+} num_input_candidates_md_stage_count;
+
+// Sets the number of stage 1 candidates used for mode decisioning
+static inline void set_md_stage_1_candidates(
+	PictureControlSet						*picture_control_set_ptr,
+	ModeDecisionContext						*context_ptr,
+	uint8_t									cand_class,
+	num_input_candidates_md_stage_count		*stage_1_input_candidate_numbers)
+{
+	if (picture_control_set_ptr->slice_type == I_SLICE)
+		context_ptr->md_stage_1_count[cand_class] = stage_1_input_candidate_numbers->num_intra_candidates;
+	else if (picture_control_set_ptr->temporal_layer_index == 0 && picture_control_set_ptr->parent_pcs_ptr->is_used_as_reference_flag)
+		context_ptr->md_stage_1_count[cand_class] = stage_1_input_candidate_numbers->num_base_layer_referenced_candidates;
+	else if (picture_control_set_ptr->parent_pcs_ptr->is_used_as_reference_flag) // referenced, non-base layer
+		context_ptr->md_stage_1_count[cand_class] = stage_1_input_candidate_numbers->num_non_base_layer_referenced_candidates;
+	else // non-referenced
+		context_ptr->md_stage_1_count[cand_class] = stage_1_input_candidate_numbers->num_non_referenced_candidates;
+}
+
+// Sets the number of stage 2 candidates used for mode decisioning
+static inline void set_md_stage_2_candidates(
+	PictureControlSet						*picture_control_set_ptr,
+	ModeDecisionContext						*context_ptr,
+	uint8_t									cand_class,
+	num_input_candidates_md_stage_count		*stage_2_input_candidate_numbers)
+{
+	if (picture_control_set_ptr->slice_type == I_SLICE)
+		context_ptr->md_stage_2_count[cand_class] = stage_2_input_candidate_numbers->num_intra_candidates;
+	else if (picture_control_set_ptr->temporal_layer_index == 0 && picture_control_set_ptr->parent_pcs_ptr->is_used_as_reference_flag)
+		context_ptr->md_stage_2_count[cand_class] = stage_2_input_candidate_numbers->num_base_layer_referenced_candidates;
+	else if (picture_control_set_ptr->parent_pcs_ptr->is_used_as_reference_flag) // referenced, non-base layer
+		context_ptr->md_stage_2_count[cand_class] = stage_2_input_candidate_numbers->num_non_base_layer_referenced_candidates;
+	else // non-referenced
+		context_ptr->md_stage_2_count[cand_class] = stage_2_input_candidate_numbers->num_non_referenced_candidates;
+}
+
+// Helper method to set md_stage_input_candidate_numbers. Does not actually set number 
+// of candidates used for mode decisioning.
+static inline void set_md_stage_candidate_count(
+	num_input_candidates_md_stage_count		*md_stage_input_candidate_numbers,
+	uint8_t									num_intra_candidates,
+	uint8_t									num_base_layer_ref_candidates,
+	uint8_t									num_non_base_layer_ref_candidates,
+	uint8_t									num_non_ref_candidates)
+{
+	md_stage_input_candidate_numbers->num_intra_candidates = num_intra_candidates;
+	md_stage_input_candidate_numbers->num_base_layer_referenced_candidates = num_base_layer_ref_candidates;
+	md_stage_input_candidate_numbers->num_non_base_layer_referenced_candidates = num_non_base_layer_ref_candidates;
+	md_stage_input_candidate_numbers->num_non_referenced_candidates = num_non_ref_candidates;
+}
+
+
 void fast_loop_core(
     ModeDecisionCandidateBuffer *candidate_buffer,
     PictureControlSet           *picture_control_set_ptr,
@@ -2262,6 +2327,295 @@ void set_md_stage_counts(
             }
         }
 #else
+#if MD_STAGE_NIC_CLEANUP
+		// Step 2: set md_stage count
+		// { intra, referenced layer 0, referenced non-base layer, non-referenced }
+		num_input_candidates_md_stage_count md_stage_1_class_0 = { 0, 0, 0, 0 };
+		num_input_candidates_md_stage_count md_stage_1_class_1 = { 0, 0, 0, 0 };
+		num_input_candidates_md_stage_count md_stage_1_class_2 = { 0, 0, 0, 0 };
+		num_input_candidates_md_stage_count md_stage_1_class_3 = { 0, 0, 0, 0 };
+		num_input_candidates_md_stage_count md_stage_1_class_4 = { 0, 0, 0, 0 };
+		num_input_candidates_md_stage_count md_stage_1_class_5 = { 0, 0, 0, 0 };
+		num_input_candidates_md_stage_count md_stage_1_class_6 = { 0, 0, 0, 0 };
+		num_input_candidates_md_stage_count md_stage_1_class_7 = { 0, 0, 0, 0 };
+		num_input_candidates_md_stage_count md_stage_1_class_8 = { 0, 0, 0, 0 };
+
+		num_input_candidates_md_stage_count md_stage_2_class_0 = { 0, 0, 0, 0 };
+		num_input_candidates_md_stage_count md_stage_2_class_1 = { 0, 0, 0, 0 };
+		num_input_candidates_md_stage_count md_stage_2_class_2 = { 0, 0, 0, 0 };
+		num_input_candidates_md_stage_count md_stage_2_class_3 = { 0, 0, 0, 0 };
+		num_input_candidates_md_stage_count md_stage_2_class_4 = { 0, 0, 0, 0 };
+		num_input_candidates_md_stage_count md_stage_2_class_5 = { 0, 0, 0, 0 };
+		num_input_candidates_md_stage_count md_stage_2_class_6 = { 0, 0, 0, 0 };
+		num_input_candidates_md_stage_count md_stage_2_class_7 = { 0, 0, 0, 0 };
+		num_input_candidates_md_stage_count md_stage_2_class_8 = { 0, 0, 0, 0 };
+
+		// Adopt setting 10 for M0
+		if (picture_control_set_ptr->enc_mode == ENC_M0) {
+			set_md_stage_candidate_count(&md_stage_1_class_0, fastCandidateTotalCount, 22, 22, 11);
+			set_md_stage_candidate_count(&md_stage_1_class_1, 0, 16, 16, 8);
+			set_md_stage_candidate_count(&md_stage_1_class_2, 0, 16, 16, 8);
+			set_md_stage_candidate_count(&md_stage_1_class_3, 0, 11, 11, 5);
+			set_md_stage_candidate_count(&md_stage_1_class_4, 0, 7, 7, 3);
+			set_md_stage_candidate_count(&md_stage_1_class_5, 0, 8, 8, 8);
+			set_md_stage_candidate_count(&md_stage_1_class_6, 15, 10, 10, 5);
+			set_md_stage_candidate_count(&md_stage_1_class_7, 9, 6, 6, 6);
+			set_md_stage_candidate_count(&md_stage_1_class_8, 6, 5, 5, 4);
+
+			if (context_ptr->combine_class12) {
+				md_stage_1_class_1.num_intra_candidates *= 2;
+				md_stage_1_class_1.num_base_layer_referenced_candidates *= 2;
+				md_stage_1_class_1.num_non_base_layer_referenced_candidates *= 2;
+				md_stage_1_class_1.num_non_referenced_candidates *= 2;
+			}
+
+			if (picture_control_set_ptr->enc_mode >= ENC_M3) {
+				md_stage_1_class_1.num_intra_candidates /= 2;
+				md_stage_1_class_1.num_base_layer_referenced_candidates /= 2;
+				md_stage_1_class_1.num_non_base_layer_referenced_candidates /= 2;
+				md_stage_1_class_1.num_non_referenced_candidates /= 2;
+
+				md_stage_1_class_2.num_intra_candidates /= 2;
+				md_stage_1_class_2.num_base_layer_referenced_candidates /= 2;
+				md_stage_1_class_2.num_non_base_layer_referenced_candidates /= 2;
+				md_stage_1_class_2.num_non_referenced_candidates /= 2;
+
+				md_stage_1_class_3.num_intra_candidates /= 2;
+				md_stage_1_class_3.num_base_layer_referenced_candidates /= 2;
+				md_stage_1_class_3.num_non_base_layer_referenced_candidates /= 2;
+				md_stage_1_class_3.num_non_referenced_candidates /= 2;
+			}
+
+			if (scs->input_resolution >= INPUT_SIZE_1080i_RANGE)
+				set_md_stage_candidate_count(&md_stage_2_class_0, 15, 10, 10, 5);
+			else
+				set_md_stage_candidate_count(&md_stage_2_class_0, 15, 13, 13, 5);
+			set_md_stage_candidate_count(&md_stage_2_class_1, 0, 8, 8, 4);
+			set_md_stage_candidate_count(&md_stage_2_class_2, 0, 8, 8, 4);
+			set_md_stage_candidate_count(&md_stage_2_class_3, 0, 3, 3, 2);
+			set_md_stage_candidate_count(&md_stage_2_class_4, 0, 5, 5, 2);
+
+			if (context_ptr->combine_class12) {
+				md_stage_2_class_1.num_intra_candidates *= 2;
+				md_stage_2_class_1.num_base_layer_referenced_candidates *= 2;
+				md_stage_2_class_1.num_non_base_layer_referenced_candidates *= 2;
+				md_stage_2_class_1.num_non_referenced_candidates *= 2;
+			}
+
+			if (!context_ptr->combine_class12 &&
+				picture_control_set_ptr->parent_pcs_ptr->sc_content_detected) {
+				set_md_stage_candidate_count(&md_stage_2_class_0, 15, 13, 13, 5);
+				set_md_stage_candidate_count(&md_stage_2_class_1, 0, 15, 15, 7);
+				set_md_stage_candidate_count(&md_stage_2_class_2, 0, 15, 15, 7);
+				set_md_stage_candidate_count(&md_stage_2_class_3, 0, 7, 7, 3);
+			}
+
+			switch (picture_control_set_ptr->parent_pcs_ptr->pic_obmc_mode)
+			{
+			case 1: set_md_stage_candidate_count(&md_stage_2_class_5, 0, 6, 6, 6); break;
+			case 2: set_md_stage_candidate_count(&md_stage_2_class_5, 0, 5, 5, 2); break;
+			case 3: set_md_stage_candidate_count(&md_stage_2_class_5, 0, 5, 5, 2); break;
+			case 4: set_md_stage_candidate_count(&md_stage_2_class_5, 0, 5, 5, 2); break;
+			default: set_md_stage_candidate_count(&md_stage_2_class_5, 0, 5, 5, 2); break;
+			}
+			set_md_stage_candidate_count(&md_stage_2_class_6, 5, 4, 4, 2);
+			switch (picture_control_set_ptr->parent_pcs_ptr->palette_mode)
+			{
+			case 1: set_md_stage_candidate_count(&md_stage_2_class_7, 4, 4, 4, 2); break;
+			case 2: set_md_stage_candidate_count(&md_stage_2_class_7, 4, 4, 4, 1); break;
+			case 3: set_md_stage_candidate_count(&md_stage_2_class_7, 4, 4, 4, 1); break;
+			case 4: set_md_stage_candidate_count(&md_stage_2_class_7, 2, 2, 2, 1); break;
+			case 5: set_md_stage_candidate_count(&md_stage_2_class_7, 2, 2, 2, 1); break;
+			case 6: set_md_stage_candidate_count(&md_stage_2_class_7, 2, 2, 2, 1); break;
+			default: set_md_stage_candidate_count(&md_stage_2_class_7, 2, 2, 2, 1); break;
+			}
+			set_md_stage_candidate_count(&md_stage_2_class_8, 4, 4, 4, 1);
+		} // if enc_mode == 0 
+		else if (picture_control_set_ptr->enc_mode <= ENC_M3) // Adopt setting 11 for M1, M2, M3
+		{
+			set_md_stage_candidate_count(&md_stage_1_class_0, fastCandidateTotalCount, 13, 13, 6);
+			set_md_stage_candidate_count(&md_stage_1_class_1, 0, 10, 10, 5);
+			set_md_stage_candidate_count(&md_stage_1_class_2, 0, 10, 10, 5);
+			set_md_stage_candidate_count(&md_stage_1_class_3, 0, 6, 6, 3);
+			set_md_stage_candidate_count(&md_stage_1_class_4, 0, 4, 4, 2);
+			set_md_stage_candidate_count(&md_stage_1_class_5, 0, 5, 5, 5);
+			set_md_stage_candidate_count(&md_stage_1_class_6, 15, 6, 6, 3);
+			set_md_stage_candidate_count(&md_stage_1_class_7, 9, 4, 4, 4);
+			set_md_stage_candidate_count(&md_stage_1_class_8, 8, 3, 3, 2);
+
+			if (context_ptr->combine_class12) {
+				md_stage_1_class_1.num_intra_candidates *= 2;
+				md_stage_1_class_1.num_base_layer_referenced_candidates *= 2;
+				md_stage_1_class_1.num_non_base_layer_referenced_candidates *= 2;
+				md_stage_1_class_1.num_non_referenced_candidates *= 2;
+			}
+
+			if (picture_control_set_ptr->enc_mode >= ENC_M3) {
+				md_stage_1_class_1.num_intra_candidates /= 2;
+				md_stage_1_class_1.num_base_layer_referenced_candidates /= 2;
+				md_stage_1_class_1.num_non_base_layer_referenced_candidates /= 2;
+				md_stage_1_class_1.num_non_referenced_candidates /= 2;
+
+				md_stage_1_class_2.num_intra_candidates /= 2;
+				md_stage_1_class_2.num_base_layer_referenced_candidates /= 2;
+				md_stage_1_class_2.num_non_base_layer_referenced_candidates /= 2;
+				md_stage_1_class_2.num_non_referenced_candidates /= 2;
+
+				md_stage_1_class_3.num_intra_candidates /= 2;
+				md_stage_1_class_3.num_base_layer_referenced_candidates /= 2;
+				md_stage_1_class_3.num_non_base_layer_referenced_candidates /= 2;
+				md_stage_1_class_3.num_non_referenced_candidates /= 2;
+			}
+
+			if (scs->input_resolution >= INPUT_SIZE_1080i_RANGE)
+				set_md_stage_candidate_count(&md_stage_2_class_0, 15, 7, 7, 4);
+			else
+				set_md_stage_candidate_count(&md_stage_2_class_0, 15, 9, 9, 4);
+			set_md_stage_candidate_count(&md_stage_2_class_1, 0, 5, 5, 3);
+			set_md_stage_candidate_count(&md_stage_2_class_2, 0, 5, 5, 3);
+			set_md_stage_candidate_count(&md_stage_2_class_3, 0, 2, 2, 2);
+			set_md_stage_candidate_count(&md_stage_2_class_4, 0, 4, 4, 2);
+
+			if (context_ptr->combine_class12) {
+				md_stage_2_class_1.num_intra_candidates *= 2;
+				md_stage_2_class_1.num_base_layer_referenced_candidates *= 2;
+				md_stage_2_class_1.num_non_base_layer_referenced_candidates *= 2;
+				md_stage_2_class_1.num_non_referenced_candidates *= 2;
+			}
+
+			if (!context_ptr->combine_class12 &&
+				picture_control_set_ptr->parent_pcs_ptr->sc_content_detected) {
+				set_md_stage_candidate_count(&md_stage_2_class_0, 15, 9, 9, 4);
+				set_md_stage_candidate_count(&md_stage_2_class_1, 0, 11, 11, 5);
+				set_md_stage_candidate_count(&md_stage_2_class_2, 0, 11, 11, 5);
+				set_md_stage_candidate_count(&md_stage_2_class_3, 0, 5, 5, 2);
+			}
+
+			switch (picture_control_set_ptr->parent_pcs_ptr->pic_obmc_mode)
+			{
+			case 1: set_md_stage_candidate_count(&md_stage_2_class_5, 0, 4, 4, 4); break;
+			case 2: set_md_stage_candidate_count(&md_stage_2_class_5, 0, 4, 4, 2); break;
+			case 3: set_md_stage_candidate_count(&md_stage_2_class_5, 0, 4, 4, 2); break;
+			case 4: set_md_stage_candidate_count(&md_stage_2_class_5, 0, 4, 4, 2); break;
+			default: set_md_stage_candidate_count(&md_stage_2_class_5, 0, 4, 4, 2); break;
+			}
+			set_md_stage_candidate_count(&md_stage_2_class_6, 3, 3, 3, 2);
+			switch (picture_control_set_ptr->parent_pcs_ptr->palette_mode)
+			{
+			case 1: set_md_stage_candidate_count(&md_stage_2_class_7, 4, 2, 2, 2); break;
+			case 2: set_md_stage_candidate_count(&md_stage_2_class_7, 4, 2, 2, 1); break;
+			case 3: set_md_stage_candidate_count(&md_stage_2_class_7, 4, 2, 2, 1); break;
+			case 4: set_md_stage_candidate_count(&md_stage_2_class_7, 2, 2, 2, 1); break;
+			case 5: set_md_stage_candidate_count(&md_stage_2_class_7, 2, 2, 2, 1); break;
+			case 6: set_md_stage_candidate_count(&md_stage_2_class_7, 2, 2, 2, 1); break;
+			default: set_md_stage_candidate_count(&md_stage_2_class_7, 2, 2, 2, 1); break;
+			}
+			set_md_stage_candidate_count(&md_stage_2_class_8, 2, 2, 2, 1);
+		} // else if M1, M2, M3
+		else // Otherwise adopt ref settings
+		{
+			set_md_stage_candidate_count(&md_stage_1_class_0, fastCandidateTotalCount, 16, 16, 8);
+			set_md_stage_candidate_count(&md_stage_1_class_1, 0, 16, 16, 8);
+			set_md_stage_candidate_count(&md_stage_1_class_2, 0, 16, 16, 8);
+			set_md_stage_candidate_count(&md_stage_1_class_3, 0, 16, 16, 8);
+			set_md_stage_candidate_count(&md_stage_1_class_4, 0, 14, 14, 6);
+			set_md_stage_candidate_count(&md_stage_1_class_5, 0, 16, 16, 16);
+			set_md_stage_candidate_count(&md_stage_1_class_6, 10, 10, 5, 5);
+			set_md_stage_candidate_count(&md_stage_1_class_7, 12, 12, 12, 12);
+			set_md_stage_candidate_count(&md_stage_1_class_8, 5, 5, 4, 4);
+
+			if (context_ptr->combine_class12) {
+				md_stage_1_class_1.num_intra_candidates *= 2;
+				md_stage_1_class_1.num_base_layer_referenced_candidates *= 2;
+				md_stage_1_class_1.num_non_base_layer_referenced_candidates *= 2;
+				md_stage_1_class_1.num_non_referenced_candidates *= 2;
+			}
+
+			if (picture_control_set_ptr->enc_mode >= ENC_M3) {
+				md_stage_1_class_1.num_intra_candidates /= 2;
+				md_stage_1_class_1.num_base_layer_referenced_candidates /= 2;
+				md_stage_1_class_1.num_non_base_layer_referenced_candidates /= 2;
+				md_stage_1_class_1.num_non_referenced_candidates /= 2;
+
+				md_stage_1_class_2.num_intra_candidates /= 2;
+				md_stage_1_class_2.num_base_layer_referenced_candidates /= 2;
+				md_stage_1_class_2.num_non_base_layer_referenced_candidates /= 2;
+				md_stage_1_class_2.num_non_referenced_candidates /= 2;
+
+				md_stage_1_class_3.num_intra_candidates /= 2;
+				md_stage_1_class_3.num_base_layer_referenced_candidates /= 2;
+				md_stage_1_class_3.num_non_base_layer_referenced_candidates /= 2;
+				md_stage_1_class_3.num_non_referenced_candidates /= 2;
+			}
+
+			if (scs->input_resolution >= INPUT_SIZE_1080i_RANGE)
+				set_md_stage_candidate_count(&md_stage_2_class_0, 10, 7, 7, 4);
+			else
+				set_md_stage_candidate_count(&md_stage_2_class_0, 10, 10, 10, 4);
+
+			set_md_stage_candidate_count(&md_stage_2_class_1, 0, 6, 6, 3);
+			set_md_stage_candidate_count(&md_stage_2_class_2, 0, 6, 6, 3);
+			set_md_stage_candidate_count(&md_stage_2_class_3, 0, 6, 6, 3);
+			set_md_stage_candidate_count(&md_stage_2_class_4, 0, 12, 12, 4);
+
+			if (context_ptr->combine_class12) {
+				md_stage_2_class_1.num_intra_candidates *= 2;
+				md_stage_2_class_1.num_base_layer_referenced_candidates *= 2;
+				md_stage_2_class_1.num_non_base_layer_referenced_candidates *= 2;
+				md_stage_2_class_1.num_non_referenced_candidates *= 2;
+			}
+
+			if (!context_ptr->combine_class12 &&
+				picture_control_set_ptr->parent_pcs_ptr->sc_content_detected) {
+				set_md_stage_candidate_count(&md_stage_2_class_0, 10, 8, 8, 4);
+				set_md_stage_candidate_count(&md_stage_2_class_1, 0, 12, 12, 6);
+				set_md_stage_candidate_count(&md_stage_2_class_2, 0, 12, 12, 6);
+				set_md_stage_candidate_count(&md_stage_2_class_3, 0, 12, 12, 6);
+			}
+
+			switch (picture_control_set_ptr->parent_pcs_ptr->pic_obmc_mode)
+			{
+			case 1: set_md_stage_candidate_count(&md_stage_2_class_5, 0, 14, 14, 14); break;
+			case 2: set_md_stage_candidate_count(&md_stage_2_class_5, 0, 12, 12, 4); break;
+			case 3: set_md_stage_candidate_count(&md_stage_2_class_5, 0, 12, 12, 4); break;
+			case 4: set_md_stage_candidate_count(&md_stage_2_class_5, 0, 12, 8, 4); break;
+			default: set_md_stage_candidate_count(&md_stage_2_class_5, 0, 12, 8, 4); break;
+			}
+			set_md_stage_candidate_count(&md_stage_2_class_6, 5, 5, 3, 2);
+			switch (picture_control_set_ptr->parent_pcs_ptr->palette_mode)
+			{
+			case 1: set_md_stage_candidate_count(&md_stage_2_class_7, 7, 7, 4, 4); break;
+			case 2: set_md_stage_candidate_count(&md_stage_2_class_7, 7, 7, 2, 2); break;
+			case 3: set_md_stage_candidate_count(&md_stage_2_class_7, 7, 7, 2, 2); break;
+			case 4: set_md_stage_candidate_count(&md_stage_2_class_7, 4, 4, 2, 1); break;
+			case 5: set_md_stage_candidate_count(&md_stage_2_class_7, 4, 4, 2, 1); break;
+			case 6: set_md_stage_candidate_count(&md_stage_2_class_7, 2, 2, 1, 1); break;
+			default: set_md_stage_candidate_count(&md_stage_2_class_7, 2, 2, 1, 1); break;
+			}
+			set_md_stage_candidate_count(&md_stage_2_class_8, 4, 4, 3, 1);
+		}
+
+		set_md_stage_1_candidates(picture_control_set_ptr, context_ptr, CAND_CLASS_0, &md_stage_1_class_0);
+		set_md_stage_1_candidates(picture_control_set_ptr, context_ptr, CAND_CLASS_1, &md_stage_1_class_1);
+		set_md_stage_1_candidates(picture_control_set_ptr, context_ptr, CAND_CLASS_2, &md_stage_1_class_2);
+		set_md_stage_1_candidates(picture_control_set_ptr, context_ptr, CAND_CLASS_3, &md_stage_1_class_3);
+		set_md_stage_1_candidates(picture_control_set_ptr, context_ptr, CAND_CLASS_4, &md_stage_1_class_4);
+		set_md_stage_1_candidates(picture_control_set_ptr, context_ptr, CAND_CLASS_5, &md_stage_1_class_5);
+		set_md_stage_1_candidates(picture_control_set_ptr, context_ptr, CAND_CLASS_6, &md_stage_1_class_6);
+		set_md_stage_1_candidates(picture_control_set_ptr, context_ptr, CAND_CLASS_7, &md_stage_1_class_7);
+		set_md_stage_1_candidates(picture_control_set_ptr, context_ptr, CAND_CLASS_8, &md_stage_1_class_8);
+
+		set_md_stage_2_candidates(picture_control_set_ptr, context_ptr, CAND_CLASS_0, &md_stage_2_class_0);
+		set_md_stage_2_candidates(picture_control_set_ptr, context_ptr, CAND_CLASS_1, &md_stage_2_class_1);
+		set_md_stage_2_candidates(picture_control_set_ptr, context_ptr, CAND_CLASS_2, &md_stage_2_class_2);
+		set_md_stage_2_candidates(picture_control_set_ptr, context_ptr, CAND_CLASS_3, &md_stage_2_class_3);
+		set_md_stage_2_candidates(picture_control_set_ptr, context_ptr, CAND_CLASS_4, &md_stage_2_class_4);
+		set_md_stage_2_candidates(picture_control_set_ptr, context_ptr, CAND_CLASS_5, &md_stage_2_class_5);
+		set_md_stage_2_candidates(picture_control_set_ptr, context_ptr, CAND_CLASS_6, &md_stage_2_class_6);
+		set_md_stage_2_candidates(picture_control_set_ptr, context_ptr, CAND_CLASS_7, &md_stage_2_class_7);
+		set_md_stage_2_candidates(picture_control_set_ptr, context_ptr, CAND_CLASS_8, &md_stage_2_class_8);
+
+#else
     // Step 2: set md_stage count
     context_ptr->md_stage_1_count[CAND_CLASS_0] = (picture_control_set_ptr->slice_type == I_SLICE) ? fastCandidateTotalCount : (picture_control_set_ptr->parent_pcs_ptr->is_used_as_reference_flag) ? INTRA_NFL : (INTRA_NFL >> 1);
     context_ptr->md_stage_1_count[CAND_CLASS_1] = (picture_control_set_ptr->slice_type == I_SLICE) ? 0 : (picture_control_set_ptr->parent_pcs_ptr->is_used_as_reference_flag) ? INTER_NEW_NFL : (INTER_NEW_NFL >> 1);
@@ -2516,6 +2870,7 @@ void set_md_stage_counts(
 #endif
     }
 #endif //
+#endif // cleanup MD_STAGE_NIC_CLEANUP
 #if PRESETS_OPT
     if (picture_control_set_ptr->enc_mode >= ENC_M8)
 #elif PRESETS_TUNE
