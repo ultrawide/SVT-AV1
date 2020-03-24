@@ -4550,16 +4550,16 @@ static uint8_t is_high_complex_sb(
     is_high_comp = high_cost_sb && all_blocks_have_coeff && all_blocks_are_small_sizes ? 1 : 0;
     is_high_comp = is_high_comp && most_blocks_are_intra == INTRA_MODE ? 2 :
         is_high_comp && most_blocks_are_intra == INTER_MODE ? 1 : 0;
-    printf("temLayer%d\t,%llu\t,%llu\t,%u\t,%u\t,%i,\t%llu,\t%llu\t%i\n ",
-        pcs_ptr->temporal_layer_index,
-        best_part_cost, 
-        high_cost_th,
-        all_blocks_have_coeff,
-        all_blocks_are_small_sizes,
-        most_blocks_are_intra,
-        intra_block_cnt,
-        total_block,
-        is_high_comp);
+    //printf("temLayer%d\t,%llu\t,%llu\t,%u\t,%u\t,%i,\t%llu,\t%llu\t%i\n ",
+    //    pcs_ptr->temporal_layer_index,
+    //    best_part_cost, 
+    //    high_cost_th,
+    //    all_blocks_have_coeff,
+    //    all_blocks_are_small_sizes,
+    //    most_blocks_are_intra,
+    //    intra_block_cnt,
+    //    total_block,
+    //    is_high_comp);
     return is_high_comp;
 }
 #endif
