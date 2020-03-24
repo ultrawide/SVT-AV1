@@ -4492,6 +4492,77 @@ static uint64_t generate_best_part_cost(
     }
     return best_part_cost;
 }
+#if HIGH_COMPLEX_SB_DETECT
+static uint8_t is_high_complex_sb(
+    SequenceControlSet  *scs_ptr,
+    PictureControlSet   *pcs_ptr,
+    ModeDecisionContext *context_ptr,
+    uint32_t             sb_index) {
+    uint32_t  blk_index = 0;
+    uint64_t best_part_cost = 0;
+    uint64_t has_coeff_sb = 0;
+    uint64_t small_block_size = 0;
+    uint64_t total_block = 0;
+    uint64_t intra_block_cnt = 0;
+    uint64_t chroma_cfl_cnt = 0;
+    EbBool split_flag;
+    while (blk_index < scs_ptr->max_block_cnt) {
+        const BlockGeom * blk_geom = get_blk_geom_mds(blk_index);
+        // if the parent square is inside inject this block
+        uint8_t is_blk_allowed = pcs_ptr->slice_type != I_SLICE ? 1 :
+            (blk_geom->sq_size < 128) ? 1 : 0;
+        // derive split_flag
+        split_flag = context_ptr->md_blk_arr_nsq[blk_index].split_flag;
+        if (scs_ptr->sb_geom[sb_index].block_is_inside_md_scan[blk_index] &&
+            is_blk_allowed) {
+            if (blk_geom->shape == PART_N) {
+                if (context_ptr->md_blk_arr_nsq[blk_index].split_flag == EB_FALSE) {
+                    best_part_cost += context_ptr->md_local_blk_unit[blk_index].cost;
+                    has_coeff_sb += context_ptr->md_blk_arr_nsq[blk_index].block_has_coeff != 0 ? (blk_geom->bwidth*blk_geom->bheight) : 0;
+                    small_block_size += blk_geom->bwidth <= 32 && blk_geom->bheight <= 32 ? (blk_geom->bwidth*blk_geom->bheight) : 0;
+                    intra_block_cnt += (context_ptr->md_blk_arr_nsq[blk_index].prediction_mode_flag == INTRA_MODE) ? (blk_geom->bwidth*blk_geom->bheight) : 0;
+                    chroma_cfl_cnt += (context_ptr->md_blk_arr_nsq[blk_index].prediction_unit_array->intra_chroma_mode == INTRA_MODE) ? (blk_geom->bwidth*blk_geom->bheight) : 0;
+                    total_block += (blk_geom->bwidth*blk_geom->bheight);
+                }
+            }
+        }
+        blk_index += split_flag ?
+            d1_depth_offset[scs_ptr->seq_header.sb_size == BLOCK_128X128][blk_geom->depth] :
+            ns_depth_offset[scs_ptr->seq_header.sb_size == BLOCK_128X128][blk_geom->depth];
+    }
+    uint8_t is_high_comp = 0;
+    uint32_t full_lambda =  context_ptr->hbd_mode_decision ?
+                            context_ptr->full_lambda_md[EB_10_BIT_MD] :
+                            context_ptr->full_lambda_md[EB_8_BIT_MD];
+    uint32_t sb_width = scs_ptr->seq_header.sb_size == BLOCK_128X128 ?
+                            128 : 64;
+    uint32_t sb_height = scs_ptr->seq_header.sb_size == BLOCK_128X128 ?
+                            128 : 64;
+    uint64_t dist_sum = (sb_width * sb_height * 50);
+    uint64_t high_cost_th = RDCOST(full_lambda, 16, dist_sum);
+
+    uint8_t high_cost_sb = best_part_cost > high_cost_th ? 1 : 0;                                         
+    uint8_t all_blocks_have_coeff = ((total_block - has_coeff_sb) * 100) < (10 * total_block) ? 1 : 0;
+    uint8_t all_blocks_are_small_sizes = (small_block_size == total_block) ? 1 : 0;
+    int8_t most_blocks_are_intra = ((total_block - intra_block_cnt) * 100 < (60 * total_block)) ? INTRA_MODE : (intra_block_cnt == 0) ? INTER_MODE :  -1;
+    uint8_t mostly_cfl_sb = ((total_block - chroma_cfl_cnt) * 100) < 30 * total_block;
+  
+    is_high_comp = high_cost_sb && all_blocks_have_coeff && all_blocks_are_small_sizes ? 1 : 0;
+    is_high_comp = is_high_comp && most_blocks_are_intra == INTRA_MODE ? 2 :
+        is_high_comp && most_blocks_are_intra == INTER_MODE ? 1 : 0;
+    printf("temLayer%d\t,%llu\t,%llu\t,%u\t,%u\t,%i,\t%llu,\t%llu\t%i\n ",
+        pcs_ptr->temporal_layer_index,
+        best_part_cost, 
+        high_cost_th,
+        all_blocks_have_coeff,
+        all_blocks_are_small_sizes,
+        most_blocks_are_intra,
+        intra_block_cnt,
+        total_block,
+        is_high_comp);
+    return is_high_comp;
+}
+#endif
 static void perform_pred_depth_refinement(SequenceControlSet *scs_ptr, PictureControlSet *pcs_ptr,
                                           ModeDecisionContext *context_ptr, uint32_t sb_index) {
 #if DEPTH_PART_CLEAN_UP
@@ -4997,7 +5068,9 @@ void *enc_dec_kernel(void *input_ptr) {
                                 pcs_ptr,
                                 context_ptr->tile_group_index,
                                 segment_index);
-
+#if HIGH_COMPLEX_SB_DETECT
+           context_ptr->md_context->high_complex_sb = 0;
+#endif
             // Reset EncDec Coding State
             reset_enc_dec( // HT done
                 context_ptr,
@@ -5297,7 +5370,11 @@ void *enc_dec_kernel(void *input_ptr) {
                                              sb_origin_y,
                                              sb_index,
                                              context_ptr->md_context);
-
+#if HIGH_COMPLEX_SB_DETECT
+                            if(pcs_ptr->slice_type!= I_SLICE)
+                            context_ptr->md_context->high_complex_sb = is_high_complex_sb(
+                                scs_ptr, pcs_ptr, context_ptr->md_context, sb_index);
+#endif
                             // Perform Pred_1 depth refinement - Add blocks to be considered in the next stage(s) of PD based on depth cost.
                             perform_pred_depth_refinement(
                                 scs_ptr, pcs_ptr, context_ptr->md_context, sb_index);

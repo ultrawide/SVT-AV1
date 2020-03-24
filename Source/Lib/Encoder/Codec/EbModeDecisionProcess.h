@@ -181,6 +181,18 @@ typedef struct RefPruningControls {
     uint8_t max_ref_to_tag;
 }RefPruningControls;
 #endif
+#if HIGH_COMPLEX_SB_DETECT
+typedef struct FeatureCtrl {
+    uint8_t default_md_max_ref_count;
+    uint8_t default_predictive_me_level;
+    uint8_t default_new_nearest_near_comb_injection;
+    uint8_t default_md_pic_obmc_mode;
+    uint8_t default_md_filter_intra_mode;
+    uint8_t default_md_intra_angle_delta;
+    uint8_t default_disable_angle_z2_intra_flag;
+    uint8_t default_warped_motion_injection;
+} FeatureCtrl;
+#endif
 typedef struct ModeDecisionContext {
     EbDctor  dctor;
     EbFifo * mode_decision_configuration_input_fifo_ptr;
@@ -420,6 +432,9 @@ typedef struct ModeDecisionContext {
     EbBool md_staging_tx_search; // 0: skip, 1: use ref cost, 2: no shortcuts
     EbBool md_staging_skip_full_chroma;
     EbBool md_staging_skip_rdoq;
+#if ABS_TH_BASED_TXT_DISABLING
+    EbBool abs_th_skip_txt;
+#endif
     EbBool md_staging_spatial_sse_full_loop;
     DECLARE_ALIGNED(
         16, uint8_t,
@@ -502,7 +517,12 @@ typedef struct ModeDecisionContext {
 #if UV_SEARCH_MODE_INJCECTION
     uint8_t       intra_chroma_search_follows_intra_luma_injection;
 #endif
+#if HIGH_COMPLEX_SB_DETECT
+    uint8_t       high_complex_sb;
+    FeatureCtrl   feature_ctrl;
+#endif
 } ModeDecisionContext;
+
 
 typedef void (*EbAv1LambdaAssignFunc)(uint32_t *fast_lambda, uint32_t *full_lambda,
                                       uint8_t bit_depth, uint16_t qp_index,
