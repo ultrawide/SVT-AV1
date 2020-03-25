@@ -191,6 +191,10 @@ typedef struct FeatureCtrl {
     uint8_t default_md_intra_angle_delta;
     uint8_t default_disable_angle_z2_intra_flag;
     uint8_t default_warped_motion_injection;
+#if INTER_CASE_CLASSIFIER || INTRA_CASE_CLASSIFIER
+    uint8_t default_disallow_all_nsq_blocks_below_32x32;
+    uint8_t default_tx_search_level;
+#endif
 } FeatureCtrl;
 #endif
 typedef struct ModeDecisionContext {
@@ -520,6 +524,9 @@ typedef struct ModeDecisionContext {
 #if HIGH_COMPLEX_SB_DETECT
     uint8_t       high_complex_sb;
     FeatureCtrl   feature_ctrl;
+#endif
+#if INTER_CASE_CLASSIFIER || INTRA_CASE_CLASSIFIER
+    uint8_t       disallow_all_nsq_blocks_below_32x32;
 #endif
 } ModeDecisionContext;
 

@@ -167,7 +167,9 @@ extern "C" {
 #endif
 #define DISABLE_NSQ_BELOW_16x16     0
 #define DISABLE_TXT                 0
-#define DISABLE_BELOW_16x16         0
+#define DISABLE_NSQ_BELOW_326x32    0
+#define INTER_CASE_CLASSIFIER       0
+#define INTRA_CASE_CLASSIFIER       0
 #endif
 
 // END  BEYOND_CS2 /////////////////////////////////////////////////////////

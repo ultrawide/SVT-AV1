@@ -618,6 +618,9 @@ typedef struct PictureParentControlSet {
     EbBool disallow_nsq;
     EbBool disallow_all_nsq_blocks_below_8x8;
     EbBool disallow_all_nsq_blocks_below_16x16;
+#if DISABLE_NSQ_BELOW_326x32 || INTER_CASE_CLASSIFIER || INTRA_CASE_CLASSIFIER
+    EbBool disallow_all_nsq_blocks_below_32x32;
+#endif
     EbBool disallow_all_non_hv_nsq_blocks_below_16x16;
     EbBool disallow_all_h4_v4_blocks_below_16x16;
 #else

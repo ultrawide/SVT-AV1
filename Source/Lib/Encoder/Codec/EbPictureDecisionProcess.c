@@ -991,6 +991,13 @@ EbErrorType signal_derivation_multi_processes_oq(
 #if DISABLE_NSQ_BELOW_16x16
     pcs_ptr->disallow_all_nsq_blocks_below_16x16 = EB_TRUE;
 #endif
+#if DISABLE_NSQ_BELOW_326x32 || INTER_CASE_CLASSIFIER || INTRA_CASE_CLASSIFIER
+
+    pcs_ptr->disallow_all_nsq_blocks_below_32x32 = EB_FALSE;
+#if DISABLE_NSQ_BELOW_326x32
+    pcs_ptr->disallow_all_nsq_blocks_below_32x32 = EB_TRUE;
+#endif
+#endif
 #else
     // Set pic_depth_mode
     if (sc_content_detected)

@@ -1716,6 +1716,9 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
         context_ptr->intra_chroma_search_follows_intra_luma_injection = 0;
 #endif
 #endif
+#if INTER_CASE_CLASSIFIER || INTRA_CASE_CLASSIFIER
+    context_ptr->disallow_all_nsq_blocks_below_32x32 = pcs_ptr->parent_pcs_ptr->disallow_all_nsq_blocks_below_32x32;
+#endif
     // Set the full loop escape level
     // Level                Settings
     // 0                    Off
@@ -4506,9 +4509,7 @@ static uint8_t is_high_complex_sb(
     uint64_t intra_block_cnt = 0;
     uint64_t chroma_cfl_cnt = 0;
     EbBool split_flag;
-    uint64_t small_block_size = scs_ptr->input_resolution < INPUT_SIZE_576p_RANGE_OR_LOWER ? 8 :
-        scs_ptr->input_resolution < INPUT_SIZE_1080p_RANGE ? 16 :
-        32;
+    uint64_t small_block_size = scs_ptr->input_resolution < INPUT_SIZE_576p_RANGE_OR_LOWER ? 16 : 32;
     while (blk_index < scs_ptr->max_block_cnt) {
         const BlockGeom * blk_geom = get_blk_geom_mds(blk_index);
         // if the parent square is inside inject this block
@@ -4547,22 +4548,28 @@ static uint8_t is_high_complex_sb(
     uint8_t high_cost_sb = best_part_cost > high_cost_th ? 1 : 0;                                         
     uint8_t all_blocks_have_coeff = ((total_block - has_coeff_sb) * 100) < (10 * total_block) ? 1 : 0;
     uint8_t all_blocks_are_small_sizes = (small_block_size_cnt == total_block) ? 1 : 0;
-    int8_t most_blocks_are_intra = ((total_block - intra_block_cnt) * 100 < (30 * total_block)) ? INTRA_MODE : (intra_block_cnt == 0) ? INTER_MODE :  -1;
+    int8_t most_blocks_are_intra = ((total_block - intra_block_cnt) * 100 < (30 * total_block)) ? INTRA_MODE : ((total_block - intra_block_cnt) * 100 > (70 * total_block)) ? INTER_MODE :  -1;
     uint8_t mostly_cfl_sb = ((total_block - chroma_cfl_cnt) * 100) < 30 * total_block;
   
     is_high_comp = high_cost_sb && all_blocks_have_coeff && all_blocks_are_small_sizes ? 1 : 0;
     is_high_comp = is_high_comp && most_blocks_are_intra == INTRA_MODE ? 2 :
         is_high_comp && most_blocks_are_intra == INTER_MODE ? 1 : 0;
-    //printf("temLayer%d\t,%llu\t,%llu\t,%u\t,%u\t,%i,\t%llu,\t%llu\t%i\n ",
-    //    pcs_ptr->temporal_layer_index,
-    //    best_part_cost, 
-    //    high_cost_th,
-    //    all_blocks_have_coeff,
-    //    all_blocks_are_small_sizes,
-    //    most_blocks_are_intra,
-    //    intra_block_cnt,
-    //    total_block,
-    //    is_high_comp);
+#if INTER_CASE_CLASSIFIER
+    is_high_comp = is_high_comp == 1 ? 1 : 0;
+#endif
+#if INTRA_CASE_CLASSIFIER
+    is_high_comp = is_high_comp == 2 ? 2 : 0;
+#endif
+    /*printf("temLayer%d\t,%llu\t,%llu\t,%u\t,%u\t,%i,\t%llu,\t%llu\t%i\n ",
+        pcs_ptr->temporal_layer_index,
+        best_part_cost, 
+        high_cost_th,
+        all_blocks_have_coeff,
+        all_blocks_are_small_sizes,
+        most_blocks_are_intra,
+        intra_block_cnt,
+        total_block,
+        is_high_comp);*/
     return is_high_comp;
 }
 #endif

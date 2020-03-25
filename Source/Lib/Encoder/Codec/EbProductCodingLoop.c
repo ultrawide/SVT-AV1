@@ -8760,10 +8760,12 @@ void interintra_class_pruning_3(ModeDecisionContext *context_ptr, uint64_t best_
 #if DEPTH_PART_CLEAN_UP
 EbBool is_block_allowed(PictureControlSet *pcs_ptr, ModeDecisionContext *context_ptr) {
     if((context_ptr->blk_geom->sq_size <=  8 && context_ptr->blk_geom->shape != PART_N && pcs_ptr->parent_pcs_ptr->disallow_all_nsq_blocks_below_8x8) ||
-#if DISABLE_BELOW_16x16
-        (context_ptr->blk_geom->sq_size <= 16) ||
-#else
        (context_ptr->blk_geom->sq_size <= 16 && context_ptr->blk_geom->shape != PART_N && pcs_ptr->parent_pcs_ptr->disallow_all_nsq_blocks_below_16x16) ||
+#if DISABLE_NSQ_BELOW_326x32
+        (context_ptr->blk_geom->sq_size <= 32 && context_ptr->blk_geom->shape != PART_N && pcs_ptr->parent_pcs_ptr->disallow_all_nsq_blocks_below_32x32) ||
+#endif
+#if INTER_CASE_CLASSIFIER || INTRA_CASE_CLASSIFIER
+        (context_ptr->blk_geom->sq_size <= 32 && context_ptr->blk_geom->shape != PART_N && context_ptr->disallow_all_nsq_blocks_below_32x32) ||
 #endif
        (context_ptr->blk_geom->shape != PART_N  && pcs_ptr->parent_pcs_ptr->disallow_nsq) ||
        (context_ptr->blk_geom->sq_size <= 16 && context_ptr->blk_geom->shape != PART_N && context_ptr->blk_geom->shape != PART_H && context_ptr->blk_geom->shape != PART_V && pcs_ptr->parent_pcs_ptr->disallow_all_non_hv_nsq_blocks_below_16x16) ||
@@ -9683,17 +9685,34 @@ void md_adjust_feature_mode_sb(ModeDecisionContext *context_ptr,
     feature_ctrl->default_md_intra_angle_delta = context_ptr->md_intra_angle_delta;
     feature_ctrl->default_disable_angle_z2_intra_flag = context_ptr->disable_angle_z2_intra_flag;
     feature_ctrl->default_warped_motion_injection = context_ptr->warped_motion_injection;
+#if INTER_CASE_CLASSIFIER || INTRA_CASE_CLASSIFIER
+    feature_ctrl->default_disallow_all_nsq_blocks_below_32x32 = context_ptr->disallow_all_nsq_blocks_below_32x32;
+    feature_ctrl->default_tx_search_level = context_ptr->tx_search_level;
+#endif
     if (context_ptr->pd_pass == PD_PASS_2) {
         if (context_ptr->high_complex_sb == 2) {// INTRA
+#if !INTER_CASE_CLASSIFIER && !INTRA_CASE_CLASSIFIER
             context_ptr->md_max_ref_count = 1;
             context_ptr->predictive_me_level = 0;
             context_ptr->new_nearest_near_comb_injection = 0;
             context_ptr->md_pic_obmc_mode = 0;
             context_ptr->warped_motion_injection = 0;
+#endif
+#if INTER_CASE_CLASSIFIER || INTRA_CASE_CLASSIFIER
+            context_ptr->disallow_all_nsq_blocks_below_32x32 = 1;
+            context_ptr->tx_search_level = TX_SEARCH_OFF;
+#endif
         }else if (context_ptr->high_complex_sb == 1) { // INTER
+#if !INTER_CASE_CLASSIFIER && !INTRA_CASE_CLASSIFIER
             context_ptr->md_filter_intra_mode = 0;
             context_ptr->md_intra_angle_delta = 0;
             context_ptr->disable_angle_z2_intra_flag = EB_TRUE;
+#endif
+#if INTER_CASE_CLASSIFIER || INTRA_CASE_CLASSIFIER
+            context_ptr->disallow_all_nsq_blocks_below_32x32 = 1;
+            context_ptr->tx_search_level = TX_SEARCH_OFF;
+#endif
+
         }
     }
 }
@@ -9707,6 +9726,10 @@ void md_reset_feature_mode_sb(ModeDecisionContext *context_ptr,
     context_ptr->md_intra_angle_delta = feature_ctrl->default_md_intra_angle_delta;
     context_ptr->disable_angle_z2_intra_flag = feature_ctrl->default_disable_angle_z2_intra_flag;
     context_ptr->warped_motion_injection = feature_ctrl->default_warped_motion_injection;
+#if INTER_CASE_CLASSIFIER || INTRA_CASE_CLASSIFIER
+    context_ptr->disallow_all_nsq_blocks_below_32x32 = feature_ctrl->default_disallow_all_nsq_blocks_below_32x32;
+    context_ptr->tx_search_level = feature_ctrl->default_tx_search_level;
+#endif
 }
 #endif
 EB_EXTERN EbErrorType mode_decision_sb(SequenceControlSet *scs_ptr, PictureControlSet *pcs_ptr,
