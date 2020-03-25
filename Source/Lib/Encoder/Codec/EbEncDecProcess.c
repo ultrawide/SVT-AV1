@@ -4501,11 +4501,14 @@ static uint8_t is_high_complex_sb(
     uint32_t  blk_index = 0;
     uint64_t best_part_cost = 0;
     uint64_t has_coeff_sb = 0;
-    uint64_t small_block_size = 0;
+    uint64_t small_block_size_cnt = 0;
     uint64_t total_block = 0;
     uint64_t intra_block_cnt = 0;
     uint64_t chroma_cfl_cnt = 0;
     EbBool split_flag;
+    uint64_t small_block_size = scs_ptr->input_resolution < INPUT_SIZE_576p_RANGE_OR_LOWER ? 8 :
+        scs_ptr->input_resolution < INPUT_SIZE_1080p_RANGE ? 16 :
+        32;
     while (blk_index < scs_ptr->max_block_cnt) {
         const BlockGeom * blk_geom = get_blk_geom_mds(blk_index);
         // if the parent square is inside inject this block
@@ -4519,7 +4522,7 @@ static uint8_t is_high_complex_sb(
                 if (context_ptr->md_blk_arr_nsq[blk_index].split_flag == EB_FALSE) {
                     best_part_cost += context_ptr->md_local_blk_unit[blk_index].cost;
                     has_coeff_sb += context_ptr->md_blk_arr_nsq[blk_index].block_has_coeff != 0 ? (blk_geom->bwidth*blk_geom->bheight) : 0;
-                    small_block_size += blk_geom->bwidth <= 32 && blk_geom->bheight <= 32 ? (blk_geom->bwidth*blk_geom->bheight) : 0;
+                    small_block_size_cnt += blk_geom->bwidth <= small_block_size && blk_geom->bheight <= small_block_size ? (blk_geom->bwidth*blk_geom->bheight) : 0;
                     intra_block_cnt += (context_ptr->md_blk_arr_nsq[blk_index].prediction_mode_flag == INTRA_MODE) ? (blk_geom->bwidth*blk_geom->bheight) : 0;
                     chroma_cfl_cnt += (context_ptr->md_blk_arr_nsq[blk_index].prediction_unit_array->intra_chroma_mode == INTRA_MODE) ? (blk_geom->bwidth*blk_geom->bheight) : 0;
                     total_block += (blk_geom->bwidth*blk_geom->bheight);
@@ -4538,13 +4541,13 @@ static uint8_t is_high_complex_sb(
                             128 : 64;
     uint32_t sb_height = scs_ptr->seq_header.sb_size == BLOCK_128X128 ?
                             128 : 64;
-    uint64_t dist_sum = (sb_width * sb_height * 50);
+    uint64_t dist_sum = (sb_width * sb_height * 100);
     uint64_t high_cost_th = RDCOST(full_lambda, 16, dist_sum);
 
     uint8_t high_cost_sb = best_part_cost > high_cost_th ? 1 : 0;                                         
     uint8_t all_blocks_have_coeff = ((total_block - has_coeff_sb) * 100) < (10 * total_block) ? 1 : 0;
-    uint8_t all_blocks_are_small_sizes = (small_block_size == total_block) ? 1 : 0;
-    int8_t most_blocks_are_intra = ((total_block - intra_block_cnt) * 100 < (60 * total_block)) ? INTRA_MODE : (intra_block_cnt == 0) ? INTER_MODE :  -1;
+    uint8_t all_blocks_are_small_sizes = (small_block_size_cnt == total_block) ? 1 : 0;
+    int8_t most_blocks_are_intra = ((total_block - intra_block_cnt) * 100 < (30 * total_block)) ? INTRA_MODE : (intra_block_cnt == 0) ? INTER_MODE :  -1;
     uint8_t mostly_cfl_sb = ((total_block - chroma_cfl_cnt) * 100) < 30 * total_block;
   
     is_high_comp = high_cost_sb && all_blocks_have_coeff && all_blocks_are_small_sizes ? 1 : 0;

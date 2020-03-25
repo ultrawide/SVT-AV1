@@ -9629,13 +9629,13 @@ void md_adjust_feature_mode_sb(ModeDecisionContext *context_ptr,
     feature_ctrl->default_disable_angle_z2_intra_flag = context_ptr->disable_angle_z2_intra_flag;
     feature_ctrl->default_warped_motion_injection = context_ptr->warped_motion_injection;
     if (context_ptr->pd_pass == PD_PASS_2) {
-        if (context_ptr->high_complex_sb == 2) {
+        if (context_ptr->high_complex_sb == 2) {// INTRA
             context_ptr->md_max_ref_count = 1;
             context_ptr->predictive_me_level = 0;
             context_ptr->new_nearest_near_comb_injection = 0;
             context_ptr->md_pic_obmc_mode = 0;
             context_ptr->warped_motion_injection = 0;
-        }else if (context_ptr->high_complex_sb == 1) {
+        }else if (context_ptr->high_complex_sb == 1) { // INTER
             context_ptr->md_filter_intra_mode = 0;
             context_ptr->md_intra_angle_delta = 0;
             context_ptr->disable_angle_z2_intra_flag = EB_TRUE;
