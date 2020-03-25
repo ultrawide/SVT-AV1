@@ -988,6 +988,9 @@ EbErrorType signal_derivation_multi_processes_oq(
 
     // Set disallow_all_h4_v4_blocks_below_16x16
     pcs_ptr->disallow_all_h4_v4_blocks_below_16x16 = EB_FALSE;
+#if DISABLE_NSQ_BELOW_16x16
+    pcs_ptr->disallow_all_nsq_blocks_below_16x16 = EB_TRUE;
+#endif
 #else
     // Set pic_depth_mode
     if (sc_content_detected)

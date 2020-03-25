@@ -2872,6 +2872,7 @@ void set_md_stage_counts(PictureControlSet *pcs_ptr, ModeDecisionContext *contex
         }
 #endif
 #endif
+
         // Set md_stage_3 NICs
 
         context_ptr->md_stage_3_count[CAND_CLASS_0] =
@@ -2893,6 +2894,45 @@ void set_md_stage_counts(PictureControlSet *pcs_ptr, ModeDecisionContext *contex
         context_ptr->md_stage_3_count[CAND_CLASS_8] =
             (context_ptr->md_stage_2_count[CAND_CLASS_8] + 1) >> 1;
     }
+
+
+#if HIGH_COMPLEX_SB_DETECT
+        if(context_ptr->high_complex_sb == 2) {
+            context_ptr->md_stage_1_count[CAND_CLASS_1] = (context_ptr->md_stage_1_count[CAND_CLASS_1] + 1) >> 1;
+            context_ptr->md_stage_1_count[CAND_CLASS_2] = (context_ptr->md_stage_1_count[CAND_CLASS_2] + 1) >> 1;
+            context_ptr->md_stage_1_count[CAND_CLASS_3] = (context_ptr->md_stage_1_count[CAND_CLASS_3] + 1) >> 1;
+            context_ptr->md_stage_1_count[CAND_CLASS_4] = (context_ptr->md_stage_1_count[CAND_CLASS_4] + 1) >> 1;
+            context_ptr->md_stage_1_count[CAND_CLASS_5] = (context_ptr->md_stage_1_count[CAND_CLASS_5] + 1) >> 1;
+            context_ptr->md_stage_1_count[CAND_CLASS_8] = (context_ptr->md_stage_1_count[CAND_CLASS_8] + 1) >> 1;
+
+            context_ptr->md_stage_2_count[CAND_CLASS_1] = (context_ptr->md_stage_2_count[CAND_CLASS_1] + 1) >> 1;
+            context_ptr->md_stage_2_count[CAND_CLASS_2] = (context_ptr->md_stage_2_count[CAND_CLASS_2] + 1) >> 1;
+            context_ptr->md_stage_2_count[CAND_CLASS_3] = (context_ptr->md_stage_2_count[CAND_CLASS_3] + 1) >> 1;
+            context_ptr->md_stage_2_count[CAND_CLASS_4] = (context_ptr->md_stage_2_count[CAND_CLASS_4] + 1) >> 1;
+            context_ptr->md_stage_2_count[CAND_CLASS_5] = (context_ptr->md_stage_2_count[CAND_CLASS_5] + 1) >> 1;
+            context_ptr->md_stage_2_count[CAND_CLASS_8] = (context_ptr->md_stage_2_count[CAND_CLASS_8] + 1) >> 1;
+
+            context_ptr->md_stage_3_count[CAND_CLASS_1] = (context_ptr->md_stage_3_count[CAND_CLASS_1] + 1) >> 1;
+            context_ptr->md_stage_3_count[CAND_CLASS_2] = (context_ptr->md_stage_3_count[CAND_CLASS_2] + 1) >> 1;
+            context_ptr->md_stage_3_count[CAND_CLASS_3] = (context_ptr->md_stage_3_count[CAND_CLASS_3] + 1) >> 1;
+            context_ptr->md_stage_3_count[CAND_CLASS_4] = (context_ptr->md_stage_3_count[CAND_CLASS_4] + 1) >> 1;
+            context_ptr->md_stage_3_count[CAND_CLASS_5] = (context_ptr->md_stage_3_count[CAND_CLASS_5] + 1) >> 1;
+            context_ptr->md_stage_3_count[CAND_CLASS_8] = (context_ptr->md_stage_3_count[CAND_CLASS_8] + 1) >> 1;
+        }else if(context_ptr->high_complex_sb == 1) {
+            context_ptr->md_stage_1_count[CAND_CLASS_0] = (context_ptr->md_stage_1_count[CAND_CLASS_0] + 1) >> 1;
+            context_ptr->md_stage_1_count[CAND_CLASS_6] = (context_ptr->md_stage_1_count[CAND_CLASS_6] + 1) >> 1;
+            context_ptr->md_stage_1_count[CAND_CLASS_7] = (context_ptr->md_stage_1_count[CAND_CLASS_7] + 1) >> 1;
+            
+            context_ptr->md_stage_2_count[CAND_CLASS_0] = (context_ptr->md_stage_2_count[CAND_CLASS_1] + 1) >> 1;
+            context_ptr->md_stage_2_count[CAND_CLASS_6] = (context_ptr->md_stage_2_count[CAND_CLASS_2] + 1) >> 1;
+            context_ptr->md_stage_2_count[CAND_CLASS_7] = (context_ptr->md_stage_2_count[CAND_CLASS_3] + 1) >> 1;
+
+            context_ptr->md_stage_3_count[CAND_CLASS_0] = (context_ptr->md_stage_3_count[CAND_CLASS_0] + 1) >> 1;
+            context_ptr->md_stage_3_count[CAND_CLASS_6] = (context_ptr->md_stage_3_count[CAND_CLASS_6] + 1) >> 1;
+            context_ptr->md_stage_3_count[CAND_CLASS_7] = (context_ptr->md_stage_3_count[CAND_CLASS_7] + 1) >> 1;
+           
+        }
+#endif
 
     // Step 3: update count for md_stage_1 and d_stage_2 if bypassed (no NIC
     // setting should be done beyond this point)
@@ -7034,6 +7074,9 @@ void perform_tx_partitioning(ModeDecisionCandidateBuffer *candidate_buffer,
 #if ABS_TH_BASED_TXT_DISABLING
                 tx_search_skip_flag = context_ptr->abs_th_skip_txt ? 1 : tx_search_skip_flag;           
 #endif
+#if DISABLE_TXT
+                tx_search_skip_flag = 1;
+#endif
                 if (!tx_search_skip_flag) {
                     tx_type_search(pcs_ptr, context_ptr, tx_candidate_buffer, qp);
                 }
@@ -8609,18 +8652,26 @@ void interintra_class_pruning_2(ModeDecisionContext *context_ptr, uint64_t best_
                 uint64_t factor;
                 if (cand_class_it == CAND_CLASS_0 || cand_class_it == CAND_CLASS_6 || cand_class_it == CAND_CLASS_7)
 #if TEST_INTRA_CLASSES
+#if HIGH_COMPLEX_SB_DETECT
+                    factor = context_ptr->high_complex_sb == 1 ? COST_TH_FACTOR : (uint64_t)~0;
+#else
                     factor = COST_TH_FACTOR;
+#endif
 #else
                     factor = (uint64_t)~0;
 #endif
                 else
 #if TEST_INTER_CLASSES
+#if HIGH_COMPLEX_SB_DETECT
+                    factor = context_ptr->high_complex_sb == 2 ? COST_TH_FACTOR : (uint64_t)~0;
+#else
                     factor = COST_TH_FACTOR;
+#endif
 #else
                     factor = (uint64_t)~0;
 #endif
 #if HIGH_COMPLEX_SB_DETECT
-                if (factor != (uint64_t)~0 && context_ptr->high_complex_sb == 2)
+                if (factor != (uint64_t)~0)
 #else
                 if (factor != (uint64_t)~0)
 #endif
@@ -8709,7 +8760,11 @@ void interintra_class_pruning_3(ModeDecisionContext *context_ptr, uint64_t best_
 #if DEPTH_PART_CLEAN_UP
 EbBool is_block_allowed(PictureControlSet *pcs_ptr, ModeDecisionContext *context_ptr) {
     if((context_ptr->blk_geom->sq_size <=  8 && context_ptr->blk_geom->shape != PART_N && pcs_ptr->parent_pcs_ptr->disallow_all_nsq_blocks_below_8x8) ||
+#if DISABLE_BELOW_16x16
+        (context_ptr->blk_geom->sq_size <= 16) ||
+#else
        (context_ptr->blk_geom->sq_size <= 16 && context_ptr->blk_geom->shape != PART_N && pcs_ptr->parent_pcs_ptr->disallow_all_nsq_blocks_below_16x16) ||
+#endif
        (context_ptr->blk_geom->shape != PART_N  && pcs_ptr->parent_pcs_ptr->disallow_nsq) ||
        (context_ptr->blk_geom->sq_size <= 16 && context_ptr->blk_geom->shape != PART_N && context_ptr->blk_geom->shape != PART_H && context_ptr->blk_geom->shape != PART_V && pcs_ptr->parent_pcs_ptr->disallow_all_non_hv_nsq_blocks_below_16x16) ||
        (context_ptr->blk_geom->sq_size <= 16 && (context_ptr->blk_geom->shape == PART_H4 || context_ptr->blk_geom->shape == PART_V4) && pcs_ptr->parent_pcs_ptr->disallow_all_h4_v4_blocks_below_16x16))

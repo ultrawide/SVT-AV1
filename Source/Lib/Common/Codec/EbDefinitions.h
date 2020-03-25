@@ -148,11 +148,13 @@ extern "C" {
 #define NEAREST_NEAR_REF_MASKING 1
 #define PRED_ME_REF_MASKING 1
 #endif
-#define SB_CLASSIFIER               1
+#define SB_CLASSIFIER               0
 #if SB_CLASSIFIER
 #define SHUT_CLASS_POST_MD_SATGE_1_IF_BEST_COST 1
+#define SHUT_CLASS_POST_MD_SATGE_0_IF_BEST_COST 1
 #if SHUT_CLASS_POST_MD_SATGE_0_IF_BEST_COST || SHUT_CLASS_POST_MD_SATGE_1_IF_BEST_COST
-#define TEST_INTRA_CLASSES  0
+
+#define TEST_INTRA_CLASSES  1
 #define TEST_INTER_CLASSES  1
 #define COST_TH_FACTOR     5
 #endif
@@ -163,6 +165,9 @@ extern "C" {
 #define FACTOR                      5
 #define HIGH_COMPLEX_SB_DETECT      1
 #endif
+#define DISABLE_NSQ_BELOW_16x16     0
+#define DISABLE_TXT                 0
+#define DISABLE_BELOW_16x16         0
 #endif
 
 // END  BEYOND_CS2 /////////////////////////////////////////////////////////
