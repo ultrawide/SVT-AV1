@@ -4542,11 +4542,19 @@ static uint8_t is_high_complex_sb(
                             128 : 64;
     uint32_t sb_height = scs_ptr->seq_header.sb_size == BLOCK_128X128 ?
                             128 : 64;
+#if NEW_TH
+    uint64_t dist_sum = (sb_width * sb_height * 80);
+#else
     uint64_t dist_sum = (sb_width * sb_height * 100);
+#endif
     uint64_t high_cost_th = RDCOST(full_lambda, 16, dist_sum);
 
-    uint8_t high_cost_sb = best_part_cost > high_cost_th ? 1 : 0;                                         
+    uint8_t high_cost_sb = best_part_cost > high_cost_th ? 1 : 0;  
+#if NEW_TH
+    uint8_t all_blocks_have_coeff = ((total_block - has_coeff_sb) * 100) < (30 * total_block) ? 1 : 0;
+#else
     uint8_t all_blocks_have_coeff = ((total_block - has_coeff_sb) * 100) < (10 * total_block) ? 1 : 0;
+#endif
     uint8_t all_blocks_are_small_sizes = (small_block_size_cnt == total_block) ? 1 : 0;
     int8_t most_blocks_are_intra = ((total_block - intra_block_cnt) * 100 < (30 * total_block)) ? INTRA_MODE : ((total_block - intra_block_cnt) * 100 > (70 * total_block)) ? INTER_MODE :  -1;
     uint8_t mostly_cfl_sb = ((total_block - chroma_cfl_cnt) * 100) < 30 * total_block;

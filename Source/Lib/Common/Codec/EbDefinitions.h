@@ -170,6 +170,7 @@ extern "C" {
 #define DISABLE_NSQ_BELOW_326x32    0
 #define INTER_CASE_CLASSIFIER       0
 #define INTRA_CASE_CLASSIFIER       0
+#define NEW_TH                      0
 #endif
 
 // END  BEYOND_CS2 /////////////////////////////////////////////////////////
