@@ -998,6 +998,7 @@ EbErrorType signal_derivation_multi_processes_oq(
     pcs_ptr->disallow_all_nsq_blocks_below_32x32 = EB_TRUE;
 #endif
 #endif
+
 #else
     // Set pic_depth_mode
     if (sc_content_detected)

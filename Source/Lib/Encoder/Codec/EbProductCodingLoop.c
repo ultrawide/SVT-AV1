@@ -8767,7 +8767,11 @@ EbBool is_block_allowed(PictureControlSet *pcs_ptr, ModeDecisionContext *context
 #if INTER_CASE_CLASSIFIER || INTRA_CASE_CLASSIFIER
         (context_ptr->blk_geom->sq_size <= 32 && context_ptr->blk_geom->shape != PART_N && context_ptr->disallow_all_nsq_blocks_below_32x32) ||
 #endif
+#if DISABLE_NSQ_IN_MD
+       (context_ptr->blk_geom->shape != PART_N  && context_ptr->md_disallow_nsq) ||
+#else
        (context_ptr->blk_geom->shape != PART_N  && pcs_ptr->parent_pcs_ptr->disallow_nsq) ||
+#endif
        (context_ptr->blk_geom->sq_size <= 16 && context_ptr->blk_geom->shape != PART_N && context_ptr->blk_geom->shape != PART_H && context_ptr->blk_geom->shape != PART_V && pcs_ptr->parent_pcs_ptr->disallow_all_non_hv_nsq_blocks_below_16x16) ||
        (context_ptr->blk_geom->sq_size <= 16 && (context_ptr->blk_geom->shape == PART_H4 || context_ptr->blk_geom->shape == PART_V4) && pcs_ptr->parent_pcs_ptr->disallow_all_h4_v4_blocks_below_16x16))
         return EB_FALSE;
@@ -9962,7 +9966,11 @@ EB_EXTERN EbErrorType mode_decision_sb(SequenceControlSet *scs_ptr, PictureContr
         uint8_t  redundant_blk_avail = 0;
         uint16_t redundant_blk_mds;
 #if DEPTH_PART_CLEAN_UP
+#if DISABLE_NSQ_IN_MD
+        if (!context_ptr->md_disallow_nsq)
+#else
         if(!pcs_ptr->parent_pcs_ptr->disallow_nsq)
+#endif
 #else
         if (all_blk_init)
 #endif
@@ -9970,7 +9978,11 @@ EB_EXTERN EbErrorType mode_decision_sb(SequenceControlSet *scs_ptr, PictureContr
 
         context_ptr->similar_blk_avail = 0;
 #if DEPTH_PART_CLEAN_UP
+#if DISABLE_NSQ_IN_MD
+        if (!context_ptr->md_disallow_nsq)
+#else
         if (!pcs_ptr->parent_pcs_ptr->disallow_nsq)
+#endif
 #else
         if (all_blk_init)
 #endif

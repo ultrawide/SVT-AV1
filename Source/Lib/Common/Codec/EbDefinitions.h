@@ -171,6 +171,8 @@ extern "C" {
 #define INTER_CASE_CLASSIFIER       0
 #define INTRA_CASE_CLASSIFIER       0
 #define NEW_TH                      0
+#define DISABLE_NSQ_IN_MD           0
+#define DISABLE_TXT_IN_MD           0
 #endif
 
 // END  BEYOND_CS2 /////////////////////////////////////////////////////////

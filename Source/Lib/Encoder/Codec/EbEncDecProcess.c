@@ -1462,7 +1462,9 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
     else
         context_ptr->tx_search_level = TX_SEARCH_ENC_DEC;
 #endif
-
+#if DISABLE_TXT_IN_MD
+    context_ptr->tx_search_level = TX_SEARCH_OFF;
+#endif
     // Set tx search skip weights (MAX_MODE_COST: no skipping; 0: always skipping)
     if (pd_pass == PD_PASS_0)
         context_ptr->tx_weight = MAX_MODE_COST;
@@ -1718,6 +1720,9 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
 #endif
 #if INTER_CASE_CLASSIFIER || INTRA_CASE_CLASSIFIER
     context_ptr->disallow_all_nsq_blocks_below_32x32 = pcs_ptr->parent_pcs_ptr->disallow_all_nsq_blocks_below_32x32;
+#endif
+#if DISABLE_NSQ_IN_MD
+    context_ptr->md_disallow_nsq = 1;
 #endif
     // Set the full loop escape level
     // Level                Settings

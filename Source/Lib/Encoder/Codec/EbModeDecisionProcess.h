@@ -528,6 +528,9 @@ typedef struct ModeDecisionContext {
 #if INTER_CASE_CLASSIFIER || INTRA_CASE_CLASSIFIER
     uint8_t       disallow_all_nsq_blocks_below_32x32;
 #endif
+#if DISABLE_NSQ_IN_MD
+    uint8_t       md_disallow_nsq;
+#endif
 } ModeDecisionContext;
 
 
