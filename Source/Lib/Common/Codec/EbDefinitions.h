@@ -148,8 +148,12 @@ extern "C" {
 #define NEAREST_NEAR_REF_MASKING 1
 #define PRED_ME_REF_MASKING 1
 #endif
+#define NSQ_MD_SIGNAL    1
 #define SB_CLASSIFIER               0
-#if SB_CLASSIFIER
+#if SB_CLASSIFIER  
+#define SB_CLASSIFIER_INF           1
+#define HIGH_COMP 0
+#if HIGH_COMP
 #define SHUT_CLASS_POST_MD_SATGE_1_IF_BEST_COST 1
 #define SHUT_CLASS_POST_MD_SATGE_0_IF_BEST_COST 1
 #if SHUT_CLASS_POST_MD_SATGE_0_IF_BEST_COST || SHUT_CLASS_POST_MD_SATGE_1_IF_BEST_COST
@@ -157,13 +161,26 @@ extern "C" {
 #define TEST_INTRA_CLASSES  1
 #define TEST_INTER_CLASSES  1
 #define COST_TH_FACTOR     5
+#define SHUT_CLASS_POST_MD_SATGE_1_IF_BEST_COST_HIGH_COMP_SB 1
 #endif
 #define INTER_TUNING                1
 #define INTRA_TUNING                1
 #define ABS_TH_BASED_RDOQ_DISABLING 1
 #define ABS_TH_BASED_TXT_DISABLING  1
+#define DISABLE_COMP_WHEN_IT_IS_HIGH_INTRA 1
 #define FACTOR                      5
-#define HIGH_COMPLEX_SB_DETECT      1
+#define HALF_NICS                   1
+#define RDOQ_HIGH_COMP_INTER        1
+#define RDOQ_HIGH_COMP_INTRA        1
+#endif
+#define LOW_COMP 0
+#if LOW_COMP
+#define DISALLOW_NSQ_LOW_COMP_SB    1
+#define MOST_INTER                  0
+#define MOST_INTER_NO_COEFF         0
+#define MOST_INTER_NO_ALL_SMALL     0
+#define MOST_INTER_NO_HIGH_COST     0
+#endif 
 #endif
 #define DISABLE_NSQ_BELOW_16x16     0
 #define DISABLE_TXT                 0

@@ -1723,6 +1723,8 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
 #endif
 #if DISABLE_NSQ_IN_MD
     context_ptr->md_disallow_nsq = 1;
+#else
+    context_ptr->md_disallow_nsq = pcs_ptr->parent_pcs_ptr->disallow_nsq;
 #endif
     // Set the full loop escape level
     // Level                Settings
@@ -4500,8 +4502,8 @@ static uint64_t generate_best_part_cost(
     }
     return best_part_cost;
 }
-#if HIGH_COMPLEX_SB_DETECT
-static uint8_t is_high_complex_sb(
+#if SB_CLASSIFIER_INF
+static uint8_t get_sb_class(
     SequenceControlSet  *scs_ptr,
     PictureControlSet   *pcs_ptr,
     ModeDecisionContext *context_ptr,
@@ -4540,6 +4542,7 @@ static uint8_t is_high_complex_sb(
             ns_depth_offset[scs_ptr->seq_header.sb_size == BLOCK_128X128][blk_geom->depth];
     }
     uint8_t is_high_comp = 0;
+    uint8_t is_low_comp = 0;
     uint32_t full_lambda =  context_ptr->hbd_mode_decision ?
                             context_ptr->full_lambda_md[EB_10_BIT_MD] :
                             context_ptr->full_lambda_md[EB_8_BIT_MD];
@@ -4558,31 +4561,52 @@ static uint8_t is_high_complex_sb(
 #if NEW_TH
     uint8_t all_blocks_have_coeff = ((total_block - has_coeff_sb) * 100) < (30 * total_block) ? 1 : 0;
 #else
-    uint8_t all_blocks_have_coeff = ((total_block - has_coeff_sb) * 100) < (10 * total_block) ? 1 : 0;
+    uint8_t most_blocks_have_coeff = ((total_block - has_coeff_sb) * 100) < (10 * total_block) ? 1 : 0;
 #endif
     uint8_t all_blocks_are_small_sizes = (small_block_size_cnt == total_block) ? 1 : 0;
     int8_t most_blocks_are_intra = ((total_block - intra_block_cnt) * 100 < (30 * total_block)) ? INTRA_MODE : ((total_block - intra_block_cnt) * 100 > (70 * total_block)) ? INTER_MODE :  -1;
     uint8_t mostly_cfl_sb = ((total_block - chroma_cfl_cnt) * 100) < 30 * total_block;
   
-    is_high_comp = high_cost_sb && all_blocks_have_coeff && all_blocks_are_small_sizes ? 1 : 0;
+    is_high_comp = high_cost_sb && most_blocks_have_coeff && all_blocks_are_small_sizes ? 1 : 0;
     is_high_comp = is_high_comp && most_blocks_are_intra == INTRA_MODE ? 2 :
         is_high_comp && most_blocks_are_intra == INTER_MODE ? 1 : 0;
+    uint8_t most_blocks_are_large_sizes = ((total_block - small_block_size_cnt) * 100) > (70 * total_block) ? 1 : 0;
+    uint8_t most_blocks_have_nocoeff = ((total_block - has_coeff_sb) * 100) > (70 * total_block) ? 1 : 0;
+#if LOW_COMP
+#if MOST_INTER
+    is_high_comp = most_blocks_are_intra == INTER_MODE ? 3 : 0;
+#endif
+#if MOST_INTER_NO_COEFF
+    is_high_comp = most_blocks_are_intra == INTER_MODE && most_blocks_have_nocoeff ? 3 : 0;
+#endif
+#if MOST_INTER_NO_ALL_SMALL
+    is_high_comp = most_blocks_are_intra == INTER_MODE && !all_blocks_are_small_sizes ? 3 : 0;
+#endif
+#if MOST_INTER_NO_HIGH_COST
+    is_high_comp = most_blocks_are_intra == INTER_MODE && !high_cost_sb ? 3 : 0;
+#endif
+#endif
+
 #if INTER_CASE_CLASSIFIER
     is_high_comp = is_high_comp == 1 ? 1 : 0;
 #endif
 #if INTRA_CASE_CLASSIFIER
     is_high_comp = is_high_comp == 2 ? 2 : 0;
 #endif
-    /*printf("temLayer%d\t,%llu\t,%llu\t,%u\t,%u\t,%i,\t%llu,\t%llu\t%i\n ",
+   /* printf("temLayer%d\t,%llu\t,%llu\t,%u\t,%u\t,%i,\t%llu,\t%llu\t,%u\t,%u\t%i\n ",
         pcs_ptr->temporal_layer_index,
         best_part_cost, 
         high_cost_th,
-        all_blocks_have_coeff,
+        most_blocks_have_coeff,
         all_blocks_are_small_sizes,
         most_blocks_are_intra,
         intra_block_cnt,
         total_block,
+        most_blocks_are_large_sizes,
+        most_blocks_have_nocoeff,
         is_high_comp);*/
+
+
     return is_high_comp;
 }
 #endif
@@ -5091,7 +5115,7 @@ void *enc_dec_kernel(void *input_ptr) {
                                 pcs_ptr,
                                 context_ptr->tile_group_index,
                                 segment_index);
-#if HIGH_COMPLEX_SB_DETECT
+#if SB_CLASSIFIER_INF
            context_ptr->md_context->high_complex_sb = 0;
 #endif
             // Reset EncDec Coding State
@@ -5393,9 +5417,9 @@ void *enc_dec_kernel(void *input_ptr) {
                                              sb_origin_y,
                                              sb_index,
                                              context_ptr->md_context);
-#if HIGH_COMPLEX_SB_DETECT
+#if SB_CLASSIFIER_INF
                             if(pcs_ptr->slice_type!= I_SLICE)
-                            context_ptr->md_context->high_complex_sb = is_high_complex_sb(
+                            context_ptr->md_context->high_complex_sb = get_sb_class(
                                 scs_ptr, pcs_ptr, context_ptr->md_context, sb_index);
 #endif
                             // Perform Pred_1 depth refinement - Add blocks to be considered in the next stage(s) of PD based on depth cost.

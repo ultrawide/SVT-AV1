@@ -181,7 +181,7 @@ typedef struct RefPruningControls {
     uint8_t max_ref_to_tag;
 }RefPruningControls;
 #endif
-#if HIGH_COMPLEX_SB_DETECT
+#if SB_CLASSIFIER_INF
 typedef struct FeatureCtrl {
     uint8_t default_md_max_ref_count;
     uint8_t default_predictive_me_level;
@@ -194,6 +194,10 @@ typedef struct FeatureCtrl {
 #if INTER_CASE_CLASSIFIER || INTRA_CASE_CLASSIFIER
     uint8_t default_disallow_all_nsq_blocks_below_32x32;
     uint8_t default_tx_search_level;
+#endif
+#if DISALLOW_NSQ_LOW_COMP_SB
+     uint8_t default_md_disallow_nsq;
+     uint8_t default_tx_search_level;
 #endif
 } FeatureCtrl;
 #endif
@@ -521,14 +525,14 @@ typedef struct ModeDecisionContext {
 #if UV_SEARCH_MODE_INJCECTION
     uint8_t       intra_chroma_search_follows_intra_luma_injection;
 #endif
-#if HIGH_COMPLEX_SB_DETECT
+#if SB_CLASSIFIER_INF
     uint8_t       high_complex_sb;
     FeatureCtrl   feature_ctrl;
 #endif
 #if INTER_CASE_CLASSIFIER || INTRA_CASE_CLASSIFIER
     uint8_t       disallow_all_nsq_blocks_below_32x32;
 #endif
-#if DISABLE_NSQ_IN_MD
+#if NSQ_MD_SIGNAL
     uint8_t       md_disallow_nsq;
 #endif
 } ModeDecisionContext;

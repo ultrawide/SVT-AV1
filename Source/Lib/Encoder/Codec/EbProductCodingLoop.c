@@ -2896,7 +2896,7 @@ void set_md_stage_counts(PictureControlSet *pcs_ptr, ModeDecisionContext *contex
     }
 
 
-#if HIGH_COMPLEX_SB_DETECT
+#if HALF_NICS
         if(context_ptr->high_complex_sb == 2) {
             context_ptr->md_stage_1_count[CAND_CLASS_1] = (context_ptr->md_stage_1_count[CAND_CLASS_1] + 1) >> 1;
             context_ptr->md_stage_1_count[CAND_CLASS_2] = (context_ptr->md_stage_1_count[CAND_CLASS_2] + 1) >> 1;
@@ -7216,7 +7216,7 @@ void full_loop_core(PictureControlSet *pcs_ptr, SuperBlock *sb_ptr, BlkStruct *b
         skip_txt_th =  RDCOST(full_lambda, 16, dist_sum);   
     }
 #if INTER_TUNING
-#if HIGH_COMPLEX_SB_DETECT
+#if RDOQ_HIGH_COMP_INTER
     if (is_inter && context_ptr->high_complex_sb == 2) {
 #else
     if (is_inter) {
@@ -7234,7 +7234,7 @@ void full_loop_core(PictureControlSet *pcs_ptr, SuperBlock *sb_ptr, BlkStruct *b
     }
 #endif
 #if INTRA_TUNING
-#if HIGH_COMPLEX_SB_DETECT
+#if RDOQ_HIGH_COMP_INTRA
     if (!is_inter && context_ptr->high_complex_sb == 1) {
 #else
     if (!is_inter) {
@@ -8054,7 +8054,7 @@ EbErrorType signal_derivation_block(
         if (context_ptr->intra_similar_mode)
             context_ptr->inject_inter_candidates = is_src_intra ? 0 : context_ptr->inject_inter_candidates;
     }
-#if HIGH_COMPLEX_SB_DETECT
+#if DISABLE_COMP_WHEN_IT_IS_HIGH_INTRA
     if (context_ptr->pd_pass == PD_PASS_2)
         if (context_ptr->high_complex_sb == 2)
             context_ptr->compound_types_to_try = MD_COMP_AVG;
@@ -8652,7 +8652,7 @@ void interintra_class_pruning_2(ModeDecisionContext *context_ptr, uint64_t best_
                 uint64_t factor;
                 if (cand_class_it == CAND_CLASS_0 || cand_class_it == CAND_CLASS_6 || cand_class_it == CAND_CLASS_7)
 #if TEST_INTRA_CLASSES
-#if HIGH_COMPLEX_SB_DETECT
+#if SHUT_CLASS_POST_MD_SATGE_1_IF_BEST_COST_HIGH_COMP_SB
                     factor = context_ptr->high_complex_sb == 1 ? COST_TH_FACTOR : (uint64_t)~0;
 #else
                     factor = COST_TH_FACTOR;
@@ -8662,7 +8662,7 @@ void interintra_class_pruning_2(ModeDecisionContext *context_ptr, uint64_t best_
 #endif
                 else
 #if TEST_INTER_CLASSES
-#if HIGH_COMPLEX_SB_DETECT
+#if SHUT_CLASS_POST_MD_SATGE_1_IF_BEST_COST_HIGH_COMP_SB
                     factor = context_ptr->high_complex_sb == 2 ? COST_TH_FACTOR : (uint64_t)~0;
 #else
                     factor = COST_TH_FACTOR;
@@ -8670,11 +8670,7 @@ void interintra_class_pruning_2(ModeDecisionContext *context_ptr, uint64_t best_
 #else
                     factor = (uint64_t)~0;
 #endif
-#if HIGH_COMPLEX_SB_DETECT
                 if (factor != (uint64_t)~0)
-#else
-                if (factor != (uint64_t)~0)
-#endif
                     if (context_ptr->blk_geom->shape != PART_N) {
                         shut_class_norm_cost_th = RDCOST(full_lambda, 16, factor * factor * context_ptr->blk_geom->bwidth * context_ptr->blk_geom->bheight);
                     }
@@ -8767,7 +8763,7 @@ EbBool is_block_allowed(PictureControlSet *pcs_ptr, ModeDecisionContext *context
 #if INTER_CASE_CLASSIFIER || INTRA_CASE_CLASSIFIER
         (context_ptr->blk_geom->sq_size <= 32 && context_ptr->blk_geom->shape != PART_N && context_ptr->disallow_all_nsq_blocks_below_32x32) ||
 #endif
-#if DISABLE_NSQ_IN_MD
+#if NSQ_MD_SIGNAL
        (context_ptr->blk_geom->shape != PART_N  && context_ptr->md_disallow_nsq) ||
 #else
        (context_ptr->blk_geom->shape != PART_N  && pcs_ptr->parent_pcs_ptr->disallow_nsq) ||
@@ -9678,7 +9674,7 @@ static void set_child_to_be_skipped(
     }
 }
 
-#if HIGH_COMPLEX_SB_DETECT
+#if SB_CLASSIFIER_INF
 void md_adjust_feature_mode_sb(ModeDecisionContext *context_ptr,
     FeatureCtrl* feature_ctrl) {
     feature_ctrl->default_md_max_ref_count = context_ptr->md_max_ref_count;
@@ -9693,9 +9689,13 @@ void md_adjust_feature_mode_sb(ModeDecisionContext *context_ptr,
     feature_ctrl->default_disallow_all_nsq_blocks_below_32x32 = context_ptr->disallow_all_nsq_blocks_below_32x32;
     feature_ctrl->default_tx_search_level = context_ptr->tx_search_level;
 #endif
+#if LOW_COMP
+     feature_ctrl->default_md_disallow_nsq = context_ptr->md_disallow_nsq;
+     feature_ctrl->default_tx_search_level = context_ptr->tx_search_level; 
+#endif
     if (context_ptr->pd_pass == PD_PASS_2) {
         if (context_ptr->high_complex_sb == 2) {// INTRA
-#if !INTER_CASE_CLASSIFIER && !INTRA_CASE_CLASSIFIER
+#if HIGH_COMP
             context_ptr->md_max_ref_count = 1;
             context_ptr->predictive_me_level = 0;
             context_ptr->new_nearest_near_comb_injection = 0;
@@ -9707,7 +9707,8 @@ void md_adjust_feature_mode_sb(ModeDecisionContext *context_ptr,
             context_ptr->tx_search_level = TX_SEARCH_OFF;
 #endif
         }else if (context_ptr->high_complex_sb == 1) { // INTER
-#if !INTER_CASE_CLASSIFIER && !INTRA_CASE_CLASSIFIER
+
+#if HIGH_COMP
             context_ptr->md_filter_intra_mode = 0;
             context_ptr->md_intra_angle_delta = 0;
             context_ptr->disable_angle_z2_intra_flag = EB_TRUE;
@@ -9716,8 +9717,14 @@ void md_adjust_feature_mode_sb(ModeDecisionContext *context_ptr,
             context_ptr->disallow_all_nsq_blocks_below_32x32 = 1;
             context_ptr->tx_search_level = TX_SEARCH_OFF;
 #endif
-
         }
+
+#if DISALLOW_NSQ_LOW_COMP_SB
+        if (context_ptr->high_complex_sb == 3) {
+            context_ptr->md_disallow_nsq = 1;
+            context_ptr->tx_search_level = TX_SEARCH_OFF;
+        }
+#endif
     }
 }
 void md_reset_feature_mode_sb(ModeDecisionContext *context_ptr,
@@ -9733,6 +9740,10 @@ void md_reset_feature_mode_sb(ModeDecisionContext *context_ptr,
 #if INTER_CASE_CLASSIFIER || INTRA_CASE_CLASSIFIER
     context_ptr->disallow_all_nsq_blocks_below_32x32 = feature_ctrl->default_disallow_all_nsq_blocks_below_32x32;
     context_ptr->tx_search_level = feature_ctrl->default_tx_search_level;
+#endif
+#if DISALLOW_NSQ_LOW_COMP_SB
+     context_ptr->md_disallow_nsq = feature_ctrl->default_md_disallow_nsq;
+     context_ptr->tx_search_level = feature_ctrl->default_tx_search_level; 
 #endif
 }
 #endif
@@ -9893,7 +9904,7 @@ EB_EXTERN EbErrorType mode_decision_sb(SequenceControlSet *scs_ptr, PictureContr
     Part     nsq_shape_table[NUMBER_OF_SHAPES] = {
         PART_N, PART_H, PART_V, PART_HA, PART_HB, PART_VA, PART_VB, PART_H4, PART_V4, PART_S};
     uint8_t skip_next_depth = 0;
-#if HIGH_COMPLEX_SB_DETECT
+#if SB_CLASSIFIER_INF
     FeatureCtrl* feature_ctrl = &context_ptr->feature_ctrl;
     md_adjust_feature_mode_sb(context_ptr, feature_ctrl);
 #endif
@@ -9966,7 +9977,7 @@ EB_EXTERN EbErrorType mode_decision_sb(SequenceControlSet *scs_ptr, PictureContr
         uint8_t  redundant_blk_avail = 0;
         uint16_t redundant_blk_mds;
 #if DEPTH_PART_CLEAN_UP
-#if DISABLE_NSQ_IN_MD
+#if NSQ_MD_SIGNAL
         if (!context_ptr->md_disallow_nsq)
 #else
         if(!pcs_ptr->parent_pcs_ptr->disallow_nsq)
@@ -9978,7 +9989,7 @@ EB_EXTERN EbErrorType mode_decision_sb(SequenceControlSet *scs_ptr, PictureContr
 
         context_ptr->similar_blk_avail = 0;
 #if DEPTH_PART_CLEAN_UP
-#if DISABLE_NSQ_IN_MD
+#if NSQ_MD_SIGNAL
         if (!context_ptr->md_disallow_nsq)
 #else
         if (!pcs_ptr->parent_pcs_ptr->disallow_nsq)
@@ -10203,7 +10214,7 @@ EB_EXTERN EbErrorType mode_decision_sb(SequenceControlSet *scs_ptr, PictureContr
                 depth_cost[scs_ptr->static_config.super_block_size == 128
                                ? context_ptr->blk_geom->depth
                                : context_ptr->blk_geom->depth + 1] += nsq_cost[nsq_shape_table[0]];
-                if (context_ptr->skip_depth && scs_ptr->sb_geom[sb_addr].is_complete_sb) {
+                if (!context_ptr->md_disallow_nsq && context_ptr->skip_depth && scs_ptr->sb_geom[sb_addr].is_complete_sb) {
                     if (context_ptr->pd_pass > PD_PASS_1) {
                         uint64_t sq_cost = nsq_cost[0]; // sq cost
                         uint64_t best_nsq_cost = MAX_CU_COST;
@@ -10266,7 +10277,7 @@ EB_EXTERN EbErrorType mode_decision_sb(SequenceControlSet *scs_ptr, PictureContr
         sb_ptr->depth_cost[depth_idx] =
             depth_cost[depth_idx] < 0 ? MAX_MODE_COST : depth_cost[depth_idx];
     }
-#if HIGH_COMPLEX_SB_DETECT
+#if SB_CLASSIFIER_INF
     md_reset_feature_mode_sb(context_ptr, feature_ctrl);
 #endif
     return return_error;
