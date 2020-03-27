@@ -9913,7 +9913,20 @@ EB_EXTERN EbErrorType mode_decision_sb(SequenceControlSet *scs_ptr, PictureContr
 
         const BlockGeom *blk_geom = context_ptr->blk_geom = get_blk_geom_mds(blk_idx_mds);
         BlkStruct *     blk_ptr = context_ptr->blk_ptr = &context_ptr->md_blk_arr_nsq[blk_idx_mds];
-
+#if TXT_OFF_IN_NSQ
+        uint8_t default_tx_search_level = context_ptr->tx_search_level;
+        if (context_ptr->blk_geom != PART_N) {
+            context_ptr->tx_search_level = TX_SEARCH_OFF;
+        }
+#endif
+#if CS_CFL_OFF_IN_NSQ
+        uint8_t default_chroma_level = context_ptr->chroma_level;
+        uint8_t default_cf_level = context_ptr->md_disable_cfl;
+        if (context_ptr->blk_geom != PART_N) {
+            context_ptr->chroma_level = CHROMA_MODE_1;
+            context_ptr->md_disable_cfl = 1;
+        }
+#endif
         context_ptr->cu_size_log2 = blk_geom->bwidth_log2;
         context_ptr->blk_origin_x = sb_origin_x + blk_geom->origin_x;
         context_ptr->blk_origin_y = sb_origin_y + blk_geom->origin_y;
@@ -10162,6 +10175,13 @@ EB_EXTERN EbErrorType mode_decision_sb(SequenceControlSet *scs_ptr, PictureContr
                     context_ptr->md_local_blk_unit[context_ptr->blk_ptr->mds_idx].default_cost = 0;
             }
         }
+#if TXT_OFF_IN_NSQ
+        context_ptr->tx_search_level = default_tx_search_level;
+#endif
+#if CS_CFL_OFF_IN_NSQ
+        context_ptr->chroma_level = default_chroma_level;
+        context_ptr->md_disable_cfl = default_cf_level;
+#endif
         skip_next_nsq = 0;
         if (blk_geom->nsi + 1 == blk_geom->totns) {
             nsq_cost[context_ptr->blk_geom->shape] =

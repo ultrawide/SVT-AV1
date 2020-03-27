@@ -186,6 +186,7 @@ extern "C" {
 #define HIGH_DIST_3                 0
 #define HIGH_DIST_4                 0
 #define HIGH_DIST_5                 0
+#define HIGH_DIST_6                 0
 #endif 
 #define DETECT_HIGH_INTRA_PIC       0
 #endif
@@ -197,6 +198,9 @@ extern "C" {
 #define NEW_TH                      0
 #define DISABLE_NSQ_IN_MD           0
 #define DISABLE_TXT_IN_MD           0
+#define DISABLE_NSQ                 0
+#define TXT_OFF_IN_NSQ              0
+#define CS_CFL_OFF_IN_NSQ           0
 #endif
 
 // END  BEYOND_CS2 /////////////////////////////////////////////////////////

@@ -4572,6 +4572,9 @@ static uint8_t get_sb_class(
 #if HIGH_DIST_5
     dist_sum = (sb_width * sb_height * 150);
 #endif
+#if HIGH_DIST_6
+    dist_sum = (sb_width * sb_height * 10);
+#endif
 #endif
     uint64_t high_cost_th = RDCOST(full_lambda, 16, dist_sum);
 
@@ -4633,7 +4636,7 @@ static uint8_t get_sb_class(
     is_high_comp = is_high_comp == 2 ? 2 : 0;
 #endif
 
-#if HIGH_DIST_0 || HIGH_DIST_1 || HIGH_DIST_2 || HIGH_DIST_3 || HIGH_DIST_4 || HIGH_DIST_5
+#if HIGH_DIST_0 || HIGH_DIST_1 || HIGH_DIST_2 || HIGH_DIST_3 || HIGH_DIST_4 || HIGH_DIST_5 || HIGH_DIST_6
      is_high_comp = high_cost_sb ? 3 : 0;
 #endif
    /* printf("temLayer%d\t,%llu\t,%llu\t,%u\t,%u\t,%i,\t%llu,\t%llu\t,%u\t,%u\t%i\n ",
