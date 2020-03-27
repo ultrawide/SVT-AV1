@@ -201,6 +201,10 @@ extern "C" {
 #define DISABLE_NSQ                 0
 #define TXT_OFF_IN_NSQ              0
 #define CS_CFL_OFF_IN_NSQ           0
+#define PART_RANK                   0
+#if PART_RANK
+#define NUM_PAR_TO_ALLOW            2
+#endif
 #endif
 
 // END  BEYOND_CS2 /////////////////////////////////////////////////////////

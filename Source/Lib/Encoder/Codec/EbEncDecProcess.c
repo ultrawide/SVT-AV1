@@ -4502,6 +4502,20 @@ static uint64_t generate_best_part_cost(
     }
     return best_part_cost;
 }
+#if PART_RANK
+Part convert_part_to_shape[NUMBER_OF_SHAPES] = {
+    PART_N,
+    PART_H,
+    PART_V,
+    PART_S,
+    PART_HA,
+    PART_HB,
+    PART_VA,
+    PART_VB,
+    PART_H4,
+    PART_V4
+};
+#endif
 #if SB_CLASSIFIER_INF
 static uint8_t get_sb_class(
     SequenceControlSet  *scs_ptr,
@@ -4515,6 +4529,11 @@ static uint8_t get_sb_class(
     uint64_t total_block = 0;
     uint64_t intra_block_cnt = 0;
     uint64_t chroma_cfl_cnt = 0;
+#if PART_RANK
+    uint64_t part_prob[NUMBER_OF_SHAPES] = { 0 };
+    Part     nsq_shape_table[NUMBER_OF_SHAPES] = {
+        PART_N, PART_H, PART_V, PART_HA, PART_HB, PART_VA, PART_VB, PART_H4, PART_V4, PART_S};
+#endif
     EbBool split_flag;
     uint64_t small_block_size = scs_ptr->input_resolution < INPUT_SIZE_576p_RANGE_OR_LOWER ? 16 : 32;
     while (blk_index < scs_ptr->max_block_cnt) {
@@ -4533,6 +4552,9 @@ static uint8_t get_sb_class(
                     small_block_size_cnt += blk_geom->bwidth <= small_block_size && blk_geom->bheight <= small_block_size ? (blk_geom->bwidth*blk_geom->bheight) : 0;
                     intra_block_cnt += (context_ptr->md_blk_arr_nsq[blk_index].prediction_mode_flag == INTRA_MODE) ? (blk_geom->bwidth*blk_geom->bheight) : 0;
                     chroma_cfl_cnt += (context_ptr->md_blk_arr_nsq[blk_index].prediction_unit_array->intra_chroma_mode == INTRA_MODE) ? (blk_geom->bwidth*blk_geom->bheight) : 0;
+#if PART_RANK
+                    part_prob[convert_part_to_shape[context_ptr->md_blk_arr_nsq[blk_index].part]] += (blk_geom->bwidth*blk_geom->bheight);
+#endif
                     total_block += (blk_geom->bwidth*blk_geom->bheight);
                 }
             }
@@ -4541,6 +4563,22 @@ static uint8_t get_sb_class(
             d1_depth_offset[scs_ptr->seq_header.sb_size == BLOCK_128X128][blk_geom->depth] :
             ns_depth_offset[scs_ptr->seq_header.sb_size == BLOCK_128X128][blk_geom->depth];
     }
+#if PART_RANK
+    part_prob[0] = MAX_CU_COST;
+    uint32_t i, j, index;
+    for (i = 0; i < NUMBER_OF_SHAPES - 1; ++i) {
+        for (j = i + 1; j < NUMBER_OF_SHAPES; ++j) {
+            if (part_prob[nsq_shape_table[j]] > part_prob[nsq_shape_table[i]]) {
+                index              = nsq_shape_table[i];
+                nsq_shape_table[i] = nsq_shape_table[j];
+                nsq_shape_table[j] = index;
+            }
+        }
+    }
+    for (i = 0; i < NUMBER_OF_SHAPES; ++i) {
+        context_ptr->nsq_shape_table[i] = nsq_shape_table[i];
+    }
+#endif
     uint8_t is_high_comp = 0;
     uint8_t is_low_comp = 0;
     uint32_t full_lambda =  context_ptr->hbd_mode_decision ?
@@ -5163,6 +5201,18 @@ void *enc_dec_kernel(void *input_ptr) {
                                 segment_index);
 #if SB_CLASSIFIER_INF
            context_ptr->md_context->high_complex_sb = 0;
+#endif
+#if PART_RANK
+           context_ptr->md_context->nsq_shape_table[0] = PART_N;
+           context_ptr->md_context->nsq_shape_table[1] = PART_H;
+           context_ptr->md_context->nsq_shape_table[2] = PART_V;
+           context_ptr->md_context->nsq_shape_table[3] = PART_HA;
+           context_ptr->md_context->nsq_shape_table[4] = PART_HB;
+           context_ptr->md_context->nsq_shape_table[5] = PART_VA;
+           context_ptr->md_context->nsq_shape_table[6] = PART_VB;
+           context_ptr->md_context->nsq_shape_table[7] = PART_H4;
+           context_ptr->md_context->nsq_shape_table[8] = PART_V4;
+           context_ptr->md_context->nsq_shape_table[9] = PART_S;
 #endif
             // Reset EncDec Coding State
             reset_enc_dec( // HT done

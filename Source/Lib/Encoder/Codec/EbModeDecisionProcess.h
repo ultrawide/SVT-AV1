@@ -535,6 +535,9 @@ typedef struct ModeDecisionContext {
 #if NSQ_MD_SIGNAL
     uint8_t       md_disallow_nsq;
 #endif
+#if PART_RANK
+    Part nsq_shape_table[NUMBER_OF_SHAPES];
+#endif
 } ModeDecisionContext;
 
 

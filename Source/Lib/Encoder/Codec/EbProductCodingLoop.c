@@ -10135,16 +10135,36 @@ EB_EXTERN EbErrorType mode_decision_sb(SequenceControlSet *scs_ptr, PictureContr
 #if !CLEAN_UP_SB_DATA_6
             skip_next_depth = context_ptr->blk_ptr->do_not_process_block;
 #endif
+#if PART_RANK
+            uint8_t skip_part = 0;
+            if (context_ptr->pd_pass == PD_PASS_2) {
+                uint8_t matched_part = 0;
+                for (int p = 0; p < NUM_PAR_TO_ALLOW; p++) {
+                    if (context_ptr->nsq_shape_table[p] == blk_geom->shape)
+                        matched_part++;
+                }
+                skip_part = matched_part ? 0 : 1;
+            }
+#endif
             if (pcs_ptr->parent_pcs_ptr->sb_geom[sb_addr].block_is_allowed[blk_ptr->mds_idx] &&
                 !skip_next_nsq && !skip_next_sq &&
                 !sq_weight_based_nsq_skip &&
+#if PART_RANK
+                !skip_part &&
                 !skip_next_depth) {
+#else
+                !skip_next_depth) {
+#endif
                 md_encode_block(pcs_ptr,
                                 context_ptr,
                                 input_picture_ptr,
                                 bestcandidate_buffers);
             }
+#if PART_RANK
+            else if (sq_weight_based_nsq_skip || skip_next_depth || skip_part) {
+#else
             else if (sq_weight_based_nsq_skip || skip_next_depth) {
+#endif
                 if (context_ptr->blk_geom->shape != PART_N)
                     context_ptr->md_local_blk_unit[context_ptr->blk_ptr->mds_idx].cost =
                         (MAX_MODE_COST >> 4);
