@@ -8756,7 +8756,11 @@ void interintra_class_pruning_3(ModeDecisionContext *context_ptr, uint64_t best_
 #if DEPTH_PART_CLEAN_UP
 EbBool is_block_allowed(PictureControlSet *pcs_ptr, ModeDecisionContext *context_ptr) {
     if((context_ptr->blk_geom->sq_size <=  8 && context_ptr->blk_geom->shape != PART_N && pcs_ptr->parent_pcs_ptr->disallow_all_nsq_blocks_below_8x8) ||
+#if DISALLOW_NSQ_BELOW16_SQWEIGHT75
+     (context_ptr->blk_geom->sq_size <= 16 && context_ptr->blk_geom->shape != PART_N && context_ptr->disallow_all_nsq_blocks_below_16x16) ||
+#else
        (context_ptr->blk_geom->sq_size <= 16 && context_ptr->blk_geom->shape != PART_N && pcs_ptr->parent_pcs_ptr->disallow_all_nsq_blocks_below_16x16) ||
+#endif
 #if DISABLE_NSQ_BELOW_326x32
         (context_ptr->blk_geom->sq_size <= 32 && context_ptr->blk_geom->shape != PART_N && pcs_ptr->parent_pcs_ptr->disallow_all_nsq_blocks_below_32x32) ||
 #endif
@@ -9689,9 +9693,13 @@ void md_adjust_feature_mode_sb(ModeDecisionContext *context_ptr,
     feature_ctrl->default_disallow_all_nsq_blocks_below_32x32 = context_ptr->disallow_all_nsq_blocks_below_32x32;
     feature_ctrl->default_tx_search_level = context_ptr->tx_search_level;
 #endif
-#if LOW_COMP
+#if DISALLOW_NSQ_LOW_COMP_SB
      feature_ctrl->default_md_disallow_nsq = context_ptr->md_disallow_nsq;
      feature_ctrl->default_tx_search_level = context_ptr->tx_search_level; 
+#endif
+#if DISALLOW_NSQ_BELOW16_SQWEIGHT75
+     feature_ctrl->default_disallow_all_nsq_blocks_below_16x16 = context_ptr->disallow_all_nsq_blocks_below_16x16;
+     feature_ctrl->default_sq_weight = context_ptr->sq_weight;
 #endif
     if (context_ptr->pd_pass == PD_PASS_2) {
         if (context_ptr->high_complex_sb == 2) {// INTRA
@@ -9725,6 +9733,12 @@ void md_adjust_feature_mode_sb(ModeDecisionContext *context_ptr,
             context_ptr->tx_search_level = TX_SEARCH_OFF;
         }
 #endif
+#if DISALLOW_NSQ_BELOW16_SQWEIGHT75
+        if (context_ptr->high_complex_sb == 3) {
+            context_ptr->disallow_all_nsq_blocks_below_16x16 = 1;
+            context_ptr->sq_weight = 75;
+        }
+#endif
     }
 }
 void md_reset_feature_mode_sb(ModeDecisionContext *context_ptr,
@@ -9744,6 +9758,10 @@ void md_reset_feature_mode_sb(ModeDecisionContext *context_ptr,
 #if DISALLOW_NSQ_LOW_COMP_SB
      context_ptr->md_disallow_nsq = feature_ctrl->default_md_disallow_nsq;
      context_ptr->tx_search_level = feature_ctrl->default_tx_search_level; 
+#endif
+#if DISALLOW_NSQ_BELOW16_SQWEIGHT75
+     context_ptr->disallow_all_nsq_blocks_below_16x16 = feature_ctrl->default_disallow_all_nsq_blocks_below_16x16;
+     context_ptr->sq_weight = feature_ctrl->default_sq_weight;
 #endif
 }
 #endif

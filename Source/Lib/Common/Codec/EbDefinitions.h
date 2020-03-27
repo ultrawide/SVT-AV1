@@ -175,7 +175,8 @@ extern "C" {
 #endif
 #define LOW_COMP 0
 #if LOW_COMP
-#define DISALLOW_NSQ_LOW_COMP_SB    1
+#define DISALLOW_NSQ_LOW_COMP_SB    0
+#define DISALLOW_NSQ_BELOW16_SQWEIGHT75    1
 #define MOST_INTER                  0
 #define MOST_INTER_NO_COEFF         0
 #define MOST_INTER_NO_ALL_SMALL     0
@@ -186,11 +187,10 @@ extern "C" {
 #define HIGH_DIST_3                 0
 #define HIGH_DIST_4                 0
 #define HIGH_DIST_5                 0
-#define HIGH_DIST_6                 0
+#define HIGH_DIST_6                 1
 #endif 
 #define DETECT_HIGH_INTRA_PIC       0
 #endif
-#define DISABLE_NSQ_BELOW_16x16     0
 #define DISABLE_TXT                 0
 #define DISABLE_NSQ_BELOW_326x32    0
 #define INTER_CASE_CLASSIFIER       0
@@ -205,6 +205,8 @@ extern "C" {
 #if PART_RANK
 #define NUM_PAR_TO_ALLOW            2
 #endif
+#define DISABLE_NSQ_BELOW_16x16     0
+#define SQ_WEIGHT_75                0
 #endif
 
 // END  BEYOND_CS2 /////////////////////////////////////////////////////////

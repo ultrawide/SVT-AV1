@@ -1726,6 +1726,9 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
 #else
     context_ptr->md_disallow_nsq = pcs_ptr->parent_pcs_ptr->disallow_nsq;
 #endif
+#if DISALLOW_NSQ_BELOW16_SQWEIGHT75
+    context_ptr->disallow_all_nsq_blocks_below_16x16 = pcs_ptr->parent_pcs_ptr->disallow_all_nsq_blocks_below_16x16;
+#endif
     // Set the full loop escape level
     // Level                Settings
     // 0                    Off
@@ -2484,7 +2487,9 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
             else
                 context_ptr->sq_weight =
                 sequence_control_set_ptr->static_config.sq_weight - 5;
-
+#if SQ_WEIGHT_75
+    context_ptr->sq_weight = 75;
+#endif
     // nsq_hv_level  needs sq_weight to be ON
     // 0: OFF
     // 1: ON 10% + skip HA/HB/H4  or skip VA/VB/V4
