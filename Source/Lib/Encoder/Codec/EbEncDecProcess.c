@@ -4554,6 +4554,24 @@ static uint8_t get_sb_class(
     uint64_t dist_sum = (sb_width * sb_height * 80);
 #else
     uint64_t dist_sum = (sb_width * sb_height * 100);
+#if HIGH_DIST_0
+    dist_sum = (sb_width * sb_height * 20);
+#endif
+#if HIGH_DIST_1
+    dist_sum = (sb_width * sb_height * 50);
+#endif
+#if HIGH_DIST_2
+    dist_sum = (sb_width * sb_height * 70);
+#endif
+#if HIGH_DIST_3
+    dist_sum = (sb_width * sb_height * 100);
+#endif
+#if HIGH_DIST_4
+    dist_sum = (sb_width * sb_height * 130);
+#endif
+#if HIGH_DIST_5
+    dist_sum = (sb_width * sb_height * 150);
+#endif
 #endif
     uint64_t high_cost_th = RDCOST(full_lambda, 16, dist_sum);
 
@@ -4572,6 +4590,27 @@ static uint8_t get_sb_class(
         is_high_comp && most_blocks_are_intra == INTER_MODE ? 1 : 0;
     uint8_t most_blocks_are_large_sizes = ((total_block - small_block_size_cnt) * 100) > (70 * total_block) ? 1 : 0;
     uint8_t most_blocks_have_nocoeff = ((total_block - has_coeff_sb) * 100) > (70 * total_block) ? 1 : 0;
+
+#if DETECT_HIGH_INTRA_PIC
+    // DeriveZeroLumaCbf
+    EbBool high_intra_ref = EB_FALSE;
+    EbBool check_zero_luma_cbf = EB_FALSE;
+    if (!pcs_ptr->parent_pcs_ptr->is_used_as_reference_flag) {
+        if (pcs_ptr->slice_type == B_SLICE) {
+            EbReferenceObject *ref_obj_l0 =
+                (EbReferenceObject *)pcs_ptr->ref_pic_ptr_array[REF_LIST_0][0]->object_ptr;
+            EbReferenceObject *ref_obj_l1 =
+                (EbReferenceObject *)pcs_ptr->ref_pic_ptr_array[REF_LIST_1][0]->object_ptr;
+            uint32_t const thresh = 30;
+
+            if ((ref_obj_l0->tmp_layer_idx == 0 && ref_obj_l0->intra_coded_area > thresh) ||
+                (ref_obj_l1->tmp_layer_idx == 0 && ref_obj_l1->intra_coded_area > thresh))
+                high_intra_ref = EB_TRUE;
+
+            printf("high_intra_ref\t%d\t%d\t%d\n", high_intra_ref,ref_obj_l0->intra_coded_area,ref_obj_l1->intra_coded_area);
+        }
+    }
+#endif
 #if LOW_COMP
 #if MOST_INTER
     is_high_comp = most_blocks_are_intra == INTER_MODE ? 3 : 0;
@@ -4592,6 +4631,10 @@ static uint8_t get_sb_class(
 #endif
 #if INTRA_CASE_CLASSIFIER
     is_high_comp = is_high_comp == 2 ? 2 : 0;
+#endif
+
+#if HIGH_DIST_0 || HIGH_DIST_1 || HIGH_DIST_2 || HIGH_DIST_3 || HIGH_DIST_4 || HIGH_DIST_5
+     is_high_comp = high_cost_sb ? 3 : 0;
 #endif
    /* printf("temLayer%d\t,%llu\t,%llu\t,%u\t,%u\t,%i,\t%llu,\t%llu\t,%u\t,%u\t%i\n ",
         pcs_ptr->temporal_layer_index,
@@ -5480,13 +5523,19 @@ void *enc_dec_kernel(void *input_ptr) {
                     av1_encode_pass(
                         scs_ptr, pcs_ptr, sb_ptr, sb_index, sb_origin_x, sb_origin_y, context_ptr);
 #endif
-
+#if DETECT_HIGH_INTRA_PIC
+                    uint8_t sb_size = scs_ptr->seq_header.sb_size == BLOCK_128X128 ? 128 : 64;
+#endif
                     context_ptr->coded_sb_count++;
                     if (pcs_ptr->parent_pcs_ptr->reference_picture_wrapper_ptr != NULL)
                         ((EbReferenceObject *)
                              pcs_ptr->parent_pcs_ptr->reference_picture_wrapper_ptr->object_ptr)
                             ->intra_coded_area_sb[sb_index] = (uint8_t)(
+#if DETECT_HIGH_INTRA_PIC
+                             (100 * context_ptr->intra_coded_area_sb[sb_index]) / (sb_size * sb_size));
+#else
                             (100 * context_ptr->intra_coded_area_sb[sb_index]) / (64 * 64));
+#endif
                 }
                 x_sb_start_index = (x_sb_start_index > 0) ? x_sb_start_index - 1 : 0;
             }

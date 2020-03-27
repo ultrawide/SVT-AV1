@@ -148,7 +148,7 @@ extern "C" {
 #define NEAREST_NEAR_REF_MASKING 1
 #define PRED_ME_REF_MASKING 1
 #endif
-#define NSQ_MD_SIGNAL    1
+#define NSQ_MD_SIGNAL               1
 #define SB_CLASSIFIER               0
 #if SB_CLASSIFIER  
 #define SB_CLASSIFIER_INF           1
@@ -180,7 +180,14 @@ extern "C" {
 #define MOST_INTER_NO_COEFF         0
 #define MOST_INTER_NO_ALL_SMALL     0
 #define MOST_INTER_NO_HIGH_COST     0
+#define HIGH_DIST_0                 0
+#define HIGH_DIST_1                 0
+#define HIGH_DIST_2                 0
+#define HIGH_DIST_3                 0
+#define HIGH_DIST_4                 0
+#define HIGH_DIST_5                 0
 #endif 
+#define DETECT_HIGH_INTRA_PIC       0
 #endif
 #define DISABLE_NSQ_BELOW_16x16     0
 #define DISABLE_TXT                 0
