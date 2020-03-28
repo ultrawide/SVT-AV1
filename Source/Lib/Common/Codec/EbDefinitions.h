@@ -149,6 +149,7 @@ extern "C" {
 #define PRED_ME_REF_MASKING 1
 #endif
 #define NSQ_MD_SIGNAL               1
+#define DISALLOW_NSQ_BELOW16_SIGNAL 1
 #define SB_CLASSIFIER               0
 #if SB_CLASSIFIER  
 #define SB_CLASSIFIER_INF           1
@@ -176,7 +177,8 @@ extern "C" {
 #define LOW_COMP 0
 #if LOW_COMP
 #define DISALLOW_NSQ_LOW_COMP_SB    0
-#define DISALLOW_NSQ_BELOW16_SQWEIGHT75    1
+#define DISALLOW_NSQ_BELOW16_SQWEIGHT75    0
+#define SQWEIGHT50                  1
 #define MOST_INTER                  0
 #define MOST_INTER_NO_COEFF         0
 #define MOST_INTER_NO_ALL_SMALL     0
@@ -188,6 +190,8 @@ extern "C" {
 #define HIGH_DIST_4                 0
 #define HIGH_DIST_5                 0
 #define HIGH_DIST_6                 1
+#define HIGHER_TH10                 0
+#define LOWER_TH10                  0
 #endif 
 #define DETECT_HIGH_INTRA_PIC       0
 #endif
@@ -207,6 +211,8 @@ extern "C" {
 #endif
 #define DISABLE_NSQ_BELOW_16x16     0
 #define SQ_WEIGHT_75                0
+#define SQ_WEIGHT_50                0
+#define SQ_WEIGHT_25                0
 #endif
 
 // END  BEYOND_CS2 /////////////////////////////////////////////////////////

@@ -1726,7 +1726,7 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
 #else
     context_ptr->md_disallow_nsq = pcs_ptr->parent_pcs_ptr->disallow_nsq;
 #endif
-#if DISALLOW_NSQ_BELOW16_SQWEIGHT75
+#if DISALLOW_NSQ_BELOW16_SIGNAL
     context_ptr->disallow_all_nsq_blocks_below_16x16 = pcs_ptr->parent_pcs_ptr->disallow_all_nsq_blocks_below_16x16;
 #endif
     // Set the full loop escape level
@@ -2489,6 +2489,12 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
                 sequence_control_set_ptr->static_config.sq_weight - 5;
 #if SQ_WEIGHT_75
     context_ptr->sq_weight = 75;
+#endif
+#if SQ_WEIGHT_50
+    context_ptr->sq_weight = 50;
+#endif
+#if SQ_WEIGHT_25
+    context_ptr->sq_weight = 25;
 #endif
     // nsq_hv_level  needs sq_weight to be ON
     // 0: OFF
@@ -4680,7 +4686,7 @@ static uint8_t get_sb_class(
 #endif
 
 #if HIGH_DIST_0 || HIGH_DIST_1 || HIGH_DIST_2 || HIGH_DIST_3 || HIGH_DIST_4 || HIGH_DIST_5 || HIGH_DIST_6
-     is_high_comp = high_cost_sb ? 3 : 0;
+     is_high_comp = high_cost_sb ? 3 : 4;
 #endif
    /* printf("temLayer%d\t,%llu\t,%llu\t,%u\t,%u\t,%i,\t%llu,\t%llu\t,%u\t,%u\t%i\n ",
         pcs_ptr->temporal_layer_index,

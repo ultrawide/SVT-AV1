@@ -8756,7 +8756,7 @@ void interintra_class_pruning_3(ModeDecisionContext *context_ptr, uint64_t best_
 #if DEPTH_PART_CLEAN_UP
 EbBool is_block_allowed(PictureControlSet *pcs_ptr, ModeDecisionContext *context_ptr) {
     if((context_ptr->blk_geom->sq_size <=  8 && context_ptr->blk_geom->shape != PART_N && pcs_ptr->parent_pcs_ptr->disallow_all_nsq_blocks_below_8x8) ||
-#if DISALLOW_NSQ_BELOW16_SQWEIGHT75
+#if DISALLOW_NSQ_BELOW16_SIGNAL
      (context_ptr->blk_geom->sq_size <= 16 && context_ptr->blk_geom->shape != PART_N && context_ptr->disallow_all_nsq_blocks_below_16x16) ||
 #else
        (context_ptr->blk_geom->sq_size <= 16 && context_ptr->blk_geom->shape != PART_N && pcs_ptr->parent_pcs_ptr->disallow_all_nsq_blocks_below_16x16) ||
@@ -9697,7 +9697,7 @@ void md_adjust_feature_mode_sb(ModeDecisionContext *context_ptr,
      feature_ctrl->default_md_disallow_nsq = context_ptr->md_disallow_nsq;
      feature_ctrl->default_tx_search_level = context_ptr->tx_search_level; 
 #endif
-#if DISALLOW_NSQ_BELOW16_SQWEIGHT75
+#if DISALLOW_NSQ_BELOW16_SQWEIGHT75 || SQWEIGHT50
      feature_ctrl->default_disallow_all_nsq_blocks_below_16x16 = context_ptr->disallow_all_nsq_blocks_below_16x16;
      feature_ctrl->default_sq_weight = context_ptr->sq_weight;
 #endif
@@ -9739,6 +9739,20 @@ void md_adjust_feature_mode_sb(ModeDecisionContext *context_ptr,
             context_ptr->sq_weight = 75;
         }
 #endif
+#if SQWEIGHT50
+#if HIGHER_TH10
+        if (context_ptr->high_complex_sb == 3) {
+            context_ptr->disallow_all_nsq_blocks_below_16x16 = 1;
+            context_ptr->sq_weight = 50;
+        }
+#endif
+#if LOWER_TH10
+        if (context_ptr->high_complex_sb == 4) {
+            context_ptr->disallow_all_nsq_blocks_below_16x16 = 1;
+            context_ptr->sq_weight = 50;
+        }
+#endif
+#endif
     }
 }
 void md_reset_feature_mode_sb(ModeDecisionContext *context_ptr,
@@ -9759,7 +9773,7 @@ void md_reset_feature_mode_sb(ModeDecisionContext *context_ptr,
      context_ptr->md_disallow_nsq = feature_ctrl->default_md_disallow_nsq;
      context_ptr->tx_search_level = feature_ctrl->default_tx_search_level; 
 #endif
-#if DISALLOW_NSQ_BELOW16_SQWEIGHT75
+#if DISALLOW_NSQ_BELOW16_SQWEIGHT75 || SQWEIGHT50
      context_ptr->disallow_all_nsq_blocks_below_16x16 = feature_ctrl->default_disallow_all_nsq_blocks_below_16x16;
      context_ptr->sq_weight = feature_ctrl->default_sq_weight;
 #endif
@@ -10272,7 +10286,7 @@ EB_EXTERN EbErrorType mode_decision_sb(SequenceControlSet *scs_ptr, PictureContr
                 depth_cost[scs_ptr->static_config.super_block_size == 128
                                ? context_ptr->blk_geom->depth
                                : context_ptr->blk_geom->depth + 1] += nsq_cost[nsq_shape_table[0]];
-                if (!context_ptr->md_disallow_nsq && context_ptr->skip_depth && scs_ptr->sb_geom[sb_addr].is_complete_sb) {
+                if (!context_ptr->md_disallow_nsq && !context_ptr->disallow_all_nsq_blocks_below_16x16 && context_ptr->skip_depth && scs_ptr->sb_geom[sb_addr].is_complete_sb) {
                     if (context_ptr->pd_pass > PD_PASS_1) {
                         uint64_t sq_cost = nsq_cost[0]; // sq cost
                         uint64_t best_nsq_cost = MAX_CU_COST;

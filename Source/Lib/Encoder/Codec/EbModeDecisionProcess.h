@@ -199,7 +199,7 @@ typedef struct FeatureCtrl {
      uint8_t default_md_disallow_nsq;
      uint8_t default_tx_search_level;
 #endif
-#if DISALLOW_NSQ_BELOW16_SQWEIGHT75
+#if DISALLOW_NSQ_BELOW16_SQWEIGHT75 || SQWEIGHT50
      uint8_t default_disallow_all_nsq_blocks_below_16x16;
      uint8_t default_sq_weight;
 #endif
@@ -542,7 +542,7 @@ typedef struct ModeDecisionContext {
 #if PART_RANK
     Part nsq_shape_table[NUMBER_OF_SHAPES];
 #endif
-#if DISALLOW_NSQ_BELOW16_SQWEIGHT75
+#if DISALLOW_NSQ_BELOW16_SIGNAL
      uint8_t disallow_all_nsq_blocks_below_16x16;
 #endif
 } ModeDecisionContext;
