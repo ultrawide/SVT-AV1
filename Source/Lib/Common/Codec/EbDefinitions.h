@@ -213,6 +213,7 @@ extern "C" {
 #define SQ_WEIGHT_75                0
 #define SQ_WEIGHT_50                0
 #define SQ_WEIGHT_25                0
+#define DISABLE_TXT_NRF             0
 #endif
 
 // END  BEYOND_CS2 /////////////////////////////////////////////////////////

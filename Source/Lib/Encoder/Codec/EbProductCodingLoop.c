@@ -7077,6 +7077,9 @@ void perform_tx_partitioning(ModeDecisionCandidateBuffer *candidate_buffer,
 #if DISABLE_TXT
                 tx_search_skip_flag = 1;
 #endif
+#if DISABLE_TXT_NRF
+                tx_search_skip_flag = !pcs_ptr->parent_pcs_ptr->is_used_as_reference_flag? 0 : tx_search_skip_flag;
+#endif
                 if (!tx_search_skip_flag) {
                     tx_type_search(pcs_ptr, context_ptr, tx_candidate_buffer, qp);
                 }
