@@ -246,6 +246,12 @@ typedef struct PictureControlSet {
     uint8_t           tile_size_bytes_minus_1;
     EbHandle intra_mutex;
     uint32_t intra_coded_area;
+#if DETECT_HIGH_COEF_PIC
+    uint32_t coef_coded_area;
+#endif
+#if DETECT_HIGH_SMALLBLOCK_PIC
+    uint32_t below32_coded_area;
+#endif
     uint32_t tot_seg_searched_cdef;
     EbHandle cdef_search_mutex;
 

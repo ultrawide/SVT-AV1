@@ -2820,6 +2820,9 @@ EB_EXTERN void av1_encode_pass(SequenceControlSet *scs_ptr, PictureControlSet *p
 #endif
                 }
 
+#if DETECT_HIGH_SMALLBLOCK_PIC
+     context_ptr->tot_below32_coded_area += (blk_geom->bwidth <= 32 && blk_geom->bheight <= 32) ? blk_geom->bwidth * blk_geom->bheight : 0;
+#endif
                 if (blk_ptr->prediction_mode_flag == INTRA_MODE) {
                     context_ptr->is_inter = blk_ptr->av1xd->use_intrabc;
                     context_ptr->tot_intra_coded_area += blk_geom->bwidth * blk_geom->bheight;
@@ -3308,6 +3311,9 @@ EB_EXTERN void av1_encode_pass(SequenceControlSet *scs_ptr, PictureControlSet *p
                                                               : PICTURE_BUFFER_DESC_LUMA_MASK,
                                 is_16bit);
                         }
+#if DETECT_HIGH_COEF_PIC
+                    context_ptr->tot_coef_coded_area += blk_ptr->block_has_coeff ? blk_geom->bwidth * blk_geom->bheight : 0;
+#endif
                     }
 
                     // Inter
@@ -4672,6 +4678,9 @@ EB_EXTERN void av1_encode_pass(SequenceControlSet *scs_ptr, PictureControlSet *p
                                 eb_release_mutex(ref_obj_1->referenced_area_mutex);
                             }
                         }
+#if DETECT_HIGH_COEF_PIC
+                    context_ptr->tot_coef_coded_area += blk_ptr->block_has_coeff ? blk_geom->bwidth * blk_geom->bheight : 0;
+#endif
                     }
                     else {
                         CHECK_REPORT_ERROR_NC(encode_context_ptr->app_callback_ptr,

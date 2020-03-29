@@ -1635,6 +1635,12 @@ void *mode_decision_configuration_kernel(void *input_ptr) {
         context_ptr->qp = pcs_ptr->picture_qp;
         pcs_ptr->parent_pcs_ptr->average_qp = 0;
         pcs_ptr->intra_coded_area           = 0;
+#if DETECT_HIGH_COEF_PIC
+        pcs_ptr->coef_coded_area = 0;
+#endif
+#if DETECT_HIGH_SMALLBLOCK_PIC
+        pcs_ptr->below32_coded_area = 0;
+#endif
         // Compute Tc, and Beta offsets for a given picture
         // Set reference cdef strength
         set_reference_cdef_strength(pcs_ptr);

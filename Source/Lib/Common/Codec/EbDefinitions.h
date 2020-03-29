@@ -193,7 +193,6 @@ extern "C" {
 #define HIGHER_TH10                 0
 #define LOWER_TH10                  0
 #endif 
-#define DETECT_HIGH_INTRA_PIC       0
 #endif
 #define DISABLE_TXT                 0
 #define DISABLE_NSQ_BELOW_326x32    0
@@ -214,6 +213,16 @@ extern "C" {
 #define SQ_WEIGHT_50                0
 #define SQ_WEIGHT_25                0
 #define DISABLE_TXT_NRF             0
+#define DETECT_NASTY_CLIPS          0
+#if DETECT_NASTY_CLIPS
+#define DETECT_HIGH_INTRA_PIC         1
+#define DETECT_HIGH_COEF_PIC          1
+#define DETECT_HIGH_SMALLBLOCK_PIC    1
+#define DISABLE_NSQ_FOR_HIGH_COMP_PIC 1
+#define INTRA_TH  30
+#define COEFF_TH  90
+#define SMALL_BLK_TH  60
+#endif
 #endif
 
 // END  BEYOND_CS2 /////////////////////////////////////////////////////////

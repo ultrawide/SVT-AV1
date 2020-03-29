@@ -545,6 +545,9 @@ typedef struct ModeDecisionContext {
 #if DISALLOW_NSQ_BELOW16_SIGNAL
      uint8_t disallow_all_nsq_blocks_below_16x16;
 #endif
+#if DETECT_HIGH_INTRA_PIC || DETECT_HIGH_COEF_PIC || DETECT_HIGH_SMALLBLOCK_PIC
+     uint8_t pic_class;
+#endif
 } ModeDecisionContext;
 
 
