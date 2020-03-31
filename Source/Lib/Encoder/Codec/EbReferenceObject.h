@@ -39,6 +39,12 @@ typedef struct EbReferenceObject {
     StatStruct           stat_struct;
     EbHandle             referenced_area_mutex;
     uint64_t             referenced_area_avg;
+#if DETECT_HIGH_COEF_PIC
+	uint8_t coef_coded_area;
+#endif
+#if DETECT_HIGH_SMALLBLOCK_PIC
+	uint8_t below32_coded_area;
+#endif
 } EbReferenceObject;
 
 typedef struct EbReferenceObjectDescInitData {

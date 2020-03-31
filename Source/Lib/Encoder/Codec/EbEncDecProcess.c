@@ -1262,11 +1262,33 @@ void copy_statistics_to_ref_obj_ect(PictureControlSet *pcs_ptr, SequenceControlS
     pcs_ptr->intra_coded_area =
         (100 * pcs_ptr->intra_coded_area) /
         (pcs_ptr->parent_pcs_ptr->aligned_width * pcs_ptr->parent_pcs_ptr->aligned_height);
+#if DETECT_HIGH_COEF_PIC
+	pcs_ptr->coef_coded_area =
+		(100 * pcs_ptr->coef_coded_area) /
+		(pcs_ptr->parent_pcs_ptr->aligned_width * pcs_ptr->parent_pcs_ptr->aligned_height);
+#endif
+#if DETECT_HIGH_SMALLBLOCK_PIC
+	pcs_ptr->below32_coded_area =
+		(100 * pcs_ptr->below32_coded_area) /
+		(pcs_ptr->parent_pcs_ptr->aligned_width * pcs_ptr->parent_pcs_ptr->aligned_height);
+#endif
     if (pcs_ptr->slice_type == I_SLICE) pcs_ptr->intra_coded_area = 0;
-
+#if DETECT_HIGH_COEF_PIC
+	if (pcs_ptr->slice_type == I_SLICE) pcs_ptr->coef_coded_area = 0;
+#endif
+#if DETECT_HIGH_SMALLBLOCK_PIC
+	if (pcs_ptr->slice_type == I_SLICE) pcs_ptr->below32_coded_area = 0;
+#endif
     ((EbReferenceObject *)pcs_ptr->parent_pcs_ptr->reference_picture_wrapper_ptr->object_ptr)
         ->intra_coded_area = (uint8_t)(pcs_ptr->intra_coded_area);
-
+#if DETECT_HIGH_COEF_PIC
+	((EbReferenceObject *)pcs_ptr->parent_pcs_ptr->reference_picture_wrapper_ptr->object_ptr)
+		->coef_coded_area = (uint8_t)(pcs_ptr->coef_coded_area);
+#endif
+#if DETECT_HIGH_SMALLBLOCK_PIC
+	((EbReferenceObject *)pcs_ptr->parent_pcs_ptr->reference_picture_wrapper_ptr->object_ptr)
+		->below32_coded_area = (uint8_t)(pcs_ptr->below32_coded_area);
+#endif
     uint32_t sb_index;
     for (sb_index = 0; sb_index < pcs_ptr->sb_total_count; ++sb_index)
         ((EbReferenceObject *)pcs_ptr->parent_pcs_ptr->reference_picture_wrapper_ptr->object_ptr)
@@ -1720,6 +1742,11 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
         context_ptr->intra_chroma_search_follows_intra_luma_injection = 0;
 #endif
 #endif
+
+#if DISABLE_NSQ_FOR_HIGH_COMP_PIC
+	 context_ptr->md_disallow_nsq = context_ptr->pic_class == 2 ? 1 : pcs_ptr->parent_pcs_ptr->disallow_nsq;
+#endif
+
     // Set the full loop escape level
     // Level                Settings
     // 0                    Off
@@ -4884,6 +4911,73 @@ void build_starting_cand_block_array(SequenceControlSet *scs_ptr, PictureControl
     pcs_ptr->parent_pcs_ptr->average_qp = (uint8_t)pcs_ptr->parent_pcs_ptr->picture_qp;
 }
 #endif
+
+#if DETECT_HIGH_INTRA_PIC || DETECT_HIGH_COEF_PIC || DETECT_HIGH_SMALLBLOCK_PIC
+static int32_t th_qp_offset[64] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+									0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+									0, 0, 0, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20,
+									  30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30,
+									40, 40, 40, 40, 40, 40, 40, 40, 40, 40, 40, 40 };
+uint8_t get_pic_class(ModeDecisionContext *context_ptr, PictureControlSet * pcs_ptr,
+	SequenceControlSet *scs_ptr)
+{
+	uint8_t pic_class = 0;
+	EbBool high_intra_ref = EB_FALSE;
+#if DETECT_HIGH_COEF_PIC
+	EbBool high_coef_ref = EB_FALSE;
+#endif
+#if DETECT_HIGH_SMALLBLOCK_PIC
+	EbBool high_below32_ref = EB_FALSE;
+#endif
+	int8_t base_layer_l0_ref_idx = -1;
+	int8_t base_layer_l1_ref_idx = -1;
+	if (pcs_ptr->parent_pcs_ptr->temporal_layer_index > 0) {
+		if (pcs_ptr->slice_type == B_SLICE) {
+			for (uint8_t ref_idx = 0; ref_idx < pcs_ptr->parent_pcs_ptr->ref_list0_count_try; ref_idx++) {
+				EbReferenceObject *ref_obj_l0 =
+					(EbReferenceObject *)pcs_ptr->ref_pic_ptr_array[REF_LIST_0][ref_idx]->object_ptr;
+				base_layer_l0_ref_idx = ref_obj_l0->tmp_layer_idx == 0 && ref_obj_l0->frame_type != I_SLICE ? ref_idx : base_layer_l0_ref_idx;
+			}
+			for (uint8_t ref_idx = 0; ref_idx < pcs_ptr->parent_pcs_ptr->ref_list1_count_try; ref_idx++) {
+				EbReferenceObject *ref_obj_l1 =
+					(EbReferenceObject *)pcs_ptr->ref_pic_ptr_array[REF_LIST_1][ref_idx]->object_ptr;
+				base_layer_l1_ref_idx = ref_obj_l1->tmp_layer_idx == 0 && ref_obj_l1->frame_type != I_SLICE ? ref_idx : base_layer_l1_ref_idx;
+			}
+			if (base_layer_l0_ref_idx > -1) {
+				EbReferenceObject *ref_obj_l0 =
+					(EbReferenceObject *)pcs_ptr->ref_pic_ptr_array[REF_LIST_0][base_layer_l0_ref_idx]->object_ptr;
+				uint32_t const intra_thresh = INTRA_TH + th_qp_offset[scs_ptr->static_config.qp];
+				high_intra_ref = ref_obj_l0->intra_coded_area > intra_thresh ? EB_TRUE : EB_FALSE;
+
+				uint32_t const coef_thresh = COEFF_TH + th_qp_offset[scs_ptr->static_config.qp];
+				high_coef_ref = ref_obj_l0->coef_coded_area > coef_thresh ? EB_TRUE : EB_FALSE;
+
+				uint32_t const below32_thresh = SMALL_BLK_TH + th_qp_offset[scs_ptr->static_config.qp];
+				high_below32_ref = ref_obj_l0->below32_coded_area > below32_thresh ? EB_TRUE : EB_FALSE;
+			}
+
+			if (base_layer_l1_ref_idx > -1) {
+				EbReferenceObject *ref_obj_l1 =
+					(EbReferenceObject *)pcs_ptr->ref_pic_ptr_array[REF_LIST_1][base_layer_l1_ref_idx]->object_ptr;
+				uint32_t const intra_thresh = INTRA_TH + th_qp_offset[scs_ptr->static_config.qp];
+				high_intra_ref = ref_obj_l1->intra_coded_area > intra_thresh ? EB_TRUE : high_intra_ref;
+
+				uint32_t const coef_thresh = COEFF_TH + th_qp_offset[scs_ptr->static_config.qp];
+				high_coef_ref = ref_obj_l1->coef_coded_area > coef_thresh ? EB_TRUE : high_coef_ref;
+
+				uint32_t const below32_thresh = SMALL_BLK_TH + th_qp_offset[scs_ptr->static_config.qp];
+				high_below32_ref = ref_obj_l1->below32_coded_area > below32_thresh ? EB_TRUE : high_below32_ref;
+			}
+
+			if (high_intra_ref && high_coef_ref && high_below32_ref)
+				pic_class = 2;
+			else
+				pic_class = 0;
+		}
+	}
+	return pic_class;
+}
+#endif
 /* EncDec (Encode Decode) Kernel */
 /*********************************************************************************
 *
@@ -4996,6 +5090,17 @@ void *enc_dec_kernel(void *input_ptr) {
         end_of_row_flag    = EB_FALSE;
         sb_row_index_start = sb_row_index_count = 0;
         context_ptr->tot_intra_coded_area       = 0;
+
+#if DETECT_HIGH_COEF_PIC
+		context_ptr->tot_coef_coded_area = 0;
+#endif
+#if DETECT_HIGH_SMALLBLOCK_PIC
+		context_ptr->tot_below32_coded_area = 0;
+#endif
+#if DETECT_HIGH_INTRA_PIC || DETECT_HIGH_COEF_PIC || DETECT_HIGH_SMALLBLOCK_PIC
+		context_ptr->md_context->pic_class = get_pic_class(context_ptr->md_context, pcs_ptr,
+			scs_ptr);
+#endif
 
         // Segment-loop
         while (assign_enc_dec_segments(segments_ptr,
@@ -5393,6 +5498,12 @@ void *enc_dec_kernel(void *input_ptr) {
 
         eb_block_on_mutex(pcs_ptr->intra_mutex);
         pcs_ptr->intra_coded_area += (uint32_t)context_ptr->tot_intra_coded_area;
+#if DETECT_HIGH_COEF_PIC
+		pcs_ptr->coef_coded_area += (uint32_t)context_ptr->tot_coef_coded_area;
+#endif
+#if DETECT_HIGH_SMALLBLOCK_PIC
+		pcs_ptr->below32_coded_area += (uint32_t)context_ptr->tot_below32_coded_area;
+#endif
         pcs_ptr->enc_dec_coded_sb_count += (uint32_t)context_ptr->coded_sb_count;
         last_sb_flag = (pcs_ptr->sb_total_count_pix == pcs_ptr->enc_dec_coded_sb_count);
         eb_release_mutex(pcs_ptr->intra_mutex);

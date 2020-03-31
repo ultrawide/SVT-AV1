@@ -69,6 +69,12 @@ typedef struct EncDecContext {
     uint32_t      bit_depth;
     EbColorFormat color_format;
     uint64_t      tot_intra_coded_area;
+#if DETECT_HIGH_COEF_PIC
+	uint64_t      tot_coef_coded_area;
+#endif
+#if DETECT_HIGH_SMALLBLOCK_PIC
+	uint64_t      tot_below32_coded_area;
+#endif
     uint8_t       intra_coded_area_sb
         [MAX_NUMBER_OF_TREEBLOCKS_PER_PICTURE]; //percentage of intra coded area 0-100%
     uint16_t qp_index;
