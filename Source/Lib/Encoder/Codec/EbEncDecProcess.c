@@ -5080,6 +5080,11 @@ void build_starting_cand_block_array(SequenceControlSet *scs_ptr, PictureControl
 }
 #endif
 #if DETECT_HIGH_INTRA_PIC || DETECT_HIGH_COEF_PIC || DETECT_HIGH_SMALLBLOCK_PIC
+static int32_t th_qp_offset[64] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                                    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                                    0, 0, 0, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20,
+                                      30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30,
+                                    40, 40, 40, 40, 40, 40, 40, 40, 40, 40, 40, 40 };
 uint8_t get_pic_class( ModeDecisionContext *context_ptr, PictureControlSet * pcs_ptr,
     SequenceControlSet *scs_ptr)
 {
@@ -5108,30 +5113,26 @@ uint8_t get_pic_class( ModeDecisionContext *context_ptr, PictureControlSet * pcs
             if (base_layer_l0_ref_idx > -1) {
                 EbReferenceObject *ref_obj_l0 =
                     (EbReferenceObject *)pcs_ptr->ref_pic_ptr_array[REF_LIST_0][base_layer_l0_ref_idx]->object_ptr;
-                uint32_t const intra_thresh = INTRA_TH;
+                uint32_t const intra_thresh = INTRA_TH + th_qp_offset[scs_ptr->static_config.qp];
                 high_intra_ref = ref_obj_l0->intra_coded_area > intra_thresh ? EB_TRUE : EB_FALSE;
 
-                uint32_t const coef_thresh = COEFF_TH;
+                uint32_t const coef_thresh = COEFF_TH + th_qp_offset[scs_ptr->static_config.qp];
                 high_coef_ref = ref_obj_l0->coef_coded_area > coef_thresh ? EB_TRUE : EB_FALSE;
 
-                uint32_t const below32_thresh = SMALL_BLK_TH;
+                uint32_t const below32_thresh = SMALL_BLK_TH + th_qp_offset[scs_ptr->static_config.qp];
                 high_below32_ref = ref_obj_l0->below32_coded_area > below32_thresh ? EB_TRUE : EB_FALSE;
-
-               /* printf("high_intra_ref0\t%d\t%d\t,high_coef_ref\t%d\t%d\t,high_small_ref\t%d\t%d\n", high_intra_ref, ref_obj_l0->intra_coded_area, 
-                    high_coef_ref, ref_obj_l0->coef_coded_area, 
-                    high_below32_ref, ref_obj_l0->below32_coded_area);*/
             }
 
             if (base_layer_l1_ref_idx > -1) {
                 EbReferenceObject *ref_obj_l1 =
                     (EbReferenceObject *)pcs_ptr->ref_pic_ptr_array[REF_LIST_1][base_layer_l1_ref_idx]->object_ptr;
-                uint32_t const intra_thresh = INTRA_TH;
+                uint32_t const intra_thresh = INTRA_TH + th_qp_offset[scs_ptr->static_config.qp];
                 high_intra_ref = ref_obj_l1->intra_coded_area > intra_thresh ? EB_TRUE : high_intra_ref;
 
-                uint32_t const coef_thresh = COEFF_TH;
+                uint32_t const coef_thresh = COEFF_TH + th_qp_offset[scs_ptr->static_config.qp];
                 high_coef_ref = ref_obj_l1->coef_coded_area > coef_thresh ? EB_TRUE : high_coef_ref;
 
-                uint32_t const below32_thresh = SMALL_BLK_TH;
+                uint32_t const below32_thresh = SMALL_BLK_TH + th_qp_offset[scs_ptr->static_config.qp];
                 high_below32_ref = ref_obj_l1->below32_coded_area > below32_thresh ? EB_TRUE : high_below32_ref;
 
                /* printf("high_intra_ref1\t%d\t%d\t,high_coef_ref\t%d\t%d\t,high_small_ref\t%d\t%d\n", high_intra_ref, ref_obj_l1->intra_coded_area, 
@@ -5146,7 +5147,7 @@ uint8_t get_pic_class( ModeDecisionContext *context_ptr, PictureControlSet * pcs
         }
     }
 
-    //printf("pic_class %d\t%d\t%d\t%d\n", high_intra_ref, high_coef_ref, high_below32_ref, pic_class);
+    //printf("pic_class %d\t%d\t%d\t%d\t%d\n", scs_ptr->static_config.qp, high_intra_ref, high_coef_ref, high_below32_ref, pic_class);
     return pic_class;
 }
 #endif

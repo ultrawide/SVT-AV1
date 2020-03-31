@@ -219,9 +219,9 @@ extern "C" {
 #define DETECT_HIGH_COEF_PIC          1
 #define DETECT_HIGH_SMALLBLOCK_PIC    1
 #define DISABLE_NSQ_FOR_HIGH_COMP_PIC 1
-#define INTRA_TH  30
+#define INTRA_TH  50
 #define COEFF_TH  90
-#define SMALL_BLK_TH  60
+#define SMALL_BLK_TH  80
 #endif
 #endif
 
