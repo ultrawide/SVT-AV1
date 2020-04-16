@@ -250,6 +250,7 @@ extern "C" {
 #define REFACTOR_SIGNALS 1
 #define FIX_CFL_OFF 1
 #endif
+#define PR_1210 1
 // END  MAY2020 /////////////////////////////////////////////////////////
 
 #define COMMON_16BIT 1 // 16Bit pipeline support for common

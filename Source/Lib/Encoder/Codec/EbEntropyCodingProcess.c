@@ -397,6 +397,9 @@ void *entropy_coding_kernel(void *input_ptr) {
                                      cm->tiles_info.tile_col_start_mi[tile_col]) >>
                                     scs_ptr->seq_header.sb_size_log2;
 
+#if PR_1210
+        EbBool frame_entropy_done = EB_FALSE;
+#endif
         {
             initial_process_call = EB_TRUE;
             y_sb_index           = rest_results_ptr->completed_sb_row_index_start;
@@ -561,6 +564,9 @@ void *entropy_coding_kernel(void *input_ptr) {
                                     eb_release_object(pcs_ptr->ref_pic_ptr_array[1][ref_idx]);
                             }
 
+#if PR_1210
+                            frame_entropy_done = EB_TRUE;
+#else
                             // Get Empty Entropy Coding Results
                             eb_get_empty_object(context_ptr->entropy_coding_output_fifo_ptr,
                                                 &entropy_coding_results_wrapper_ptr);
@@ -572,11 +578,29 @@ void *entropy_coding_kernel(void *input_ptr) {
 
                             // Post EntropyCoding Results
                             eb_post_full_object(entropy_coding_results_wrapper_ptr);
+#endif
                         }
                     } // End if(PictureCompleteFlag)
                 }
                 eb_release_mutex(pcs_ptr->entropy_coding_info[tile_idx]->entropy_coding_mutex);
             }
+#if PR_1210
+            // Move the post here.
+            // In some cases, PAK ends fast, pcs will be released before we quit the while-loop
+            if (frame_entropy_done) {
+                // Get Empty Entropy Coding Results
+                eb_get_empty_object(context_ptr->entropy_coding_output_fifo_ptr,
+                        &entropy_coding_results_wrapper_ptr);
+                entropy_coding_results_ptr =
+                    (EntropyCodingResults *)
+                    entropy_coding_results_wrapper_ptr->object_ptr;
+                entropy_coding_results_ptr->pcs_wrapper_ptr =
+                    rest_results_ptr->pcs_wrapper_ptr;
+
+                // Post EntropyCoding Results
+                eb_post_full_object(entropy_coding_results_wrapper_ptr);
+            }
+#endif
         }
         // Release Mode Decision Results
         eb_release_object(rest_results_wrapper_ptr);
