@@ -323,7 +323,11 @@ typedef struct ModeDecisionContext {
     uint16_t         qp_index;
     uint64_t         three_quad_energy;
     uint32_t         txb_1d_offset;
+#if FIX_CFL_OFF_LOSSLESS
+    EbBool           uv_intra_comp_only;
+#else
     EbBool           uv_search_path;
+#endif
     UvPredictionMode best_uv_mode[UV_PAETH_PRED + 1][(MAX_ANGLE_DELTA << 1) + 1];
     int32_t          best_uv_angle[UV_PAETH_PRED + 1][(MAX_ANGLE_DELTA << 1) + 1];
     uint64_t         best_uv_cost[UV_PAETH_PRED + 1][(MAX_ANGLE_DELTA << 1) + 1];
@@ -469,6 +473,9 @@ typedef struct ModeDecisionContext {
     EbBool md_staging_skip_full_chroma;
     EbBool md_staging_skip_rdoq;
     EbBool md_staging_spatial_sse_full_loop;
+#if FIX_CFL_OFF
+    EbBool md_staging_perform_intra_chroma_pred;
+#endif
     DECLARE_ALIGNED(
         16, uint8_t,
         intrapred_buf[INTERINTRA_MODES][2 * 32 * 32]); //MAX block size for inter intra is 32x32

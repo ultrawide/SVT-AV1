@@ -950,7 +950,11 @@ EbErrorType eb_av1_intra_prediction_cl(
         uint8_t    left_neigh_array[64 * 2 + 1];
         PredictionMode mode;
         // Hsan: plane should be derived @ an earlier stage (e.g. @ the call of perform_fast_loop())
+#if FIX_CFL_OFF_LOSSLESS
+        int32_t start_plane = (md_context_ptr->uv_intra_comp_only) ? 1 : 0;
+#else
         int32_t start_plane = (md_context_ptr->uv_search_path) ? 1 : 0;
+#endif
 #if CLEAN_UP_SKIP_CHROMA_PRED_SIGNAL
         int32_t end_plane = (md_context_ptr->blk_geom->has_uv && md_context_ptr->chroma_level <= CHROMA_MODE_1 && !md_context_ptr->md_staging_skip_chroma_pred) ? (int)MAX_MB_PLANE : 1;
 #else
@@ -1028,7 +1032,11 @@ EbErrorType eb_av1_intra_prediction_cl(
         uint16_t    left_neigh_array[64 * 2 + 1];
         PredictionMode mode;
         // Hsan: plane should be derived @ an earlier stage (e.g. @ the call of perform_fast_loop())
+#if FIX_CFL_OFF_LOSSLESS
+        int32_t start_plane = (md_context_ptr->uv_intra_comp_only) ? 1 : 0;
+#else
         int32_t start_plane = (md_context_ptr->uv_search_path) ? 1 : 0;
+#endif
 #if CLEAN_UP_SKIP_CHROMA_PRED_SIGNAL
         int32_t end_plane = (md_context_ptr->blk_geom->has_uv && md_context_ptr->chroma_level <= CHROMA_MODE_1 && !md_context_ptr->md_staging_skip_chroma_pred) ? (int)MAX_MB_PLANE : 1;
 #else
