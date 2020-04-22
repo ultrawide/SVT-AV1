@@ -7954,9 +7954,9 @@ void md_stage_3(PictureControlSet *pcs_ptr, SuperBlock *sb_ptr, BlkStruct *blk_p
                                     : 0;
                         }
 #if FIX_CFL_OFF
-                        // If CFL OFF or not applicable, and intra_chroma_mode used @ md_stage_0() (first stage intra_mode) 
-                        // and the best independant intra mode (final stage intra_mode) are not matching then the chroma pred 
-                        // should be re-performed using best independant chroma pred 
+                        // If CFL OFF or not applicable, and intra_chroma_mode used @ md_stage_0() (first stage intra_mode)
+                        // and the best independant intra mode (final stage intra_mode) are not matching then the chroma pred
+                        // should be re-performed using best independant chroma pred
                         context_ptr->md_staging_perform_intra_chroma_pred = (candidate_ptr->intra_chroma_mode != intra_chroma_mode || candidate_ptr->angle_delta[PLANE_TYPE_UV] != angle_delta);
 
                         candidate_ptr->intra_chroma_mode = intra_chroma_mode;
