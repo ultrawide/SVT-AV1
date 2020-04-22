@@ -245,12 +245,10 @@ extern "C" {
 #endif
 #define M8_CLEAN_UP 1 // remove useless code: energy, full loop escape
 #endif
-#define CFL_OFF_FIX_CHROMA_LAST_STAGE 1 // Added the ability test CFL_OFF when independent chroma @ last stage
-#if CFL_OFF_FIX_CHROMA_LAST_STAGE
-#define REMOVE_CFL_CHECK 1
+#define FIX_CHROMA_LAST_STAGE 1 // Fix Tx Type, Predicted Samples, and Fast_Rate if chroma_mode change between first stage and last stage
+#if FIX_CHROMA_LAST_STAGE
+#define REFACTOR_SIGNALS 1
 #define FIX_CFL_OFF 1
-#define FIX_CFL_OFF_LOSSLESS 1
-#define TEST_DISABLE_CFL 1
 #endif
 // END  MAY2020 /////////////////////////////////////////////////////////
 

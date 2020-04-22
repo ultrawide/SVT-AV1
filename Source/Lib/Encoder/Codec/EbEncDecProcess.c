@@ -1921,10 +1921,7 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
 #endif
         context_ptr->md_disable_cfl = EB_TRUE;
 #endif
-#if TEST_DISABLE_CFL
-    context_ptr->md_disable_cfl = EB_TRUE;
-#endif
-#if !REMOVE_CFL_CHECK
+#if !REFACTOR_SIGNALS
     if (sequence_control_set_ptr->static_config.disable_cfl_flag == 1 && context_ptr->md_disable_cfl == EB_TRUE)
         context_ptr->chroma_at_last_md_stage = 0; // Indeprndent chroma search at last MD stage is not supported when CFL is off
 #endif

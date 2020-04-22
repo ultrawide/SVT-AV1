@@ -950,7 +950,7 @@ EbErrorType eb_av1_intra_prediction_cl(
         uint8_t    left_neigh_array[64 * 2 + 1];
         PredictionMode mode;
         // Hsan: plane should be derived @ an earlier stage (e.g. @ the call of perform_fast_loop())
-#if FIX_CFL_OFF_LOSSLESS
+#if REFACTOR_SIGNALS
         int32_t start_plane = (md_context_ptr->uv_intra_comp_only) ? 1 : 0;
 #else
         int32_t start_plane = (md_context_ptr->uv_search_path) ? 1 : 0;
@@ -1032,7 +1032,7 @@ EbErrorType eb_av1_intra_prediction_cl(
         uint16_t    left_neigh_array[64 * 2 + 1];
         PredictionMode mode;
         // Hsan: plane should be derived @ an earlier stage (e.g. @ the call of perform_fast_loop())
-#if FIX_CFL_OFF_LOSSLESS
+#if REFACTOR_SIGNALS
         int32_t start_plane = (md_context_ptr->uv_intra_comp_only) ? 1 : 0;
 #else
         int32_t start_plane = (md_context_ptr->uv_search_path) ? 1 : 0;

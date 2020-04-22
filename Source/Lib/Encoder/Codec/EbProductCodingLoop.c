@@ -1209,7 +1209,7 @@ void fast_loop_core(ModeDecisionCandidateBuffer *candidate_buffer, PictureContro
     // Set default interp_filters
     candidate_buffer->candidate_ptr->interp_filters =
         (context_ptr->md_staging_use_bilinear) ? av1_make_interp_filters(BILINEAR, BILINEAR) : 0;
-#if FIX_CFL_OFF_LOSSLESS
+#if REFACTOR_SIGNALS
     context_ptr->uv_intra_comp_only = EB_FALSE;
 #endif
     product_prediction_fun_table[candidate_buffer->candidate_ptr->use_intrabc
@@ -4139,12 +4139,12 @@ uint32_t early_intra_evaluation(PictureControlSet *pcs_ptr, ModeDecisionContext 
     candidate_ptr->is_interintra_used = 0;
 
     // Prediction
-#if !FIX_CFL_OFF // clean-up
+#if !REFACTOR_SIGNALS
     context_ptr->uv_search_path = 0;
 #endif
     context_ptr->md_staging_skip_interpolation_search = EB_TRUE;
     context_ptr->md_staging_skip_chroma_pred = EB_TRUE;
-#if FIX_CFL_OFF_LOSSLESS
+#if REFACTOR_SIGNALS
     context_ptr->uv_intra_comp_only = EB_FALSE;
 #endif
     product_prediction_fun_table[INTRA_MODE](
@@ -5897,7 +5897,7 @@ void check_best_indepedant_cfl(PictureControlSet *pcs_ptr, EbPictureBufferDesc *
             0,
             context_ptr->blk_geom->txsize_uv[0][0],
             frm_hdr->reduced_tx_set);
-#if FIX_CFL_OFF_LOSSLESS
+#if REFACTOR_SIGNALS
         context_ptr->uv_intra_comp_only = EB_TRUE;
 #else
         // Start uv search path
@@ -5976,7 +5976,7 @@ void check_best_indepedant_cfl(PictureControlSet *pcs_ptr, EbPictureBufferDesc *
                                            cb_coeff_bits,
                                            cr_coeff_bits,
                                            1);
-#if !FIX_CFL_OFF // clean-up
+#if !REFACTOR_SIGNALS
         // End uv search path
         context_ptr->uv_search_path = EB_FALSE;
 #endif
@@ -7451,6 +7451,14 @@ void full_loop_core(PictureControlSet *pcs_ptr, SuperBlock *sb_ptr, BlkStruct *b
     uint32_t full_lambda = context_ptr->hbd_mode_decision ?
         context_ptr->full_lambda_md[EB_10_BIT_MD] :
         context_ptr->full_lambda_md[EB_8_BIT_MD];
+
+#if FIX_CFL_OFF
+    int32_t is_inter = (candidate_buffer->candidate_ptr->type == INTER_MODE ||
+        candidate_buffer->candidate_ptr->use_intrabc)
+        ? EB_TRUE
+        : EB_FALSE;
+#endif
+
     // initialize TU Split
     y_full_distortion[DIST_CALC_RESIDUAL]   = 0;
     y_full_distortion[DIST_CALC_PREDICTION] = 0;
@@ -7467,12 +7475,32 @@ void full_loop_core(PictureControlSet *pcs_ptr, SuperBlock *sb_ptr, BlkStruct *b
     // Set Skip Flag
     candidate_ptr->skip_flag = EB_FALSE;
 
+#if FIX_CFL_OFF
+    if (is_inter) {
+#else
     if (candidate_ptr->type != INTRA_MODE) {
+#endif
+#if REFACTOR_SIGNALS
+        if (context_ptr->md_staging_perform_inter_pred) {
+#else
         if (context_ptr->md_staging_skip_full_pred == EB_FALSE) {
+#endif
             product_prediction_fun_table[candidate_ptr->type](
                 context_ptr->hbd_mode_decision, context_ptr, pcs_ptr, candidate_buffer);
         }
     }
+#if FIX_CFL_OFF
+    else if (context_ptr->md_staging_skip_full_chroma == EB_FALSE) {
+        if (context_ptr->blk_geom->has_uv && context_ptr->chroma_level <= CHROMA_MODE_1) {
+            // Cb/Cr Prediction
+            if (context_ptr->md_staging_perform_intra_chroma_pred) {
+                context_ptr->uv_intra_comp_only = EB_TRUE;
+                product_prediction_fun_table[candidate_ptr->type](
+                    context_ptr->hbd_mode_decision, context_ptr, pcs_ptr, candidate_buffer);
+            }
+        }
+    }
+#endif
 
     // Initialize luma CBF
     candidate_ptr->y_has_coeff = 0;
@@ -7500,12 +7528,13 @@ void full_loop_core(PictureControlSet *pcs_ptr, SuperBlock *sb_ptr, BlkStruct *b
         else
             end_tx_depth = 0;
     }
+#if !FIX_CFL_OFF
     // Transform partitioning path (INTRA Luma)
         int32_t is_inter = (candidate_buffer->candidate_ptr->type == INTER_MODE ||
                             candidate_buffer->candidate_ptr->use_intrabc)
                                ? EB_TRUE
                                : EB_FALSE;
-
+#endif
         //Y Residual: residual for INTRA is computed inside the TU loop
         if (is_inter)
             //Y Residual
@@ -7552,14 +7581,6 @@ void full_loop_core(PictureControlSet *pcs_ptr, SuperBlock *sb_ptr, BlkStruct *b
     if (context_ptr->md_staging_skip_full_chroma == EB_FALSE) {
         if (context_ptr->blk_geom->has_uv && context_ptr->chroma_level <= CHROMA_MODE_1) {
 
-#if FIX_CFL_OFF
-            // Cb/Cr Prediction
-            if (context_ptr->md_staging_perform_intra_chroma_pred) {
-                context_ptr->uv_intra_comp_only = EB_TRUE;
-                product_prediction_fun_table[candidate_ptr->type](
-                    context_ptr->hbd_mode_decision, context_ptr, pcs_ptr, candidate_buffer);
-            }
-#endif
             //Cb Residual
             residual_kernel(input_picture_ptr->buffer_cb,
                             input_cb_origin_in_index,
@@ -7589,7 +7610,7 @@ void full_loop_core(PictureControlSet *pcs_ptr, SuperBlock *sb_ptr, BlkStruct *b
                             context_ptr->blk_geom->bheight_uv);
         }
 
-#if FIX_CFL_OFF_LOSSLESS
+#if FIX_CFL_OFF
         EbBool cfl_performed = EB_FALSE;
         if (!is_inter)
             if (candidate_buffer->candidate_ptr->intra_chroma_mode == UV_CFL_PRED) {
@@ -7653,7 +7674,7 @@ void full_loop_core(PictureControlSet *pcs_ptr, SuperBlock *sb_ptr, BlkStruct *b
         // Check independant chroma vs. cfl
         if (!is_inter)
             if (context_ptr->blk_geom->has_uv && context_ptr->chroma_level == CHROMA_MODE_0)
-#if FIX_CFL_OFF_LOSSLESS
+#if FIX_CFL_OFF
                 if(cfl_performed)
 #else
                 if (candidate_buffer->candidate_ptr->intra_chroma_mode == UV_CFL_PRED ||
@@ -7730,8 +7751,11 @@ void md_stage_1(PictureControlSet *pcs_ptr, SuperBlock *sb_ptr, BlkStruct *blk_p
             context_ptr->cand_buff_indices[context_ptr->target_class][full_loop_candidate_index];
         candidate_buffer = candidate_buffer_ptr_array[cand_index];
         candidate_ptr    = candidate_buffer->candidate_ptr;
-
+#if REFACTOR_SIGNALS
+        context_ptr->md_staging_perform_inter_pred = EB_TRUE;
+#else
         context_ptr->md_staging_skip_full_pred            = EB_FALSE;
+#endif
 #if IFS_MD_STAGE_3
         context_ptr->md_staging_skip_interpolation_search = EB_TRUE;
 #else
@@ -7795,7 +7819,11 @@ void md_stage_2(PictureControlSet *pcs_ptr, SuperBlock *sb_ptr, BlkStruct *blk_p
                 : 1;
         context_ptr->md_staging_skip_rdoq                 = EB_FALSE;
         context_ptr->md_staging_skip_full_chroma          = EB_TRUE;
+#if REFACTOR_SIGNALS
+        context_ptr->md_staging_perform_inter_pred = EB_FALSE;
+#else
         context_ptr->md_staging_skip_full_pred            = EB_TRUE;
+#endif
         context_ptr->md_staging_skip_interpolation_search = EB_TRUE;
 #if CLEAN_UP_SKIP_CHROMA_PRED_SIGNAL
         context_ptr->md_staging_skip_chroma_pred = EB_TRUE;
@@ -7825,6 +7853,94 @@ void md_stage_2(PictureControlSet *pcs_ptr, SuperBlock *sb_ptr, BlkStruct *blk_p
     }
 }
 
+#if FIX_CFL_OFF
+void update_intra_chroma_mode(ModeDecisionContext *context_ptr, ModeDecisionCandidate *candidate_ptr, PictureControlSet *pcs_ptr) {
+    if (context_ptr->blk_geom->sq_size < 128) {
+        if (context_ptr->blk_geom->has_uv) {
+            if (candidate_ptr->type == INTRA_MODE) {
+                uint64_t cfl_th = 30;
+                uint32_t intra_chroma_mode;
+                int32_t  angle_delta;
+                uint8_t  is_directional_chroma_mode_flag;
+                if (((context_ptr->best_inter_cost * (100 + cfl_th)) <
+                    (context_ptr->best_intra_cost * 100)) &&
+                    !(pcs_ptr->parent_pcs_ptr->sc_content_detected)) {
+                    intra_chroma_mode =
+                        context_ptr->best_uv_mode[candidate_ptr->intra_luma_mode]
+                        [MAX_ANGLE_DELTA +
+                        candidate_ptr->angle_delta[PLANE_TYPE_Y]];
+                    angle_delta =
+                        context_ptr
+                        ->best_uv_angle[candidate_ptr->intra_luma_mode]
+                        [MAX_ANGLE_DELTA +
+                        candidate_ptr->angle_delta[PLANE_TYPE_Y]];
+                    is_directional_chroma_mode_flag =
+                        (uint8_t)av1_is_directional_mode((PredictionMode)(
+                            context_ptr
+                            ->best_uv_mode[candidate_ptr->intra_luma_mode]
+                            [MAX_ANGLE_DELTA +
+                            candidate_ptr->angle_delta[PLANE_TYPE_Y]]));
+                }
+                else {
+                    intra_chroma_mode =
+                        candidate_ptr->intra_chroma_mode != UV_CFL_PRED
+                        ? context_ptr
+                        ->best_uv_mode[candidate_ptr->intra_luma_mode]
+                        [MAX_ANGLE_DELTA +
+                        candidate_ptr->angle_delta[PLANE_TYPE_Y]]
+                    : UV_CFL_PRED;
+                    angle_delta =
+                        candidate_ptr->intra_chroma_mode != UV_CFL_PRED
+                        ? context_ptr
+                        ->best_uv_angle[candidate_ptr->intra_luma_mode]
+                        [MAX_ANGLE_DELTA +
+                        candidate_ptr->angle_delta[PLANE_TYPE_Y]]
+                    : 0;
+                    is_directional_chroma_mode_flag =
+                        candidate_ptr->intra_chroma_mode != UV_CFL_PRED
+                        ? (uint8_t)av1_is_directional_mode((PredictionMode)(
+                            context_ptr->best_uv_mode
+                            [candidate_ptr->intra_luma_mode]
+                    [MAX_ANGLE_DELTA +
+                        candidate_ptr->angle_delta[PLANE_TYPE_Y]]))
+                        : 0;
+                }
+                // If CFL OFF or not applicable, and intra_chroma_mode used @ md_stage_0() (first stage intra_mode)
+                // and the best independant intra mode (final stage intra_mode) are not matching then the chroma pred
+                // should be re-performed using best independant chroma pred
+                if (candidate_ptr->intra_chroma_mode != UV_CFL_PRED)
+                    if (candidate_ptr->intra_chroma_mode != intra_chroma_mode || candidate_ptr->angle_delta[PLANE_TYPE_UV] != angle_delta) {
+                        // Set to TRUE to redo INTRA CHROMA compensation
+                        context_ptr->md_staging_perform_intra_chroma_pred = EB_TRUE;
+                        // Update fast_chroma_rate
+                        candidate_ptr->fast_chroma_rate = context_ptr->fast_chroma_rate[candidate_ptr->intra_luma_mode][MAX_ANGLE_DELTA + candidate_ptr->angle_delta[PLANE_TYPE_Y]];
+                        // Update intra_chroma_mode
+                        candidate_ptr->intra_chroma_mode = intra_chroma_mode;
+                        candidate_ptr->angle_delta[PLANE_TYPE_UV] = angle_delta;
+                        candidate_ptr->is_directional_chroma_mode_flag = is_directional_chroma_mode_flag;
+                        // Update transform_type_uv
+                        FrameHeader *frm_hdr = &pcs_ptr->parent_pcs_ptr->frm_hdr;
+                        if (candidate_ptr->intra_chroma_mode == UV_CFL_PRED)
+                            candidate_ptr->transform_type_uv = DCT_DCT;
+                        else
+                            candidate_ptr->transform_type_uv =
+                            av1_get_tx_type(
+                                context_ptr->blk_geom->bsize,
+                                0,
+                                (PredictionMode)candidate_ptr->intra_luma_mode,
+                                (UvPredictionMode)candidate_ptr->intra_chroma_mode,
+                                PLANE_TYPE_UV,
+                                0,
+                                0,
+                                0,
+                                context_ptr->blk_geom->txsize_uv[0][0],
+                                frm_hdr->reduced_tx_set);
+                    }
+            }
+        }
+    }
+}
+#endif
 void md_stage_3(PictureControlSet *pcs_ptr, SuperBlock *sb_ptr, BlkStruct *blk_ptr,
                 ModeDecisionContext *context_ptr, EbPictureBufferDesc *input_picture_ptr,
                 uint32_t input_origin_index, uint32_t input_cb_origin_in_index,
@@ -7856,7 +7972,11 @@ void md_stage_3(PictureControlSet *pcs_ptr, SuperBlock *sb_ptr, BlkStruct *blk_p
         candidate_ptr    = candidate_buffer->candidate_ptr;
 
         // Set MD Staging full_loop_core settings
+#if REFACTOR_SIGNALS
+        context_ptr->md_staging_perform_inter_pred = !(context_ptr->md_staging_mode == MD_STAGING_MODE_0);
+#else
         context_ptr->md_staging_skip_full_pred = context_ptr->md_staging_mode == MD_STAGING_MODE_0;
+#endif
 #if IFS_MD_STAGE_3
         context_ptr->md_staging_skip_interpolation_search = EB_FALSE;
 #else
@@ -7902,7 +8022,10 @@ void md_stage_3(PictureControlSet *pcs_ptr, SuperBlock *sb_ptr, BlkStruct *blk_p
 #endif
 #if FIX_CFL_OFF
         context_ptr->md_staging_perform_intra_chroma_pred = 0;
-#endif
+        if (context_ptr->chroma_at_last_md_stage) {
+            update_intra_chroma_mode(context_ptr, candidate_ptr, pcs_ptr);
+        }
+#else
         if (context_ptr->chroma_at_last_md_stage) {
             if (context_ptr->blk_geom->sq_size < 128) {
                 if (context_ptr->blk_geom->has_uv) {
@@ -7953,41 +8076,14 @@ void md_stage_3(PictureControlSet *pcs_ptr, SuperBlock *sb_ptr, BlkStruct *blk_p
                                                candidate_ptr->angle_delta[PLANE_TYPE_Y]]))
                                     : 0;
                         }
-#if FIX_CFL_OFF
-                        // If CFL OFF or not applicable, and intra_chroma_mode used @ md_stage_0() (first stage intra_mode)
-                        // and the best independant intra mode (final stage intra_mode) are not matching then the chroma pred
-                        // should be re-performed using best independant chroma pred
-                        context_ptr->md_staging_perform_intra_chroma_pred = (candidate_ptr->intra_chroma_mode != intra_chroma_mode || candidate_ptr->angle_delta[PLANE_TYPE_UV] != angle_delta);
-
                         candidate_ptr->intra_chroma_mode = intra_chroma_mode;
                         candidate_ptr->angle_delta[PLANE_TYPE_UV] = angle_delta;
                         candidate_ptr->is_directional_chroma_mode_flag = is_directional_chroma_mode_flag;
-
-                        FrameHeader *frm_hdr = &pcs_ptr->parent_pcs_ptr->frm_hdr;
-                        if (candidate_ptr->intra_chroma_mode == UV_CFL_PRED)
-                            candidate_ptr->transform_type_uv = DCT_DCT;
-                        else
-                            candidate_ptr->transform_type_uv =
-                            av1_get_tx_type(
-                                context_ptr->blk_geom->bsize,
-                                0,
-                                (PredictionMode)candidate_ptr->intra_luma_mode,
-                                (UvPredictionMode)candidate_ptr->intra_chroma_mode,
-                                PLANE_TYPE_UV,
-                                0,
-                                0,
-                                0,
-                                context_ptr->blk_geom->txsize_uv[0][0],
-                                frm_hdr->reduced_tx_set);
-#else
-                        candidate_ptr->intra_chroma_mode = intra_chroma_mode;
-                        candidate_ptr->angle_delta[PLANE_TYPE_UV] = angle_delta;
-                        candidate_ptr->is_directional_chroma_mode_flag = is_directional_chroma_mode_flag;
-#endif
                     }
                 }
             }
         }
+#endif
         full_loop_core(pcs_ptr,
                        sb_ptr,
                        blk_ptr,
@@ -8449,7 +8545,7 @@ Part get_partition_shape(PartitionContextType above, PartitionContextType left, 
 };
 
 void init_chroma_mode(ModeDecisionContext   *context_ptr) {
-#if !FIX_CFL_OFF // clean up
+#if !REFACTOR_SIGNALS
     context_ptr->uv_search_path = EB_TRUE;
 #endif
     EbBool use_angle_delta = av1_use_angle_delta(context_ptr->blk_geom->bsize, context_ptr->md_intra_angle_delta);
@@ -8463,7 +8559,7 @@ void init_chroma_mode(ModeDecisionContext   *context_ptr) {
             context_ptr->best_uv_cost[intra_mode][MAX_ANGLE_DELTA + angle_delta] = (uint64_t)~0;
         }
     }
-#if !FIX_CFL_OFF // clean up
+#if !REFACTOR_SIGNALS
     // End uv search path
     context_ptr->uv_search_path = EB_FALSE;
 #endif
@@ -8478,7 +8574,7 @@ void search_best_independent_uv_mode(PictureControlSet *  pcs_ptr,
     uint32_t full_lambda =  context_ptr->hbd_mode_decision ?
         context_ptr->full_lambda_md[EB_10_BIT_MD] :
         context_ptr->full_lambda_md[EB_8_BIT_MD];
-#if FIX_CFL_OFF_LOSSLESS
+#if REFACTOR_SIGNALS
     context_ptr->uv_intra_comp_only = EB_TRUE;
 #else
     // Start uv search path
@@ -8899,7 +8995,7 @@ void search_best_independent_uv_mode(PictureControlSet *  pcs_ptr,
     if (context_ptr->chroma_at_last_md_stage) {
         context_ptr->md_staging_skip_rdoq = tem_md_staging_skip_rdoq;
     }
-#if !FIX_CFL_OFF // clean-up
+#if !REFACTOR_SIGNALS
     // End uv search path
     context_ptr->uv_search_path = EB_FALSE;
 #endif
@@ -9104,7 +9200,7 @@ void md_encode_block(PictureControlSet *pcs_ptr,
                                         context_ptr->leaf_partition_neighbor_array);
 
     // Initialize uv_search_path
-#if !FIX_CFL_OFF // clean-up
+#if !REFACTOR_SIGNALS
     context_ptr->uv_search_path = EB_FALSE;
 #endif
     if (context_ptr->chroma_at_last_md_stage) {
@@ -9365,7 +9461,7 @@ void md_encode_block(PictureControlSet *pcs_ptr,
     // Search the best independent intra chroma mode
     if (context_ptr->chroma_at_last_md_stage) {
         // Initialize uv_search_path
-#if !FIX_CFL_OFF // clean-up
+#if !REFACTOR_SIGNALS
         context_ptr->uv_search_path = EB_FALSE;
 #endif
         if (context_ptr->blk_geom->sq_size < 128) {
