@@ -7475,11 +7475,7 @@ void full_loop_core(PictureControlSet *pcs_ptr, SuperBlock *sb_ptr, BlkStruct *b
     // Set Skip Flag
     candidate_ptr->skip_flag = EB_FALSE;
 
-#if FIX_CFL_OFF
-    if (is_inter) {
-#else
     if (candidate_ptr->type != INTRA_MODE) {
-#endif
 #if REFACTOR_SIGNALS
         if (context_ptr->md_staging_perform_inter_pred) {
 #else
@@ -7673,6 +7669,9 @@ void full_loop_core(PictureControlSet *pcs_ptr, SuperBlock *sb_ptr, BlkStruct *b
 
         // Check independant chroma vs. cfl
         if (!is_inter)
+#if FIX_CHROMA_PALETTE_INTERACTION
+            if (candidate_ptr->palette_info.pmi.palette_size[0] == 0)
+#endif
             if (context_ptr->blk_geom->has_uv && context_ptr->chroma_level == CHROMA_MODE_0)
 #if FIX_CFL_OFF
                 if(cfl_performed)
@@ -7855,9 +7854,19 @@ void md_stage_2(PictureControlSet *pcs_ptr, SuperBlock *sb_ptr, BlkStruct *blk_p
 
 #if FIX_CFL_OFF
 void update_intra_chroma_mode(ModeDecisionContext *context_ptr, ModeDecisionCandidate *candidate_ptr, PictureControlSet *pcs_ptr) {
+#if FIX_CFL_OFF
+    int32_t is_inter =
+        (candidate_ptr->type == INTER_MODE || candidate_ptr->use_intrabc) ? EB_TRUE : EB_FALSE;
+#endif
     if (context_ptr->blk_geom->sq_size < 128) {
         if (context_ptr->blk_geom->has_uv) {
+
+#if FIX_CHROMA_PALETTE_INTERACTION
+            if (!is_inter) {
+                if (candidate_ptr->palette_info.pmi.palette_size[0] == 0) {
+#else
             if (candidate_ptr->type == INTRA_MODE) {
+#endif
                 uint64_t cfl_th = 30;
                 uint32_t intra_chroma_mode;
                 int32_t  angle_delta;
@@ -7936,6 +7945,9 @@ void update_intra_chroma_mode(ModeDecisionContext *context_ptr, ModeDecisionCand
                                 context_ptr->blk_geom->txsize_uv[0][0],
                                 frm_hdr->reduced_tx_set);
                     }
+#if FIX_CHROMA_PALETTE_INTERACTION
+                }
+#endif
             }
         }
     }

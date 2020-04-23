@@ -252,6 +252,7 @@ extern "C" {
 #endif
 #define PR_1210 1
 #define PR_1217 1
+#define FIX_CHROMA_PALETTE_INTERACTION 1 // Fix Chroma/Palette interaction and enable independent in M0 for SC
 // END  MAY2020 /////////////////////////////////////////////////////////
 
 #define COMMON_16BIT 1 // 16Bit pipeline support for common
