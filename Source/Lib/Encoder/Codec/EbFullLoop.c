@@ -1653,7 +1653,11 @@ static INLINE void set_dc_sign(int32_t *cul_level, int32_t dc_val) {
 }
 int32_t av1_quantize_inv_quantize(
     PictureControlSet *pcs_ptr, ModeDecisionContext *md_context, int32_t *coeff,
+#if QP2QINDEX
+    const uint32_t coeff_stride, int32_t *quant_coeff, int32_t *recon_coeff, uint32_t qindex,
+#else
     const uint32_t coeff_stride, int32_t *quant_coeff, int32_t *recon_coeff, uint32_t qp,
+#endif
     int32_t segmentation_qp_offset, uint32_t width, uint32_t height, TxSize txsize, uint16_t *eob,
     uint32_t *count_non_zero_coeffs,
 
@@ -1669,7 +1673,11 @@ int32_t av1_quantize_inv_quantize(
     const QmVal *   q_matrix  = pcs_ptr->parent_pcs_ptr->gqmatrix[NUM_QM_LEVELS - 1][0][txsize];
     const QmVal *   iq_matrix = pcs_ptr->parent_pcs_ptr->giqmatrix[NUM_QM_LEVELS - 1][0][txsize];
     uint32_t        q_index   = pcs_ptr->parent_pcs_ptr->frm_hdr.delta_q_params.delta_q_present
+#if QP2QINDEX
+                           ? qindex
+#else
                            ? quantizer_to_qindex[qp]
+#endif
                            : pcs_ptr->parent_pcs_ptr->frm_hdr.quantization_params.base_q_idx +
                                  segmentation_qp_offset;
     if (bit_increment == 0) {
@@ -1843,7 +1851,11 @@ int32_t av1_quantize_inv_quantize(
 ****************************************/
 void product_full_loop(ModeDecisionCandidateBuffer *candidate_buffer,
                        ModeDecisionContext *context_ptr, PictureControlSet *pcs_ptr,
+#if QP2QINDEX
+                       EbPictureBufferDesc *input_picture_ptr, uint32_t qindex,
+#else
                        EbPictureBufferDesc *input_picture_ptr, uint32_t qp,
+#endif
                        uint32_t *y_count_non_zero_coeffs, uint64_t *y_coeff_bits,
                        uint64_t *y_full_distortion) {
     uint32_t            txb_origin_index;
@@ -1911,7 +1923,11 @@ void product_full_loop(ModeDecisionCandidateBuffer *candidate_buffer,
         NOT_USED_VALUE,
         &(((int32_t *)candidate_buffer->residual_quant_coeff_ptr->buffer_y)[txb_1d_offset]),
         &(((int32_t *)candidate_buffer->recon_coeff_ptr->buffer_y)[txb_1d_offset]),
+#if QP2QINDEX
+        qindex,
+#else
         qp,
+#endif
         seg_qp,
         context_ptr->blk_geom->tx_width[tx_depth][txb_itr],
         context_ptr->blk_geom->tx_height[tx_depth][txb_itr],
@@ -2249,21 +2265,34 @@ uint8_t allowed_tx_set_b[TX_SIZES_ALL][TX_TYPES] = {
     {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}};
 #endif
 void encode_pass_tx_search(PictureControlSet *pcs_ptr, EncDecContext *context_ptr,
-                           SuperBlock *sb_ptr, uint32_t cb_qp,
+                           SuperBlock *sb_ptr,
+#if QP2QINDEX
+                           uint32_t cb_qindex,
+#else
+                           uint32_t cb_qp,
+#endif
                            EbPictureBufferDesc *coeff_samples_sb,
                            EbPictureBufferDesc *residual16bit, EbPictureBufferDesc *transform16bit,
                            EbPictureBufferDesc *inverse_quant_buffer,
                            uint32_t *count_non_zero_coeffs,
                            uint32_t component_mask, uint16_t *eob,
                            MacroblockPlane *candidate_plane) {
+#if QP2QINDEX
+    (void)cb_qindex;
+#else
     (void)cb_qp;
+#endif
     (void)candidate_plane;
     UNUSED(count_non_zero_coeffs);
     UNUSED(component_mask);
 
     BlkStruct *   blk_ptr        = context_ptr->blk_ptr;
-    TransformUnit *txb_ptr        = &blk_ptr->txb_array[context_ptr->txb_itr];
-    uint32_t       qp             = blk_ptr->qp;
+    TransformUnit *txb_ptr       = &blk_ptr->txb_array[context_ptr->txb_itr];
+#if QP2QINDEX
+    uint32_t       qindex        = blk_ptr->qindex;
+#else
+    uint32_t       qp            = blk_ptr->qp;
+#endif
     const uint32_t coeff1d_offset = context_ptr->coded_area_sb;
 
     uint64_t              y_txb_coeff_bits;
@@ -2331,7 +2360,11 @@ void encode_pass_tx_search(PictureControlSet *pcs_ptr, EncDecContext *context_pt
             NOT_USED_VALUE,
             ((int32_t *)coeff_samples_sb->buffer_y) + coeff1d_offset,
             ((int32_t *)inverse_quant_buffer->buffer_y) + coeff1d_offset,
+#if QP2QINDEX
+            qindex,
+#else
             qp,
+#endif
             seg_qp,
             context_ptr->blk_geom->tx_width[blk_ptr->tx_depth][context_ptr->txb_itr],
             context_ptr->blk_geom->tx_height[blk_ptr->tx_depth][context_ptr->txb_itr],
@@ -2346,7 +2379,11 @@ void encode_pass_tx_search(PictureControlSet *pcs_ptr, EncDecContext *context_pt
             0,
             0,
             blk_ptr->av1xd->use_intrabc,
+#if QP2QINDEX
+            context_ptr->md_context->full_lambda_md[EB_8_BIT_MD],
+#else
             context_ptr->full_lambda,
+#endif
             EB_FALSE);
 
         //tx_type not equal to DCT_DCT and no coeff is not an acceptable option in AV1.
@@ -2428,7 +2465,11 @@ void encode_pass_tx_search(PictureControlSet *pcs_ptr, EncDecContext *context_pt
             txb_full_distortion[0],
             &y_txb_coeff_bits,
             &y_full_cost,
+#if QP2QINDEX
+            context_ptr->md_context->full_lambda_md[EB_8_BIT_MD]);
+#else
             context_ptr->full_lambda);
+#endif
 
         if (y_full_cost < best_full_cost) {
             best_full_cost = y_full_cost;
@@ -2443,19 +2484,32 @@ void encode_pass_tx_search(PictureControlSet *pcs_ptr, EncDecContext *context_pt
 }
 
 void encode_pass_tx_search_hbd(
-    PictureControlSet *pcs_ptr, EncDecContext *context_ptr, SuperBlock *sb_ptr, uint32_t cb_qp,
+    PictureControlSet *pcs_ptr, EncDecContext *context_ptr, SuperBlock *sb_ptr,
+#if QP2QINDEX
+    uint32_t cb_qindex,
+#else
+    uint32_t cb_qp,
+#endif
     EbPictureBufferDesc *coeff_samples_sb, EbPictureBufferDesc *residual16bit,
     EbPictureBufferDesc *transform16bit, EbPictureBufferDesc *inverse_quant_buffer,
     uint32_t *count_non_zero_coeffs, uint32_t component_mask,
     uint16_t *eob, MacroblockPlane *candidate_plane) {
+#if QP2QINDEX
+    (void)cb_qindex;
+#else
     (void)cb_qp;
+#endif
     (void)candidate_plane;
     UNUSED(component_mask);
     UNUSED(count_non_zero_coeffs);
 
     BlkStruct *   blk_ptr = context_ptr->blk_ptr;
     TransformUnit *txb_ptr = &blk_ptr->txb_array[context_ptr->txb_itr];
+#if QP2QINDEX
+    uint32_t       qindex  = blk_ptr->qindex;
+#else
     uint32_t       qp      = blk_ptr->qp;
+#endif
     const uint32_t scratch_luma_offset =
         context_ptr->blk_geom->origin_x + context_ptr->blk_geom->origin_y * SB_STRIDE_Y;
     const uint32_t coeff1d_offset = context_ptr->coded_area_sb;
@@ -2517,7 +2571,11 @@ void encode_pass_tx_search_hbd(
             NOT_USED_VALUE,
             ((int32_t *)coeff_samples_sb->buffer_y) + coeff1d_offset,
             ((int32_t *)inverse_quant_buffer->buffer_y) + coeff1d_offset,
+#if QP2QINDEX
+            qindex,
+#else
             qp,
+#endif
             seg_qp,
             context_ptr->blk_geom->tx_width[blk_ptr->tx_depth][context_ptr->txb_itr],
             context_ptr->blk_geom->tx_height[blk_ptr->tx_depth][context_ptr->txb_itr],
@@ -2532,7 +2590,11 @@ void encode_pass_tx_search_hbd(
             0,
             0,
             blk_ptr->av1xd->use_intrabc,
+#if QP2QINDEX
+            context_ptr->md_context->full_lambda_md[EB_10_BIT_MD],
+#else
             context_ptr->full_lambda,
+#endif
             EB_FALSE);
 
         //tx_type not equal to DCT_DCT and no coeff is not an acceptable option in AV1.
@@ -2614,7 +2676,11 @@ void encode_pass_tx_search_hbd(
             txb_full_distortion[0],
             &y_txb_coeff_bits,
             &y_full_cost,
+#if QP2QINDEX
+            context_ptr->md_context->full_lambda_md[EB_10_BIT_MD]);
+#else
             context_ptr->full_lambda);
+#endif
 
         if (y_full_cost < best_full_cost) {
             best_full_cost = y_full_cost;
@@ -2664,11 +2730,20 @@ void inv_transform_recon_wrapper(uint8_t *pred_buffer, uint32_t pred_offset, uin
 ****************************************/
 void full_loop_r(SuperBlock *sb_ptr, ModeDecisionCandidateBuffer *candidate_buffer,
                  ModeDecisionContext *context_ptr, EbPictureBufferDesc *input_picture_ptr,
-                 PictureControlSet *pcs_ptr, uint32_t component_mask, uint32_t cb_qp,
-                 uint32_t cr_qp, uint32_t *cb_count_non_zero_coeffs,
+                 PictureControlSet *pcs_ptr, uint32_t component_mask,
+#if QP2QINDEX
+                 uint32_t cb_qindex, uint32_t cr_qindex,
+#else
+                 uint32_t cb_qp, uint32_t cr_qp,
+#endif
+                 uint32_t *cb_count_non_zero_coeffs,
                  uint32_t *cr_count_non_zero_coeffs) {
     (void)sb_ptr;
+#if QP2QINDEX
+    (void)cr_qindex;
+#else
     (void)cr_qp;
+#endif
     (void)input_picture_ptr;
     int16_t *chroma_residual_ptr;
     uint32_t txb_origin_index;
@@ -2773,7 +2848,11 @@ void full_loop_r(SuperBlock *sb_ptr, ModeDecisionCandidateBuffer *candidate_buff
                 &(((int32_t *)
                        candidate_buffer->residual_quant_coeff_ptr->buffer_cb)[txb_1d_offset]),
                 &(((int32_t *)candidate_buffer->recon_coeff_ptr->buffer_cb)[txb_1d_offset]),
+#if QP2QINDEX
+                cb_qindex,
+#else
                 cb_qp,
+#endif
                 seg_qp,
                 context_ptr->blk_geom->tx_width_uv[tx_depth][txb_itr],
                 context_ptr->blk_geom->tx_height_uv[tx_depth][txb_itr],
@@ -2860,7 +2939,11 @@ void full_loop_r(SuperBlock *sb_ptr, ModeDecisionCandidateBuffer *candidate_buff
                 &(((int32_t *)
                        candidate_buffer->residual_quant_coeff_ptr->buffer_cr)[txb_1d_offset]),
                 &(((int32_t *)candidate_buffer->recon_coeff_ptr->buffer_cr)[txb_1d_offset]),
+#if QP2QINDEX
+                cb_qindex,
+#else
                 cb_qp,
+#endif
                 seg_qp,
                 context_ptr->blk_geom->tx_width_uv[tx_depth][txb_itr],
                 context_ptr->blk_geom->tx_height_uv[tx_depth][txb_itr],

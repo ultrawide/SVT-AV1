@@ -50,11 +50,17 @@ typedef struct EncDecContext {
     // Since recon switches between reconPtr and referencePtr, the temporary buffers sizes used the referencePtr's which has padding,...
     EbPictureBufferDesc *inverse_quant_buffer;
     // Lambda
+#if !QP2QINDEX
     uint16_t qp;
     uint8_t  chroma_qp;
     uint32_t fast_lambda;
     uint32_t full_lambda;
     uint32_t full_chroma_lambda_sao;
+#else
+    uint32_t pic_fast_lambda;
+    uint32_t pic_full_lambda;
+    uint32_t pic_full_chroma_lambda_sao;
+#endif
 
     //  Context Variables---------------------------------
     BlkStruct *blk_ptr;
@@ -75,7 +81,9 @@ typedef struct EncDecContext {
 #endif
     uint8_t       intra_coded_area_sb
         [MAX_NUMBER_OF_TREEBLOCKS_PER_PICTURE]; //percentage of intra coded area 0-100%
+#if !QP2QINDEX
     uint16_t qp_index;
+#endif
     uint64_t three_quad_energy;
 
     // Needed for DC prediction

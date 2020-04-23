@@ -319,7 +319,11 @@ typedef struct BlkStruct {
     unsigned               block_has_coeff : 1; // ec
     unsigned               split_flag_context : 2; // to do
 #endif
+#if QP2QINDEX
+    uint8_t                qindex; // ec
+#else
     uint16_t               qp; // ec
+#endif
 #if !CLEAN_UP_SB_DATA_2
     uint16_t               ref_qp;
     int16_t                delta_qp; // can be signed 8bits
@@ -399,7 +403,11 @@ typedef struct BlkStruct {
     unsigned               prediction_mode_flag : 2;
     unsigned               block_has_coeff : 1;
     unsigned               split_flag_context : 2;
+#if QP2QINDEX
+    uint8_t                qindex;
+#else
     uint16_t               qp;
+#endif
     uint16_t               ref_qp;
     int16_t                delta_qp; // can be signed 8bits
 
@@ -484,8 +492,12 @@ typedef struct SuperBlock {
     unsigned       index : 12;
     unsigned       origin_x : 12;
     unsigned       origin_y : 12;
+#if QP2QINDEX
+    uint8_t        qindex;
+#else
     uint16_t       qp;
     int16_t        delta_qp;
+#endif
     uint32_t       total_bits;
 
     // Quantized Coefficients

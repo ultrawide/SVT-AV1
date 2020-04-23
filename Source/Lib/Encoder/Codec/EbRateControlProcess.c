@@ -5077,6 +5077,9 @@ static void sb_qp_derivation_two_pass(PictureControlSet *pcs_ptr) {
     SequenceControlSet *scs_ptr = pcs_ptr->parent_pcs_ptr->scs_ptr;
     SuperBlock *        sb_ptr;
     uint32_t            sb_addr;
+#if QP2QINDEX
+    uint8_t             sb_qp;
+#endif
 
     pcs_ptr->parent_pcs_ptr->average_qp = 0;
     if (scs_ptr->use_input_stat_file && pcs_ptr->temporal_layer_index <= 0)
@@ -5186,7 +5189,11 @@ static void sb_qp_derivation_two_pass(PictureControlSet *pcs_ptr) {
             }
 
             if (pcs_ptr->slice_type == 2)
+#if QP2QINDEX
+                sb_qp =
+#else
                 sb_ptr->qp =
+#endif
                     CLIP3(MIN(pcs_ptr->parent_pcs_ptr->picture_qp,
                               ((kf_low_motion_minq[active_worst_quality] + 2) >> 2)),
                           MAX(pcs_ptr->parent_pcs_ptr->picture_qp,
@@ -5194,7 +5201,11 @@ static void sb_qp_derivation_two_pass(PictureControlSet *pcs_ptr) {
                               3,
                           ((int16_t)pcs_ptr->parent_pcs_ptr->picture_qp + (int16_t)delta_qp));
             else
+#if QP2QINDEX
+                sb_qp =
+#else
                 sb_ptr->qp =
+#endif
                     CLIP3(MIN(pcs_ptr->parent_pcs_ptr->picture_qp,
                               ((arfgf_low_motion_minq[active_worst_quality] + 2) >> 2)) -
                               1,
@@ -5203,18 +5214,32 @@ static void sb_qp_derivation_two_pass(PictureControlSet *pcs_ptr) {
                               3,
                           ((int16_t)pcs_ptr->parent_pcs_ptr->picture_qp + (int16_t)delta_qp));
 
+#if QP2QINDEX
+            sb_qp       = CLIP3(scs_ptr->static_config.min_qp_allowed,
+                               scs_ptr->static_config.max_qp_allowed,
+                               sb_qp);
+            sb_ptr->qindex = quantizer_to_qindex[sb_qp];
+            pcs_ptr->parent_pcs_ptr->average_qp += sb_qp;
+#else
             sb_ptr->qp       = CLIP3(scs_ptr->static_config.min_qp_allowed,
                                scs_ptr->static_config.max_qp_allowed,
                                sb_ptr->qp);
             sb_ptr->delta_qp = (int)pcs_ptr->parent_pcs_ptr->picture_qp - (int)sb_ptr->qp;
             pcs_ptr->parent_pcs_ptr->average_qp += sb_ptr->qp;
+#endif
         }
     } else {
         for (sb_addr = 0; sb_addr < pcs_ptr->sb_total_count_pix; ++sb_addr) {
             sb_ptr           = pcs_ptr->sb_ptr_array[sb_addr];
+#if QP2QINDEX
+            sb_qp            = (uint8_t)pcs_ptr->picture_qp;
+            sb_ptr->qindex = quantizer_to_qindex[sb_qp];
+            pcs_ptr->parent_pcs_ptr->average_qp += sb_qp;
+#else
             sb_ptr->qp       = (uint8_t)pcs_ptr->picture_qp;
             sb_ptr->delta_qp = 0;
             pcs_ptr->parent_pcs_ptr->average_qp += sb_ptr->qp;
+#endif
         }
     }
 }
@@ -5224,6 +5249,9 @@ static void sb_qp_derivation(PictureControlSet *pcs_ptr) {
     SequenceControlSet *scs_ptr = pcs_ptr->parent_pcs_ptr->scs_ptr;
     SuperBlock *        sb_ptr;
     uint32_t            sb_addr;
+#if QP2QINDEX
+    uint8_t             sb_qp = 0;
+#endif
     RATE_CONTROL        rc;
     pcs_ptr->parent_pcs_ptr->average_qp = 0;
     if (pcs_ptr->slice_type == 2)
@@ -5315,6 +5343,19 @@ static void sb_qp_derivation(PictureControlSet *pcs_ptr) {
                     delta_qp = (int16_t)q_val - (int16_t)picture_q_val;
                 }
             }
+#if QP2QINDEX
+            sb_qp       = CLIP3(MIN(pcs_ptr->parent_pcs_ptr->picture_qp,
+                                   ((kf_low_motion_minq[active_worst_quality] + 2) >> 2)),
+                               MAX(pcs_ptr->parent_pcs_ptr->picture_qp,
+                                   ((kf_high_motion_minq[active_worst_quality] + 2) >> 2)) +
+                                   3,
+                               ((int16_t)pcs_ptr->parent_pcs_ptr->picture_qp + (int16_t)delta_qp));
+            sb_qp       = CLIP3(scs_ptr->static_config.min_qp_allowed,
+                               scs_ptr->static_config.max_qp_allowed,
+                               sb_qp);
+            sb_ptr->qindex = quantizer_to_qindex[sb_qp];
+            pcs_ptr->parent_pcs_ptr->average_qp += sb_qp;
+#else
             sb_ptr->qp       = CLIP3(MIN(pcs_ptr->parent_pcs_ptr->picture_qp,
                                    ((kf_low_motion_minq[active_worst_quality] + 2) >> 2)),
                                MAX(pcs_ptr->parent_pcs_ptr->picture_qp,
@@ -5326,13 +5367,19 @@ static void sb_qp_derivation(PictureControlSet *pcs_ptr) {
                                sb_ptr->qp);
             sb_ptr->delta_qp = (int)pcs_ptr->parent_pcs_ptr->picture_qp - (int)sb_ptr->qp;
             pcs_ptr->parent_pcs_ptr->average_qp += sb_ptr->qp;
+#endif
         }
     } else {
         for (sb_addr = 0; sb_addr < pcs_ptr->sb_total_count_pix; ++sb_addr) {
             sb_ptr           = pcs_ptr->sb_ptr_array[sb_addr];
+#if QP2QINDEX
+            sb_ptr->qindex   = quantizer_to_qindex[pcs_ptr->picture_qp];
+            pcs_ptr->parent_pcs_ptr->average_qp += pcs_ptr->picture_qp;
+#else
             sb_ptr->qp       = (uint8_t)pcs_ptr->picture_qp;
             sb_ptr->delta_qp = 0;
             pcs_ptr->parent_pcs_ptr->average_qp += sb_ptr->qp;
+#endif
         }
     }
 }
@@ -5581,9 +5628,14 @@ void *rate_control_kernel(void *input_ptr) {
                 pcs_ptr->parent_pcs_ptr->average_qp = 0;
                 for (int sb_addr = 0; sb_addr < pcs_ptr->sb_total_count_pix; ++sb_addr) {
                     sb_ptr           = pcs_ptr->sb_ptr_array[sb_addr];
+#if QP2QINDEX
+                    sb_ptr->qindex   = quantizer_to_qindex[pcs_ptr->picture_qp];
+                    pcs_ptr->parent_pcs_ptr->average_qp += pcs_ptr->picture_qp;
+#else
                     sb_ptr->qp       = (uint8_t)pcs_ptr->picture_qp;
                     sb_ptr->delta_qp = 0;
                     pcs_ptr->parent_pcs_ptr->average_qp += sb_ptr->qp;
+#endif
                 }
             }
             // Get Empty Rate Control Results Buffer

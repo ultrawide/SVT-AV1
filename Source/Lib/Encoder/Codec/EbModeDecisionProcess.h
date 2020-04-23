@@ -286,8 +286,10 @@ typedef struct ModeDecisionContext {
     uint64_t *full_cost_skip_ptr;
     uint64_t *full_cost_merge_ptr;
     // Lambda
+#if !QP2QINDEX
     uint16_t qp;
     uint8_t  chroma_qp;
+#endif
     uint32_t fast_lambda_md[2];
     uint32_t full_lambda_md[2];
     //  Context Variables---------------------------------

@@ -1343,7 +1343,11 @@ void fast_loop_core(ModeDecisionCandidateBuffer *candidate_buffer, PictureContro
     *(candidate_buffer->fast_cost_ptr) = av1_product_fast_cost_func_table[candidate_ptr->type](
         blk_ptr,
         candidate_buffer->candidate_ptr,
+#if QP2QINDEX
+        NOT_USED_VALUE,
+#else
         blk_ptr->qp,
+#endif
         luma_fast_distortion,
         chroma_fast_distortion,
         use_ssd ? full_lambda : fast_lambda,
@@ -3499,7 +3503,11 @@ void md_stage_0(
                     av1_product_fast_cost_func_table[candidate_ptr->type](
                         blk_ptr,
                         candidate_buffer->candidate_ptr,
+#if QP2QINDEX
+                        NOT_USED_VALUE,
+#else
                         blk_ptr->qp,
+#endif
                         luma_fast_distortion,
                         0,
                         fast_lambda,
@@ -4984,8 +4992,13 @@ void av1_cost_calc_cfl(PictureControlSet *pcs_ptr, ModeDecisionCandidateBuffer *
     uint32_t               chroma_height = context_ptr->blk_geom->bheight_uv;
     // FullLoop and TU search
     int32_t  alpha_q3;
+#if QP2QINDEX
+    uint16_t cb_qindex = context_ptr->qp_index;
+    uint16_t cr_qindex = context_ptr->qp_index;
+#else
     uint16_t cb_qp = context_ptr->qp;
     uint16_t cr_qp = context_ptr->qp;
+#endif
 
     full_distortion[DIST_CALC_RESIDUAL]   = 0;
     full_distortion[DIST_CALC_PREDICTION] = 0;
@@ -5051,8 +5064,13 @@ void av1_cost_calc_cfl(PictureControlSet *pcs_ptr, ModeDecisionCandidateBuffer *
                     input_picture_ptr,
                     pcs_ptr,
                     PICTURE_BUFFER_DESC_Cb_FLAG,
+#if QP2QINDEX
+                    cb_qindex,
+                    cr_qindex,
+#else
                     cb_qp,
                     cr_qp,
+#endif
                     &(*count_non_zero_coeffs[1]),
                     &(*count_non_zero_coeffs[2]));
 
@@ -5135,8 +5153,13 @@ void av1_cost_calc_cfl(PictureControlSet *pcs_ptr, ModeDecisionCandidateBuffer *
                     input_picture_ptr,
                     pcs_ptr,
                     PICTURE_BUFFER_DESC_Cr_FLAG,
+#if QP2QINDEX
+                    cb_qindex,
+                    cr_qindex,
+#else
                     cb_qp,
                     cr_qp,
+#endif
                     &(*count_non_zero_coeffs[1]),
                     &(*count_non_zero_coeffs[2]));
         candidate_ptr->v_has_coeff = *count_non_zero_coeffs[2] ? EB_TRUE : EB_FALSE;
@@ -5821,8 +5844,13 @@ static INLINE TxType av1_get_tx_type(BlockSize sb_type, int32_t is_inter, Predic
 void check_best_indepedant_cfl(PictureControlSet *pcs_ptr, EbPictureBufferDesc *input_picture_ptr,
                                ModeDecisionContext *context_ptr, uint32_t input_cb_origin_in_index,
                                uint32_t                     blk_chroma_origin_index,
-                               ModeDecisionCandidateBuffer *candidate_buffer, uint8_t cb_qp,
-                               uint8_t cr_qp, uint64_t *cb_full_distortion,
+                               ModeDecisionCandidateBuffer *candidate_buffer,
+#if QP2QINDEX
+                               uint8_t cb_qindex, uint8_t cr_qindex,
+#else
+                               uint8_t cb_qp, uint8_t cr_qp,
+#endif
+                               uint64_t *cb_full_distortion,
                                uint64_t *cr_full_distortion, uint64_t *cb_coeff_bits,
                                uint64_t *cr_coeff_bits) {
     uint32_t full_lambda =  context_ptr->hbd_mode_decision ?
@@ -5958,8 +5986,13 @@ void check_best_indepedant_cfl(PictureControlSet *pcs_ptr, EbPictureBufferDesc *
                     input_picture_ptr,
                     pcs_ptr,
                     PICTURE_BUFFER_DESC_CHROMA_MASK,
+#if QP2QINDEX
+                    cb_qindex,
+                    cr_qindex,
+#else
                     cb_qp,
                     cr_qp,
+#endif
                     &(*count_non_zero_coeffs[1]),
                     &(*count_non_zero_coeffs[2]));
 
@@ -6410,7 +6443,11 @@ void tx_reset_neighbor_arrays(PictureControlSet *pcs_ptr, ModeDecisionContext *c
 
 void tx_type_search(PictureControlSet *pcs_ptr,
                     ModeDecisionContext *context_ptr, ModeDecisionCandidateBuffer *candidate_buffer,
+#if QP2QINDEX
+                    uint32_t qindex) {
+#else
                     uint32_t qp) {
+#endif
     EbPictureBufferDesc *input_picture_ptr = context_ptr->hbd_mode_decision
                                                  ? pcs_ptr->input_frame16bit
                                                  : pcs_ptr->parent_pcs_ptr->enhanced_picture_ptr;
@@ -6561,7 +6598,11 @@ void tx_type_search(PictureControlSet *pcs_ptr,
             &(((int32_t *)candidate_buffer->residual_quant_coeff_ptr
                    ->buffer_y)[context_ptr->txb_1d_offset]),
             &(((int32_t *)candidate_buffer->recon_coeff_ptr->buffer_y)[context_ptr->txb_1d_offset]),
+#if QP2QINDEX
+            qindex,
+#else
             qp,
+#endif
             seg_qp,
             context_ptr->blk_geom->tx_width[context_ptr->tx_depth][context_ptr->txb_itr],
             context_ptr->blk_geom->tx_height[context_ptr->tx_depth][context_ptr->txb_itr],
@@ -7246,7 +7287,11 @@ void update_tx_candidate_buffer(ModeDecisionCandidateBuffer *candidate_buffer,
 void perform_tx_partitioning(ModeDecisionCandidateBuffer *candidate_buffer,
                              ModeDecisionContext *context_ptr, PictureControlSet *pcs_ptr,
                              uint64_t ref_fast_cost, uint8_t start_tx_depth, uint8_t end_tx_depth,
+#if QP2QINDEX
+                             uint32_t qindex, uint32_t *y_count_non_zero_coeffs, uint64_t *y_coeff_bits,
+#else
                              uint32_t qp, uint32_t *y_count_non_zero_coeffs, uint64_t *y_coeff_bits,
+#endif
                              uint64_t *y_full_distortion) {
     uint32_t full_lambda =  context_ptr->hbd_mode_decision ?
         context_ptr->full_lambda_md[EB_10_BIT_MD] :
@@ -7365,14 +7410,22 @@ void perform_tx_partitioning(ModeDecisionCandidateBuffer *candidate_buffer,
                     32 &&
                 context_ptr->blk_geom->tx_height[context_ptr->tx_depth][context_ptr->txb_itr] <= 32)
                 if (!tx_search_skip_flag) {
+#if QP2QINDEX
+                    tx_type_search(pcs_ptr, context_ptr, tx_candidate_buffer, qindex);
+#else
                     tx_type_search(pcs_ptr, context_ptr, tx_candidate_buffer, qp);
+#endif
                 }
 
             product_full_loop(tx_candidate_buffer,
                               context_ptr,
                               pcs_ptr,
                               input_picture_ptr,
+#if QP2QINDEX
+                              context_ptr->blk_ptr->qindex,
+#else
                               context_ptr->blk_ptr->qp,
+#endif
                               &(tx_y_count_non_zero_coeffs[0]),
                               &tx_y_coeff_bits,
                               &tx_y_full_distortion[0]);
@@ -7553,7 +7606,11 @@ void full_loop_core(PictureControlSet *pcs_ptr, SuperBlock *sb_ptr, BlkStruct *b
                                 ref_fast_cost,
                                 start_tx_depth,
                                 end_tx_depth,
+#if QP2QINDEX
+                                context_ptr->blk_ptr->qindex,
+#else
                                 context_ptr->blk_ptr->qp,
+#endif
                                 &(*count_non_zero_coeffs[0]),
                                 &y_coeff_bits,
                                 &y_full_distortion[0]);
@@ -7572,8 +7629,13 @@ void full_loop_core(PictureControlSet *pcs_ptr, SuperBlock *sb_ptr, BlkStruct *b
     cr_coeff_bits = 0;
 
     // FullLoop and TU search
+#if QP2QINDEX
+    uint16_t cb_qindex = context_ptr->qp_index;
+    uint16_t cr_qindex = context_ptr->qp_index;
+#else
     uint16_t cb_qp = context_ptr->qp;
     uint16_t cr_qp = context_ptr->qp;
+#endif
     if (context_ptr->md_staging_skip_full_chroma == EB_FALSE) {
         if (context_ptr->blk_geom->has_uv && context_ptr->chroma_level <= CHROMA_MODE_1) {
 
@@ -7647,8 +7709,13 @@ void full_loop_core(PictureControlSet *pcs_ptr, SuperBlock *sb_ptr, BlkStruct *b
                         input_picture_ptr,
                         pcs_ptr,
                         PICTURE_BUFFER_DESC_CHROMA_MASK,
+#if QP2QINDEX
+                        cb_qindex,
+                        cr_qindex,
+#else
                         cb_qp,
                         cr_qp,
+#endif
                         &(*count_non_zero_coeffs[1]),
                         &(*count_non_zero_coeffs[2]));
 
@@ -7685,8 +7752,13 @@ void full_loop_core(PictureControlSet *pcs_ptr, SuperBlock *sb_ptr, BlkStruct *b
                                               input_cb_origin_in_index,
                                               blk_chroma_origin_index,
                                               candidate_buffer,
+#if QP2QINDEX
+                                              (uint8_t)cb_qindex,
+                                              (uint8_t)cr_qindex,
+#else
                                               (uint8_t)cb_qp,
                                               (uint8_t)cr_qp,
+#endif
                                               cb_full_distortion,
                                               cr_full_distortion,
                                               &cb_coeff_bits,
@@ -8166,7 +8238,11 @@ void move_blk_data(PictureControlSet *pcs, EncDecContext *context_ptr, BlkStruct
 #if !CLEAN_UP_SB_DATA_4
     dst_cu->split_flag_context   = src_cu->split_flag_context;
 #endif
+#if QP2QINDEX
+    dst_cu->qindex               = src_cu->qindex;
+#else
     dst_cu->qp                   = src_cu->qp;
+#endif
 #if !CLEAN_UP_SB_DATA_2
     dst_cu->delta_qp             = src_cu->delta_qp;
 #endif
@@ -8271,7 +8347,11 @@ void move_blk_data_redund(PictureControlSet *pcs, ModeDecisionContext *context_p
 #if !CLEAN_UP_SB_DATA_4
     dst_cu->split_flag_context   = src_cu->split_flag_context;
 #endif
+#if QP2QINDEX
+    dst_cu->qindex               = src_cu->qindex;
+#else
     dst_cu->qp                   = src_cu->qp;
+#endif
 #if !CLEAN_UP_SB_DATA_2
     dst_cu->delta_qp             = src_cu->delta_qp;
     dst_cu->leaf_index           = src_cu->leaf_index;
@@ -8844,8 +8924,13 @@ void search_best_independent_uv_mode(PictureControlSet *  pcs_ptr,
             context_ptr->candidate_buffer_ptr_array[uv_cand_buff_indices[uv_mode_count]];
         candidate_buffer->candidate_ptr =
             &context_ptr->fast_candidate_array[uv_cand_buff_indices[uv_mode_count]- start_full_buffer_index + start_fast_buffer_index];
+#if QP2QINDEX
+        uint16_t cb_qindex                           = context_ptr->qp_index;
+        uint16_t cr_qindex                           = context_ptr->qp_index;
+#else
         uint16_t cb_qp                               = context_ptr->qp;
         uint16_t cr_qp                               = context_ptr->qp;
+#endif
         uint64_t cb_coeff_bits                       = 0;
         uint64_t cr_coeff_bits                       = 0;
         uint64_t cb_full_distortion[DIST_CALC_TOTAL] = {0, 0};
@@ -8887,8 +8972,13 @@ void search_best_independent_uv_mode(PictureControlSet *  pcs_ptr,
                     input_picture_ptr,
                     pcs_ptr,
                     PICTURE_BUFFER_DESC_CHROMA_MASK,
+#if QP2QINDEX
+                    cb_qindex,
+                    cr_qindex,
+#else
                     cb_qp,
                     cr_qp,
+#endif
                     &(*count_non_zero_coeffs[1]),
                     &(*count_non_zero_coeffs[2]));
 
@@ -8954,7 +9044,11 @@ void search_best_independent_uv_mode(PictureControlSet *  pcs_ptr,
                 av1_product_fast_cost_func_table[candidate_ptr->type](
                     context_ptr->blk_ptr,
                     candidate_ptr,
+#if QP2QINDEX
+                    NOT_USED_VALUE,
+#else
                     context_ptr->qp,
+#endif
                     0,
                     0,
                     0,
@@ -9858,7 +9952,11 @@ uint8_t update_skip_nsq_shapes(SequenceControlSet *scs_ptr, PictureControlSet *p
 #if SQ_WEIGHT_PATCH_0 || SQ_WEIGHT_PATCH_1 || SQ_WEIGHT_PATCH_2 || SQ_WEIGHT_PATCH_3
     sq_weight += sq_weight_per_qp[scs_ptr->static_config.qp];
 #else
+#if QP2QINDEX
+    sq_weight += sq_weight_per_qp[context_ptr->qp_index >> 2];
+#else
     sq_weight += sq_weight_per_qp[context_ptr->qp];
+#endif
 #endif
 #else
     // use an aggressive threshold for QP 20
@@ -9928,8 +10026,13 @@ uint8_t update_skip_nsq_shapes(SequenceControlSet *scs_ptr, PictureControlSet *p
                     if (offset >= (uint32_t)-nsq_weight_per_qp[scs_ptr->static_config.qp])
                         offset += nsq_weight_per_qp[scs_ptr->static_config.qp];
 #else
+#if QP2QINDEX
+                    if (offset >= (uint32_t) -nsq_weight_per_qp[context_ptr->qp_index >> 2])
+                        offset += nsq_weight_per_qp[context_ptr->qp_index >> 2];
+#else
                     if (offset >= (uint32_t) -nsq_weight_per_qp[context_ptr->qp])
                         offset += nsq_weight_per_qp[context_ptr->qp];
+#endif
 #endif
 #else
                     if (offset >= 5 && scs_ptr->static_config.qp <= 20)
@@ -9994,8 +10097,13 @@ uint8_t update_skip_nsq_shapes(SequenceControlSet *scs_ptr, PictureControlSet *p
                     if (offset >= (uint32_t)-nsq_weight_per_qp[scs_ptr->static_config.qp])
                         offset += nsq_weight_per_qp[scs_ptr->static_config.qp];
 #else
+#if QP2QINDEX
+                    if (offset >= (uint32_t) -nsq_weight_per_qp[context_ptr->qp_index >> 2])
+                        offset += nsq_weight_per_qp[context_ptr->qp_index >> 2];
+#else
                     if (offset >= (uint32_t) -nsq_weight_per_qp[context_ptr->qp])
                         offset += nsq_weight_per_qp[context_ptr->qp];
+#endif
 #endif
 #else
                     if (offset >= 5 && scs_ptr->static_config.qp <= 20)
@@ -10583,7 +10691,11 @@ EB_EXTERN EbErrorType mode_decision_sb(SequenceControlSet *scs_ptr, PictureContr
         blk_ptr->split_flag =
             (uint16_t)leaf_data_ptr
                 ->split_flag; //mdc indicates smallest or non valid CUs with split flag=
+#if QP2QINDEX
+        blk_ptr->qindex      = context_ptr->qp_index;
+#else
         blk_ptr->qp          = context_ptr->qp;
+#endif
 #if CLEAN_UP_SB_DATA_1
         context_ptr->md_local_blk_unit[blk_idx_mds].best_d1_blk = blk_idx_mds;
 #else

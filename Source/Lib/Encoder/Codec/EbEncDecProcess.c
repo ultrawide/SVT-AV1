@@ -211,8 +211,9 @@ static void reset_enc_dec(EncDecContext *context_ptr, PictureControlSet *pcs_ptr
                           SequenceControlSet *scs_ptr, uint32_t segment_index) {
     context_ptr->is_16bit = (EbBool)(scs_ptr->static_config.encoder_bit_depth > EB_8BIT) || (EbBool)(scs_ptr->static_config.encoder_16bit_pipeline);
     context_ptr->bit_depth = scs_ptr->static_config.encoder_bit_depth;
-    uint16_t picture_qp   = pcs_ptr->picture_qp;
     uint16_t tile_group_idx = context_ptr->tile_group_index;
+#if !QP2QINDEX
+    uint16_t picture_qp   = pcs_ptr->picture_qp;
     context_ptr->qp = picture_qp;
     context_ptr->qp_index =
         pcs_ptr->parent_pcs_ptr->frm_hdr.delta_q_params.delta_q_present
@@ -224,11 +225,22 @@ static void reset_enc_dec(EncDecContext *context_ptr, PictureControlSet *pcs_ptr
     // Lambda Assignement
     context_ptr->qp_index =
         (uint8_t)pcs_ptr->parent_pcs_ptr->frm_hdr.quantization_params.base_q_idx;
+#endif
+
     (*av1_lambda_assignment_function_table[pcs_ptr->parent_pcs_ptr->pred_structure])(
+#if QP2QINDEX
+        &context_ptr->pic_fast_lambda,
+        &context_ptr->pic_full_lambda,
+#else
         &context_ptr->fast_lambda,
         &context_ptr->full_lambda,
+#endif
         (uint8_t)pcs_ptr->parent_pcs_ptr->enhanced_picture_ptr->bit_depth,
+#if QP2QINDEX
+        pcs_ptr->parent_pcs_ptr->frm_hdr.quantization_params.base_q_idx,
+#else
         context_ptr->qp_index,
+#endif
         EB_TRUE);
     // Reset MD rate Estimation table to initial values by copying from md_rate_estimation_array
     if (context_ptr->is_md_rate_estimation_ptr_owner) {
@@ -261,6 +273,7 @@ static void reset_enc_dec(EncDecContext *context_ptr, PictureControlSet *pcs_ptr
 /******************************************************
  * EncDec Configure SB
  ******************************************************/
+#if !QP2QINDEX
 static void enc_dec_configure_sb(EncDecContext *context_ptr, SuperBlock *sb_ptr,
                                  PictureControlSet *pcs_ptr, uint8_t sb_qp) {
     context_ptr->qp = sb_qp;
@@ -280,6 +293,7 @@ static void enc_dec_configure_sb(EncDecContext *context_ptr, SuperBlock *sb_ptr,
 
     return;
 }
+#endif
 
 /******************************************************
  * Update MD Segments
@@ -6166,7 +6180,11 @@ void *enc_dec_kernel(void *input_ptr) {
                     }
                     // Configure the SB
                     mode_decision_configure_sb(
+#if QP2QINDEX
+                        context_ptr->md_context, pcs_ptr, (uint8_t)sb_ptr->qindex);
+#else
                         context_ptr->md_context, pcs_ptr, (uint8_t)sb_ptr->qp);
+#endif
 #if DEPTH_PART_CLEAN_UP && !OPT_BLOCK_INDICES_GEN_0
                     // Build the t=0 cand_block_array
                     build_starting_cand_block_array(scs_ptr, pcs_ptr, context_ptr, mdc_ptr);
@@ -6353,8 +6371,12 @@ void *enc_dec_kernel(void *input_ptr) {
                                      sb_index,
                                      context_ptr->md_context);
 
+                    //Jing: Skip configure SB for encdec
+                    //      Currently EDcontext only stores frame_level lambda/qp
+#if !QP2QINDEX
                     // Configure the SB
                     enc_dec_configure_sb(context_ptr, sb_ptr, pcs_ptr, (uint8_t)sb_ptr->qp);
+#endif
 
 #if NO_ENCDEC
                     no_enc_dec_pass(scs_ptr,
@@ -6418,7 +6440,11 @@ void *enc_dec_kernel(void *input_ptr) {
             EB_MEMCPY(pcs_ptr->parent_pcs_ptr->av1x->wiener_restore_cost,
                       context_ptr->md_rate_estimation_ptr->wiener_restore_fac_bits,
                       2 * sizeof(int32_t));
+#if QP2QINDEX
+            pcs_ptr->parent_pcs_ptr->av1x->rdmult = context_ptr->pic_full_lambda;
+#else
             pcs_ptr->parent_pcs_ptr->av1x->rdmult = context_ptr->full_lambda;
+#endif
         }
 
         if (last_sb_flag) {
