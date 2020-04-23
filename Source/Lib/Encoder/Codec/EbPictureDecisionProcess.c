@@ -1030,7 +1030,16 @@ EbErrorType signal_derivation_multi_processes_oq(
 
     // Set disallow_nsq
 #if M8_NSQ
+#if M5_I
+    if (pcs_ptr->enc_mode <= ENC_M5) {
+        pcs_ptr->disallow_nsq = EB_FALSE;
+    }
+    else {
+        pcs_ptr->disallow_nsq = pcs_ptr->slice_type == I_SLICE ? EB_FALSE : EB_TRUE;
+    }
+#else
     pcs_ptr->disallow_nsq = pcs_ptr->enc_mode <= ENC_M5 ? EB_FALSE : EB_TRUE;
+#endif
 #else
     pcs_ptr->disallow_nsq = EB_FALSE;
 #endif
@@ -1291,7 +1300,11 @@ EbErrorType signal_derivation_multi_processes_oq(
 #endif
             pcs_ptr->ibc_mode = 0;
         else
+#if M5_I
+            pcs_ptr->ibc_mode = 0;
+#else
             pcs_ptr->ibc_mode = 1;
+#endif
     }
     else {
         // this will enable sc tools for P frames. hence change bitstream even if
@@ -1323,7 +1336,11 @@ EbErrorType signal_derivation_multi_processes_oq(
 #if MAR4_M3_ADOPTIONS
 #if MAR10_ADOPTIONS
 #if M8_PALETTE
+#if M5_I
+            (pcs_ptr->enc_mode <= ENC_M5 || pcs_ptr->slice_type==I_SLICE)
+#else
             pcs_ptr->enc_mode <= ENC_M5
+#endif
 #else
             pcs_ptr->enc_mode <= ENC_M8
 #endif
@@ -1351,8 +1368,13 @@ EbErrorType signal_derivation_multi_processes_oq(
         if (pcs_ptr->enc_mode <= ENC_M5)
             pcs_ptr->loop_filter_mode = 3;
         else
+#if M5_I
+            pcs_ptr->loop_filter_mode = pcs_ptr->slice_type == I_SLICE ? 3 :
+                                        pcs_ptr->is_used_as_reference_flag ? 1 : 0;
+#else
             pcs_ptr->loop_filter_mode =
             pcs_ptr->is_used_as_reference_flag ? 1 : 0;
+#endif
 #else
         pcs_ptr->loop_filter_mode = 3;
 #endif
@@ -1384,7 +1406,11 @@ EbErrorType signal_derivation_multi_processes_oq(
             if (pcs_ptr->enc_mode <= ENC_M5)
                 pcs_ptr->cdef_filter_mode = 5;
             else
+#if M5_I
+                pcs_ptr->cdef_filter_mode = pcs_ptr->slice_type==I_SLICE ? 5 : 2;
+#else
                 pcs_ptr->cdef_filter_mode = 2;
+#endif
 #else
         pcs_ptr->cdef_filter_mode = 5;
 #endif
@@ -1416,7 +1442,11 @@ EbErrorType signal_derivation_multi_processes_oq(
         if (pcs_ptr->enc_mode <= ENC_M5)
             cm->sg_filter_mode = 4;
         else
+#if M5_I
+            cm->sg_filter_mode = pcs_ptr->slice_type==I_SLICE ? 4 : 1;
+#else
             cm->sg_filter_mode = 1;
+#endif
 #else
         cm->sg_filter_mode = 4;
 #endif
@@ -1449,7 +1479,11 @@ EbErrorType signal_derivation_multi_processes_oq(
     else if (pcs_ptr->enc_mode <= ENC_M5)
         cm->sg_filter_mode = 3;
     else
+#if M5_I
+        cm->sg_filter_mode = pcs_ptr->slice_type == I_SLICE ? 3 : 1;
+#else
         cm->sg_filter_mode = 1;
+#endif
 #else
     else
         cm->sg_filter_mode = 3;
@@ -1581,7 +1615,11 @@ EbErrorType signal_derivation_multi_processes_oq(
             else
                 pcs_ptr->intra_pred_mode = 3;
         else
+#if M5_I
+            pcs_ptr->intra_pred_mode  = pcs_ptr->slice_type == I_SLICE ? 1 : 3;
+#else
             pcs_ptr->intra_pred_mode = 3;
+#endif
 #else
         else
             if (pcs_ptr->temporal_layer_index == 0)

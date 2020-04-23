@@ -1923,7 +1923,11 @@ void set_md_stage_counts(PictureControlSet *pcs_ptr, ModeDecisionContext *contex
                     inter_scaling_denom = 5;
                     // INTRA
                     intra_scaling_num = 1;
+#if M5_I
+                    intra_scaling_denom = pcs_ptr->slice_type == I_SLICE ? 1 : 5;
+#else
                     intra_scaling_denom = 5;
+#endif
 #else
                     // INTER
                     inter_scaling_num = 3;
@@ -2005,7 +2009,11 @@ void set_md_stage_counts(PictureControlSet *pcs_ptr, ModeDecisionContext *contex
                     inter_scaling_denom = 5;
                     // INTRA
                     intra_scaling_num = 1;
+#if M5_I
+                    intra_scaling_denom = pcs_ptr->slice_type == I_SLICE ? 1 : 5;
+#else
                     intra_scaling_denom = 5;
+#endif
 #else
                     // INTER
                     inter_scaling_num = 1;

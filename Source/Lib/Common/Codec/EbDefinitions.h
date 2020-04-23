@@ -254,6 +254,7 @@ extern "C" {
 #define PR_1217 1
 #define FIX_CHROMA_PALETTE_INTERACTION 1 // Fix Chroma/Palette interaction and enable independent in M0 for SC
 #define QP2QINDEX 1 // switch QP to qindex for MD
+#define M5_I  0  //change M5 presets to M8 for I slice
 
 // END  MAY2020 /////////////////////////////////////////////////////////
 

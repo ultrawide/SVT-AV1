@@ -1073,7 +1073,16 @@ EbErrorType signal_derivation_mode_decision_config_kernel_oq(
 
     // CDF
 #if M8_CDF
+#if M5_I
+    if (pcs_ptr->enc_mode <= ENC_M5) {
+        pcs_ptr->update_cdf =  1;
+    }
+    else{
+        pcs_ptr->update_cdf = pcs_ptr->slice_type ==I_SLICE ? 1 : 0;
+    }
+#else
     pcs_ptr->update_cdf = (pcs_ptr->enc_mode <= ENC_M5) ? 1 : 0;
+#endif
 #else
     if (pcs_ptr->parent_pcs_ptr->sc_content_detected)
 #if MAR2_M7_ADOPTIONS
