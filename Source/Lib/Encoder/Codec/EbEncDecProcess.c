@@ -1934,10 +1934,10 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
 #if MAR17_ADOPTIONS
     if (enc_mode <= ENC_M7)
 #else
-    if (enc_mode <= ENC_M5)
+    if(enc_mode <= ENC_M5)
 #endif
         context_ptr->md_disable_cfl = EB_FALSE;
-    else if (!pcs_ptr->parent_pcs_ptr->sc_content_detected)
+    else if(!pcs_ptr->parent_pcs_ptr->sc_content_detected)
 #endif
         context_ptr->md_disable_cfl = EB_TRUE;
 #endif
@@ -1985,7 +1985,7 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
         context_ptr->intra_chroma_search_follows_intra_luma_injection = 1;
 #else
     context_ptr->intra_chroma_search_follows_intra_luma_injection = 1;
-    if (enc_mode == ENC_M5)
+     if (enc_mode == ENC_M5)
         context_ptr->intra_chroma_search_follows_intra_luma_injection = 1;
     else
         context_ptr->intra_chroma_search_follows_intra_luma_injection = 0;
@@ -1993,17 +1993,8 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
 #endif
 #endif
 #if M8_4x4
-    // Set disallow_4x4
-#if M5_I
-    if (pcs_ptr->enc_mode <= ENC_M5) {
-        context_ptr->disallow_4x4 = EB_FALSE;
-    }
-    else {
-        context_ptr->disallow_4x4 = pcs_ptr->slice_type==I_SLICE ? EB_FALSE : EB_TRUE;
-    }
-#else
+     // Set disallow_4x4
      context_ptr->disallow_4x4 = pcs_ptr->enc_mode <= ENC_M5 ? EB_FALSE : EB_TRUE;
-#endif
      // If SB non-multiple of 4, then disallow_4x4 could not be used
      // SB Stats
      uint32_t sb_width =
@@ -2625,11 +2616,7 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
 #endif
                     context_ptr->enable_rdoq = EB_TRUE;
                 else
-#if M5_I
-                    context_ptr->enable_rdoq = pcs_ptr->slice_type==I_SLICE ? EB_TRUE : EB_FALSE;
-#else
                     context_ptr->enable_rdoq = EB_FALSE;
-#endif
 #if MAR4_M6_ADOPTIONS
 #if MAR10_ADOPTIONS
             else if (enc_mode <= ENC_M8)
@@ -5304,13 +5291,8 @@ static void perform_pred_depth_refinement(SequenceControlSet *scs_ptr, PictureCo
                                 e_depth = pcs_ptr->slice_type == I_SLICE ?  2 :  1;
                             }
                             else {
-#if M5_I
-                                s_depth = pcs_ptr->slice_type == I_SLICE ? -2 : 0;
-                                e_depth = pcs_ptr->slice_type == I_SLICE ?  2 : 0;
-#else
                                 s_depth = pcs_ptr->slice_type == I_SLICE ? -1 : 0;
                                 e_depth = pcs_ptr->slice_type == I_SLICE ?  1 : 0;
-#endif
                             }
 #else
                             s_depth = pcs_ptr->slice_type == I_SLICE ? -2 : -1;
