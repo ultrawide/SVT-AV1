@@ -330,6 +330,18 @@ extern "C" {
 #define APR23_4AM_M6_ADOPTIONS 1
 #define APR25_10AM_ADOPTIONS 1
 #define APR25_11AM_ADOPTIONS 1
+
+#define ENABLE_CYCLES_ALLOCATION_1     0
+#define DISABLE_OLD_ACTIONS            0
+#define SWICHABLE_ENC_MODE             0
+#if SWICHABLE_ENC_MODE                
+#define SB_ENC_MODE_BAND1              0
+#define SB_ENC_MODE_BAND2              0
+#define SB_ENC_MODE_BAND3              0
+#define SB_ENC_MODE_BAND4              0
+#define SB_ENC_MODE_BAND5              0
+#define SB_ENC_MODE_BAND6              0
+#endif
 #endif
 
 // END  MAY2020 /////////////////////////////////////////////////////////

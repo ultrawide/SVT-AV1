@@ -1381,7 +1381,9 @@ void fast_loop_core(ModeDecisionCandidateBuffer *candidate_buffer, PictureContro
 void set_md_stage_counts(PictureControlSet *pcs_ptr, ModeDecisionContext *context_ptr,
                          uint32_t fastCandidateTotalCount) {
     SequenceControlSet *scs = (SequenceControlSet *)(pcs_ptr->scs_wrapper_ptr->object_ptr);
-
+#if SWICHABLE_ENC_MODE
+    uint8_t enc_mode = context_ptr->md_encode_mode;
+#endif
     // Step 1: derive bypass_stage1 flags
     if (context_ptr->md_staging_mode == MD_STAGING_MODE_1 ||
         context_ptr->md_staging_mode == MD_STAGING_MODE_2)
@@ -1789,7 +1791,7 @@ void set_md_stage_counts(PictureControlSet *pcs_ptr, ModeDecisionContext *contex
         context_ptr->md_stage_1_count[CAND_CLASS_0] = MAX(context_ptr->md_stage_1_count[CAND_CLASS_0], 1);
 
 #endif
-#if SB_CLASSIFIER
+#if SB_CLASSIFIER && !DISABLE_OLD_ACTIONS
         if (context_ptr->sb_class == LOW_COMPLEX_CLASS && context_ptr->enable_area_based_cycles_allocation) {
             for (uint8_t cidx = 0; cidx < CAND_CLASS_TOTAL; ++cidx) {
                 context_ptr->md_stage_1_count[cidx] = (context_ptr->md_stage_1_count[cidx] + 1) / 2;
@@ -1799,8 +1801,13 @@ void set_md_stage_counts(PictureControlSet *pcs_ptr, ModeDecisionContext *contex
 #endif
             ////MULT
 #if SHIFT_M3_SC_TO_M1
+#if SWICHABLE_ENC_MODE
+        if (((enc_mode <= ENC_M2) && !(pcs_ptr->parent_pcs_ptr->sc_content_detected)) ||
+            ((enc_mode <= ENC_M0 && pcs_ptr->parent_pcs_ptr->sc_content_detected) && context_ptr->blk_geom->shape == PART_N)) {
+#else
         if (((pcs_ptr->enc_mode <= ENC_M2) && !(pcs_ptr->parent_pcs_ptr->sc_content_detected)) ||
             ((pcs_ptr->enc_mode <= ENC_M0 && pcs_ptr->parent_pcs_ptr->sc_content_detected) && context_ptr->blk_geom->shape == PART_N)) {
+#endif
 #else
 #if APR23_ADOPTIONS
         if (((pcs_ptr->enc_mode <= ENC_M2) && !(pcs_ptr->parent_pcs_ptr->sc_content_detected)) ||
@@ -1902,7 +1909,11 @@ void set_md_stage_counts(PictureControlSet *pcs_ptr, ModeDecisionContext *contex
                 else
 #endif
 #if M1_COMBO_1 || NEW_M1_CAND
+#if SWICHABLE_ENC_MODE
+                if (enc_mode <= ENC_M0) {
+#else
                 if (pcs_ptr->enc_mode <= ENC_M0) {
+#endif
 #else
 #if PRESETS_SHIFT
                 if (pcs_ptr->enc_mode <= ENC_M2) {
@@ -1930,7 +1941,11 @@ void set_md_stage_counts(PictureControlSet *pcs_ptr, ModeDecisionContext *contex
 #if UPGRADE_M6_M7_M8
 #if APR25_12AM_ADOPTIONS
 #if SHIFT_M6_SC_TO_M5
+#if SWICHABLE_ENC_MODE
+                else if (enc_mode <= ENC_M4) {
+#else
                 else if (pcs_ptr->enc_mode <= ENC_M4) {
+#endif
 #else
                 else if (pcs_ptr->enc_mode <= ENC_M5) {
 #endif
@@ -2008,7 +2023,11 @@ void set_md_stage_counts(PictureControlSet *pcs_ptr, ModeDecisionContext *contex
                 } else
 #endif
 #if PRESETS_SHIFT
+#if SWICHABLE_ENC_MODE
+                if (enc_mode <= ENC_M2) {
+#else
                 if (pcs_ptr->enc_mode <= ENC_M2) {
+#endif
 #else
                 if (pcs_ptr->enc_mode <= ENC_M3) {
 #endif
@@ -2025,7 +2044,11 @@ void set_md_stage_counts(PictureControlSet *pcs_ptr, ModeDecisionContext *contex
                 }
 #if MAR25_ADOPTIONS
 #if M8_NIC
+#if SWICHABLE_ENC_MODE
+                else if (enc_mode <= ENC_M5) {
+#else
                 else if (pcs_ptr->enc_mode <= ENC_M5) {
+#endif
 #else
                 else if (pcs_ptr->enc_mode <= ENC_M8) {
 #endif
@@ -2136,8 +2159,13 @@ void set_md_stage_counts(PictureControlSet *pcs_ptr, ModeDecisionContext *contex
 #endif
 #if APR23_ADOPTIONS
 #if M1_COMBO_3 || NEW_M1_CAND
+#if SWICHABLE_ENC_MODE
+            if ((enc_mode > ENC_M0 && pcs_ptr->parent_pcs_ptr->input_resolution > INPUT_SIZE_480p_RANGE) || enc_mode > ENC_M2 ||
+                (pcs_ptr->parent_pcs_ptr->sc_content_detected && enc_mode > ENC_M0)) {
+#else
             if ((pcs_ptr->enc_mode > ENC_M0 && pcs_ptr->parent_pcs_ptr->input_resolution > INPUT_SIZE_480p_RANGE) || pcs_ptr->enc_mode > ENC_M2 ||
                 (pcs_ptr->parent_pcs_ptr->sc_content_detected && pcs_ptr->enc_mode > ENC_M0)) {
+#endif
 #else
             if (pcs_ptr->enc_mode > ENC_M2 ||
                 (pcs_ptr->parent_pcs_ptr->sc_content_detected && pcs_ptr->enc_mode > ENC_M0)) {
@@ -8522,7 +8550,9 @@ void set_inter_comp_controls(ModeDecisionContext *mdctxt, uint8_t inter_comp_mod
 EbErrorType signal_derivation_block(
     PictureControlSet     *pcs,
     ModeDecisionContext   *context_ptr) {
-
+#if SWICHABLE_ENC_MODE
+    uint8_t enc_mode = context_ptr->md_encode_mode;
+#endif
     EbErrorType return_error = EB_ErrorNone;
 
 #if INTER_COMP_REDESIGN
@@ -8537,7 +8567,11 @@ EbErrorType signal_derivation_block(
     context_ptr->compound_types_to_try = context_ptr->inter_comp_ctrls.enabled ? MD_COMP_WEDGE : MD_COMP_AVG;
 #if APR22_ADOPTIONS
 #if M2_COMBO_1 || M1_COMBO_3 || NEW_M1_CAND
+#if SWICHABLE_ENC_MODE
+    if (enc_mode <= ENC_M0)
+#else
     if (pcs->enc_mode <= ENC_M0)
+#endif
 #else
     if (pcs->enc_mode <= ENC_M2)
 #endif

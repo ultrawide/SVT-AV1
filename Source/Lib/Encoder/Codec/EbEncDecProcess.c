@@ -1533,6 +1533,23 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
 
     uint8_t enc_mode = pcs_ptr->enc_mode;
     uint8_t pd_pass = context_ptr->pd_pass;
+#if SWICHABLE_ENC_MODE
+    if (pd_pass == PD_PASS_2) {
+        if (context_ptr->sb_class == HIGH_COMPLEX_CLASS)
+            enc_mode = SB_ENC_MODE_BAND1;
+        if (context_ptr->sb_class == MEDIUM_COMPLEX_CLASS)
+            enc_mode = SB_ENC_MODE_BAND2;
+        if (context_ptr->sb_class == LOW_COMPLEX_CLASS)
+            enc_mode = SB_ENC_MODE_BAND3;
+        if (context_ptr->sb_class == 2*HIGH_COMPLEX_CLASS)
+            enc_mode = SB_ENC_MODE_BAND4;
+        if (context_ptr->sb_class == 2*MEDIUM_COMPLEX_CLASS)
+            enc_mode = SB_ENC_MODE_BAND5;
+        if (context_ptr->sb_class == 2*LOW_COMPLEX_CLASS)
+            enc_mode = SB_ENC_MODE_BAND6;
+    }
+    context_ptr->md_encode_mode = enc_mode;
+#endif
 #if USE_M8_IN_PD1
     if (pd_pass == PD_PASS_1) {
         enc_mode = ENC_M8;
@@ -1579,6 +1596,9 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
             context_ptr->coeffcients_area_based_cycles_allocation_level = 1;
         else
             context_ptr->coeffcients_area_based_cycles_allocation_level = 0;
+#if ENABLE_CYCLES_ALLOCATION_1
+        context_ptr->coeffcients_area_based_cycles_allocation_level = 1;
+#endif
     }
 #if !NEW_M1_CAND
 #if !M1_COMBO_2
@@ -2204,7 +2224,11 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
          context_ptr->md_disallow_nsq = (enc_mode <= ENC_M0) ? 0 : 1;
      else
          // Update nsq settings based on the sb_class
+#if !DISABLE_OLD_ACTIONS
          context_ptr->md_disallow_nsq = (context_ptr->enable_area_based_cycles_allocation &&  context_ptr->sb_class == HIGH_COMPLEX_CLASS) ? 1 : pcs_ptr->parent_pcs_ptr->disallow_nsq;
+#else
+         context_ptr->md_disallow_nsq = pcs_ptr->parent_pcs_ptr->disallow_nsq;
+#endif
 #else
      // Update nsq settings based on the sb_class
      context_ptr->md_disallow_nsq = (context_ptr->enable_area_based_cycles_allocation &&  context_ptr->sb_class == HIGH_COMPLEX_CLASS ) ? 1 : pcs_ptr->parent_pcs_ptr->disallow_nsq;
@@ -3521,7 +3545,7 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
         context_ptr->md_tx_size_search_mode = 0;
     else
         context_ptr->md_tx_size_search_mode = pcs_ptr->parent_pcs_ptr->tx_size_search_mode;
-#if OPT_BLOCK_INDICES_GEN_2
+#if OPT_BLOCK_INDICES_GEN_2 && !DISABLE_OLD_ACTIONS
     // Update txs settings based on the sb_class
     context_ptr->md_tx_size_search_mode = (context_ptr->enable_area_based_cycles_allocation && context_ptr->sb_class == MEDIUM_COMPLEX_CLASS) ? 0 : context_ptr->md_tx_size_search_mode;
 #endif
@@ -5424,9 +5448,18 @@ uint64_t  mr_pd_level_tab[2][9][2][3] =
     }
 };
 #endif
+#if SWICHABLE_ENC_MODE
+void derive_start_end_depth(PictureControlSet *pcs_ptr,ModeDecisionContext *context_ptr, SuperBlock *sb_ptr, 
+                            uint32_t sb_size,int8_t *s_depth, int8_t *e_depth, const BlockGeom *blk_geom) {
+#else
 void derive_start_end_depth(PictureControlSet *pcs_ptr, SuperBlock *sb_ptr, uint32_t sb_size,
                             int8_t *s_depth, int8_t *e_depth, const BlockGeom *blk_geom) {
+#endif
+#if SWICHABLE_ENC_MODE
+    uint8_t encode_mode = context_ptr->md_encode_mode;
+#else
     uint8_t encode_mode = pcs_ptr->parent_pcs_ptr->enc_mode;
+#endif
 
     int8_t start_depth = sb_size == BLOCK_128X128 ? 0 : 1;
     int8_t end_depth   = 5;
@@ -5618,6 +5651,14 @@ static uint8_t determine_sb_class(
         sb_class = MEDIUM_COMPLEX_CLASS;
     else if (count_non_zero_coeffs >= ((total_samples * sb_class_ctrls->sb_class_th[LOW_COMPLEX_CLASS]) / 20))
         sb_class = LOW_COMPLEX_CLASS;
+#if SWICHABLE_ENC_MODE
+    else if (count_non_zero_coeffs >= ((total_samples * (sb_class_ctrls->sb_class_th[LOW_COMPLEX_CLASS] - 2)) / 20))
+        sb_class = 2*HIGH_COMPLEX_CLASS;
+    else if (count_non_zero_coeffs >= ((total_samples * (sb_class_ctrls->sb_class_th[LOW_COMPLEX_CLASS] - 4)) / 20))
+        sb_class = 2*MEDIUM_COMPLEX_CLASS;
+    else if (count_non_zero_coeffs >= ((total_samples * (sb_class_ctrls->sb_class_th[LOW_COMPLEX_CLASS] - 6)) / 20))
+        sb_class = 2*LOW_COMPLEX_CLASS;
+#endif
     return sb_class;
 }
 #endif
@@ -5629,7 +5670,9 @@ static void perform_pred_depth_refinement(SequenceControlSet *scs_ptr, PictureCo
     MdcSbData *results_ptr = &pcs_ptr->mdc_sb_array[sb_index];
 #endif
     uint32_t   blk_index   = 0;
-
+#if SWICHABLE_ENC_MODE
+    uint8_t encode_mode = context_ptr->md_encode_mode;
+#endif
     // Reset mdc_sb_array data to defaults; it will be updated based on the predicted blocks (stored in md_blk_arr_nsq)
     while (blk_index < scs_ptr->max_block_cnt) {
         const BlockGeom *blk_geom                              = get_blk_geom_mds(blk_index);
@@ -5691,7 +5734,11 @@ static void perform_pred_depth_refinement(SequenceControlSet *scs_ptr, PictureCo
 #if MAR19_ADOPTIONS
                         // Shut thresholds in MR_MODE
 #if APR22_ADOPTIONS
+#if SWICHABLE_ENC_MODE
+                        if (MR_MODE_MULTI_PASS_PD || (pcs_ptr->parent_pcs_ptr->sc_content_detected && encode_mode <= ENC_M0)) {
+#else
                         if (MR_MODE_MULTI_PASS_PD || (pcs_ptr->parent_pcs_ptr->sc_content_detected && pcs_ptr->enc_mode <= ENC_M0)) {
+#endif
                             s_depth = -2;
                             e_depth = 2;
                         }
@@ -5705,7 +5752,11 @@ static void perform_pred_depth_refinement(SequenceControlSet *scs_ptr, PictureCo
                         else if (pcs_ptr->parent_pcs_ptr->multi_pass_pd_level == MULTI_PASS_PD_LEVEL_0) {
 #if M8_MPPD
 #if APR24_ADOPTIONS_M6_M7
+#if SWICHABLE_ENC_MODE
+                            if (encode_mode <= ENC_M6) {
+#else
                             if (pcs_ptr->enc_mode <= ENC_M6) {
+#endif
 #else
                             if(pcs_ptr->enc_mode <= ENC_M5) {
 #endif
@@ -5715,7 +5766,11 @@ static void perform_pred_depth_refinement(SequenceControlSet *scs_ptr, PictureCo
                             else {
 #if M5_I_PD
 #if UPGRADE_M6_M7_M8
+#if SWICHABLE_ENC_MODE
+                                if (encode_mode <= ENC_M7) {
+#else
                                 if (pcs_ptr->enc_mode <= ENC_M7) {
+#endif
                                     s_depth = pcs_ptr->slice_type == I_SLICE ? -2 : pcs_ptr->parent_pcs_ptr->is_used_as_reference_flag ? -1 : 0;
                                     e_depth = pcs_ptr->slice_type == I_SLICE ? 2 : pcs_ptr->parent_pcs_ptr->is_used_as_reference_flag ? 1 : 0;
                                 }
@@ -5744,7 +5799,11 @@ static void perform_pred_depth_refinement(SequenceControlSet *scs_ptr, PictureCo
                         }
 #endif
 #if MAR30_ADOPTIONS
+#if SWICHABLE_ENC_MODE
+                        else if ((pcs_ptr->parent_pcs_ptr->sc_content_detected && encode_mode <= ENC_M1)) {
+#else
                         else if ((pcs_ptr->parent_pcs_ptr->sc_content_detected && pcs_ptr->enc_mode <= ENC_M1)) {
+#endif
 
 #if OPT_BLOCK_INDICES_GEN_1
                             s_depth = -3;
@@ -5776,6 +5835,9 @@ static void perform_pred_depth_refinement(SequenceControlSet *scs_ptr, PictureCo
                         }
                         else {
                         derive_start_end_depth(pcs_ptr,
+#if SWICHABLE_ENC_MODE
+                                              context_ptr,
+#endif
                                                sb_ptr,
                                                scs_ptr->seq_header.sb_size,
                                                &s_depth,
