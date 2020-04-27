@@ -1534,19 +1534,21 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
     uint8_t enc_mode = pcs_ptr->enc_mode;
     uint8_t pd_pass = context_ptr->pd_pass;
 #if SWICHABLE_ENC_MODE
-    if (pd_pass == PD_PASS_2) {
-        if (context_ptr->sb_class == HIGH_COMPLEX_CLASS)
-            enc_mode = SB_ENC_MODE_BAND1;
-        if (context_ptr->sb_class == MEDIUM_COMPLEX_CLASS)
-            enc_mode = SB_ENC_MODE_BAND2;
-        if (context_ptr->sb_class == LOW_COMPLEX_CLASS)
-            enc_mode = SB_ENC_MODE_BAND3;
-        if (context_ptr->sb_class == 2*HIGH_COMPLEX_CLASS)
-            enc_mode = SB_ENC_MODE_BAND4;
-        if (context_ptr->sb_class == 2*MEDIUM_COMPLEX_CLASS)
-            enc_mode = SB_ENC_MODE_BAND5;
-        if (context_ptr->sb_class == 2*LOW_COMPLEX_CLASS)
-            enc_mode = SB_ENC_MODE_BAND6;
+    if (pcs_ptr->slice_type != I_SLICE) {
+        if (pd_pass == PD_PASS_2) {
+            if (context_ptr->sb_class == HIGH_COMPLEX_CLASS)
+                enc_mode = SB_ENC_MODE_BAND1;
+            if (context_ptr->sb_class == MEDIUM_COMPLEX_CLASS)
+                enc_mode = SB_ENC_MODE_BAND2;
+            if (context_ptr->sb_class == LOW_COMPLEX_CLASS)
+                enc_mode = SB_ENC_MODE_BAND3;
+            if (context_ptr->sb_class == 2 * HIGH_COMPLEX_CLASS)
+                enc_mode = SB_ENC_MODE_BAND4;
+            if (context_ptr->sb_class == 2 * MEDIUM_COMPLEX_CLASS)
+                enc_mode = SB_ENC_MODE_BAND5;
+            if (context_ptr->sb_class == 2 * LOW_COMPLEX_CLASS)
+                enc_mode = SB_ENC_MODE_BAND6;
+        }
     }
     context_ptr->md_encode_mode = enc_mode;
 #endif
@@ -1576,7 +1578,9 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
         else
             context_ptr->enable_area_based_cycles_allocation = 1;
     }
-
+#if ENABLE_CYCLES_ALLOCATION_1
+    context_ptr->coeffcients_area_based_cycles_allocation_level = 1;
+#else
     if (MR_MODE) {
         if (pcs_ptr->parent_pcs_ptr->input_resolution >= INPUT_SIZE_4K_RANGE)
             context_ptr->coeffcients_area_based_cycles_allocation_level = 2;
@@ -1596,9 +1600,6 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
             context_ptr->coeffcients_area_based_cycles_allocation_level = 1;
         else
             context_ptr->coeffcients_area_based_cycles_allocation_level = 0;
-#if ENABLE_CYCLES_ALLOCATION_1
-        context_ptr->coeffcients_area_based_cycles_allocation_level = 1;
-#endif
     }
 #if !NEW_M1_CAND
 #if !M1_COMBO_2
@@ -1643,6 +1644,7 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
         else
             context_ptr->coeffcients_area_based_cycles_allocation_level = 4;
     }
+#endif
 #endif
 #endif
 #endif
@@ -5456,7 +5458,7 @@ void derive_start_end_depth(PictureControlSet *pcs_ptr, SuperBlock *sb_ptr, uint
                             int8_t *s_depth, int8_t *e_depth, const BlockGeom *blk_geom) {
 #endif
 #if SWICHABLE_ENC_MODE
-    uint8_t encode_mode = context_ptr->md_encode_mode;
+    uint8_t encode_mode = pcs_ptr->parent_pcs_ptr->enc_mode;
 #else
     uint8_t encode_mode = pcs_ptr->parent_pcs_ptr->enc_mode;
 #endif
@@ -5671,7 +5673,7 @@ static void perform_pred_depth_refinement(SequenceControlSet *scs_ptr, PictureCo
 #endif
     uint32_t   blk_index   = 0;
 #if SWICHABLE_ENC_MODE
-    uint8_t encode_mode = context_ptr->md_encode_mode;
+    uint8_t encode_mode = pcs_ptr->enc_mode;
 #endif
     // Reset mdc_sb_array data to defaults; it will be updated based on the predicted blocks (stored in md_blk_arr_nsq)
     while (blk_index < scs_ptr->max_block_cnt) {
