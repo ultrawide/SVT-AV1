@@ -333,6 +333,7 @@ extern "C" {
 
 #define ENABLE_CYCLES_ALLOCATION_1     0
 #define DISABLE_OLD_ACTIONS            0
+#define DISABLE_TXS_NICS_ACTIONS       0
 #define SWICHABLE_ENC_MODE             0
 #if SWICHABLE_ENC_MODE                
 #define SB_ENC_MODE_BAND1              0

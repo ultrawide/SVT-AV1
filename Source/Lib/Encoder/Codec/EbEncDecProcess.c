@@ -1551,6 +1551,25 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
         }
     }
     context_ptr->md_encode_mode = enc_mode;
+    uint8_t disallow_nsq = pcs_ptr->parent_pcs_ptr->disallow_nsq;
+#if APR25_12AM_ADOPTIONS
+    if (pcs_ptr->enc_mode <= ENC_M5) {
+        disallow_nsq = EB_FALSE;
+    }
+#if APR25_3AM_ADOPTIONS
+    else if (pcs_ptr->enc_mode <= ENC_M6 && !pcs_ptr->parent_pcs_ptr->sc_content_detected) {
+#else
+    else if (pcs_ptr->enc_mode <= ENC_M6) {
+#endif
+        disallow_nsq = pcs_ptr->parent_pcs_ptr->is_used_as_reference_flag ? EB_FALSE : EB_TRUE;
+    }
+    else if (pcs_ptr->enc_mode <= ENC_M7) {
+        disallow_nsq = pcs_ptr->slice_type == I_SLICE ? EB_FALSE : EB_TRUE;
+    }
+    else {
+        disallow_nsq = EB_TRUE;
+    }
+#endif
 #endif
 #if USE_M8_IN_PD1
     if (pd_pass == PD_PASS_1) {
@@ -2227,9 +2246,17 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
      else
          // Update nsq settings based on the sb_class
 #if !DISABLE_OLD_ACTIONS
+#if SWICHABLE_ENC_MODE
+         context_ptr->md_disallow_nsq = (context_ptr->enable_area_based_cycles_allocation &&  context_ptr->sb_class == HIGH_COMPLEX_CLASS) ? 1 : disallow_nsq;
+#else
          context_ptr->md_disallow_nsq = (context_ptr->enable_area_based_cycles_allocation &&  context_ptr->sb_class == HIGH_COMPLEX_CLASS) ? 1 : pcs_ptr->parent_pcs_ptr->disallow_nsq;
+#endif
+#else
+#if SWICHABLE_ENC_MODE
+         context_ptr->md_disallow_nsq = disallow_nsq;
 #else
          context_ptr->md_disallow_nsq = pcs_ptr->parent_pcs_ptr->disallow_nsq;
+#endif
 #endif
 #else
      // Update nsq settings based on the sb_class
@@ -3547,7 +3574,7 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
         context_ptr->md_tx_size_search_mode = 0;
     else
         context_ptr->md_tx_size_search_mode = pcs_ptr->parent_pcs_ptr->tx_size_search_mode;
-#if OPT_BLOCK_INDICES_GEN_2 && !DISABLE_OLD_ACTIONS
+#if OPT_BLOCK_INDICES_GEN_2 && !DISABLE_OLD_ACTIONS && !DISABLE_TXS_NICS_ACTIONS
     // Update txs settings based on the sb_class
     context_ptr->md_tx_size_search_mode = (context_ptr->enable_area_based_cycles_allocation && context_ptr->sb_class == MEDIUM_COMPLEX_CLASS) ? 0 : context_ptr->md_tx_size_search_mode;
 #endif
