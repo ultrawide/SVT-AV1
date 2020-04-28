@@ -1538,15 +1538,17 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
         if (pd_pass == PD_PASS_2) {
             if (context_ptr->sb_class == HIGH_COMPLEX_CLASS)
                 enc_mode = SB_ENC_MODE_BAND1;
-            if (context_ptr->sb_class == MEDIUM_COMPLEX_CLASS)
+            if (context_ptr->sb_class == MEDIUM_COMPLEX_CLASS) {
                 enc_mode = SB_ENC_MODE_BAND2;
+                
+            }
             if (context_ptr->sb_class == LOW_COMPLEX_CLASS)
                 enc_mode = SB_ENC_MODE_BAND3;
             if (context_ptr->sb_class == 2 * HIGH_COMPLEX_CLASS)
                 enc_mode = SB_ENC_MODE_BAND4;
-            if (context_ptr->sb_class == 2 * MEDIUM_COMPLEX_CLASS)
+            if (context_ptr->sb_class == 3 * HIGH_COMPLEX_CLASS)
                 enc_mode = SB_ENC_MODE_BAND5;
-            if (context_ptr->sb_class == 2 * LOW_COMPLEX_CLASS)
+            if (context_ptr->sb_class == 4 * HIGH_COMPLEX_CLASS)
                 enc_mode = SB_ENC_MODE_BAND6;
         }
     }
@@ -5684,10 +5686,12 @@ static uint8_t determine_sb_class(
     else if (count_non_zero_coeffs >= ((total_samples * (sb_class_ctrls->sb_class_th[LOW_COMPLEX_CLASS] - 2)) / 20))
         sb_class = 2*HIGH_COMPLEX_CLASS;
     else if (count_non_zero_coeffs >= ((total_samples * (sb_class_ctrls->sb_class_th[LOW_COMPLEX_CLASS] - 4)) / 20))
-        sb_class = 2*MEDIUM_COMPLEX_CLASS;
+        sb_class = 3*HIGH_COMPLEX_CLASS;
     else if (count_non_zero_coeffs >= ((total_samples * (sb_class_ctrls->sb_class_th[LOW_COMPLEX_CLASS] - 6)) / 20))
-        sb_class = 2*LOW_COMPLEX_CLASS;
+        sb_class = 4*HIGH_COMPLEX_CLASS;
 #endif
+
+
     return sb_class;
 }
 #endif
