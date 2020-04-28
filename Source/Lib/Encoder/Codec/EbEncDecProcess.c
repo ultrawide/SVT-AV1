@@ -1553,17 +1553,17 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
     context_ptr->md_encode_mode = enc_mode;
     uint8_t disallow_nsq = pcs_ptr->parent_pcs_ptr->disallow_nsq;
 #if APR25_12AM_ADOPTIONS
-    if (pcs_ptr->enc_mode <= ENC_M5) {
+    if (enc_mode <= ENC_M5) {
         disallow_nsq = EB_FALSE;
     }
 #if APR25_3AM_ADOPTIONS
-    else if (pcs_ptr->enc_mode <= ENC_M6 && !pcs_ptr->parent_pcs_ptr->sc_content_detected) {
+    else if (enc_mode <= ENC_M6 && !pcs_ptr->parent_pcs_ptr->sc_content_detected) {
 #else
     else if (pcs_ptr->enc_mode <= ENC_M6) {
 #endif
         disallow_nsq = pcs_ptr->parent_pcs_ptr->is_used_as_reference_flag ? EB_FALSE : EB_TRUE;
     }
-    else if (pcs_ptr->enc_mode <= ENC_M7) {
+    else if (enc_mode <= ENC_M7) {
         disallow_nsq = pcs_ptr->slice_type == I_SLICE ? EB_FALSE : EB_TRUE;
     }
     else {
