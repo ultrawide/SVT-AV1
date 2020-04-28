@@ -2247,7 +2247,7 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
          context_ptr->md_disallow_nsq = (enc_mode <= ENC_M0) ? 0 : 1;
      else
          // Update nsq settings based on the sb_class
-#if !DISABLE_OLD_ACTIONS
+#if !DISABLE_OLD_ACTIONS && !DISABLE_TXS_NSQ_ACTIONS && !DISABLE_NICS_NSQ_ACTIONS
 #if SWICHABLE_ENC_MODE
          context_ptr->md_disallow_nsq = (context_ptr->enable_area_based_cycles_allocation &&  context_ptr->sb_class == HIGH_COMPLEX_CLASS) ? 1 : disallow_nsq;
 #else
@@ -3576,7 +3576,7 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
         context_ptr->md_tx_size_search_mode = 0;
     else
         context_ptr->md_tx_size_search_mode = pcs_ptr->parent_pcs_ptr->tx_size_search_mode;
-#if OPT_BLOCK_INDICES_GEN_2 && !DISABLE_OLD_ACTIONS && !DISABLE_TXS_NICS_ACTIONS
+#if OPT_BLOCK_INDICES_GEN_2 && !DISABLE_OLD_ACTIONS && !DISABLE_TXS_NICS_ACTIONS &&! DISABLE_TXS_NSQ_ACTIONS
     // Update txs settings based on the sb_class
     context_ptr->md_tx_size_search_mode = (context_ptr->enable_area_based_cycles_allocation && context_ptr->sb_class == MEDIUM_COMPLEX_CLASS) ? 0 : context_ptr->md_tx_size_search_mode;
 #endif
