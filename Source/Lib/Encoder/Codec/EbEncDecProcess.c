@@ -2258,7 +2258,7 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
          context_ptr->md_disallow_nsq = disallow_nsq;
 #else
 #if NSQ_OFF_ACTION
-         context_ptr->md_disallow_nsq = (context_ptr->enable_area_based_cycles_allocation &&  context_ptr->sb_class == SB_CLASS_NUM) ? 1 : pcs_ptr->parent_pcs_ptr->disallow_nsq;
+         context_ptr->md_disallow_nsq = (context_ptr->enable_area_based_cycles_allocation &&  context_ptr->sb_class == SB_CLASS_NUM_NSQ_OFF) ? 1 : pcs_ptr->parent_pcs_ptr->disallow_nsq;
 #else
          context_ptr->md_disallow_nsq = pcs_ptr->parent_pcs_ptr->disallow_nsq;
 #endif
@@ -3383,7 +3383,7 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
                 sequence_control_set_ptr->static_config.sq_weight - 5;
 
 #if SQ_WEIGHT_ACTION
-         context_ptr->sq_weight -= (context_ptr->enable_area_based_cycles_allocation &&  context_ptr->sb_class == SB_CLASS_NUM) ? SQ_WEIGHT_ACTION : 0;
+         context_ptr->sq_weight -= (context_ptr->enable_area_based_cycles_allocation &&  context_ptr->sb_class == SB_CLASS_NUM_NSQ_W) ? SQ_WEIGHT_ACTION : 0;
 #endif
 
     // nsq_hv_level  needs sq_weight to be ON
@@ -5690,6 +5690,22 @@ static uint8_t determine_sb_class(
         sb_class = MEDIUM_COMPLEX_CLASS;
     else if (count_non_zero_coeffs >= ((total_samples * sb_class_ctrls->sb_class_th[LOW_COMPLEX_CLASS]) / 20))
         sb_class = LOW_COMPLEX_CLASS;
+#if ADD_MORE_CALSS
+    else if (count_non_zero_coeffs >= ((total_samples * 10) / 20))
+        sb_class = 4;
+    else if (count_non_zero_coeffs >= ((total_samples * 8) / 20))
+        sb_class = 5;
+    else if (count_non_zero_coeffs >= ((total_samples * 6) / 20))
+        sb_class = 6;
+    else if (count_non_zero_coeffs >= ((total_samples * 4) / 20))
+        sb_class = 7;
+    else if (count_non_zero_coeffs >= ((total_samples * 2) / 20))
+        sb_class = 8;
+    else if (count_non_zero_coeffs >= ((total_samples * 1) / 20))
+        sb_class = 9;
+    else if (count_non_zero_coeffs == 0)
+        sb_class = 10;
+#endif
 #if SWICHABLE_ENC_MODE
     else if (count_non_zero_coeffs >= ((total_samples * (sb_class_ctrls->sb_class_th[LOW_COMPLEX_CLASS] - 2)) / 20))
         sb_class = 2*HIGH_COMPLEX_CLASS;

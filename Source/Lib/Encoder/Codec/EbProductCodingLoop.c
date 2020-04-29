@@ -1800,7 +1800,7 @@ void set_md_stage_counts(PictureControlSet *pcs_ptr, ModeDecisionContext *contex
         }
 #endif
 #if NICS_ACTION
-        if (context_ptr->sb_class == SB_CLASS_NUM && context_ptr->enable_area_based_cycles_allocation) {
+        if (context_ptr->sb_class == SB_CLASS_NUM_NICS && context_ptr->enable_area_based_cycles_allocation) {
             for (uint8_t cidx = 0; cidx < CAND_CLASS_TOTAL; ++cidx) {
                 context_ptr->md_stage_1_count[cidx] = MAX((context_ptr->md_stage_1_count[cidx]) / NICS_ACTION,1);
                 context_ptr->md_stage_2_count[cidx] = MAX((context_ptr->md_stage_2_count[cidx]) / NICS_ACTION,1);
