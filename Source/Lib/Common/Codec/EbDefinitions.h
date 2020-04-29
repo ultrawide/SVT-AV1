@@ -331,8 +331,8 @@ extern "C" {
 #define APR25_10AM_ADOPTIONS 1
 #define APR25_11AM_ADOPTIONS 1
 
-#define ENABLE_CYCLES_ALLOCATION_1     0
-#define DISABLE_OLD_ACTIONS            0
+
+
 #define DISABLE_TXS_NICS_ACTIONS       0
 #define DISABLE_TXS_NSQ_ACTIONS        0
 #define DISABLE_NICS_NSQ_ACTIONS       0
@@ -345,6 +345,12 @@ extern "C" {
 #define SB_ENC_MODE_BAND5              0
 #define SB_ENC_MODE_BAND6              0
 #endif
+#define ENABLE_CYCLES_ALLOCATION_1         0
+#define DISABLE_OLD_ACTIONS                0
+#define SB_CLASS_NUM                       0 
+#define NSQ_OFF_ACTION                     0
+#define SQ_WEIGHT_ACTION                   0
+#define NICS_ACTION                        0
 #endif
 
 // END  MAY2020 /////////////////////////////////////////////////////////

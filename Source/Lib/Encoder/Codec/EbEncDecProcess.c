@@ -2257,7 +2257,11 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
 #if SWICHABLE_ENC_MODE
          context_ptr->md_disallow_nsq = disallow_nsq;
 #else
+#if NSQ_OFF_ACTION
+         context_ptr->md_disallow_nsq = (context_ptr->enable_area_based_cycles_allocation &&  context_ptr->sb_class == SB_CLASS_NUM) ? 1 : pcs_ptr->parent_pcs_ptr->disallow_nsq;
+#else
          context_ptr->md_disallow_nsq = pcs_ptr->parent_pcs_ptr->disallow_nsq;
+#endif
 #endif
 #endif
 #else
@@ -3377,6 +3381,10 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
             else
                 context_ptr->sq_weight =
                 sequence_control_set_ptr->static_config.sq_weight - 5;
+
+#if SQ_WEIGHT_ACTION
+         context_ptr->sq_weight -= (context_ptr->enable_area_based_cycles_allocation &&  context_ptr->sb_class == SB_CLASS_NUM) ? SQ_WEIGHT_ACTION : 0;
+#endif
 
     // nsq_hv_level  needs sq_weight to be ON
     // 0: OFF
