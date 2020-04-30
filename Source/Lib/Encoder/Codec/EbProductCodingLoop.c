@@ -7971,8 +7971,15 @@ void update_intra_chroma_mode(ModeDecisionContext *context_ptr, ModeDecisionCand
                 uint32_t intra_chroma_mode;
                 int32_t  angle_delta;
                 uint8_t  is_directional_chroma_mode_flag;
+
 #if FIXED_LAST_STAGE_SC
+#if CAND_PRUN_OPT
+                uint64_t chroma_at_last_md_stage_cfl_th = candidate_ptr->disallow_cfl ? 0 : context_ptr->chroma_at_last_md_stage_cfl_th;
+
+                if (((context_ptr->best_inter_cost * chroma_at_last_md_stage_cfl_th) < (context_ptr->best_intra_cost * 100))) {
+#else
                 if (((context_ptr->best_inter_cost * context_ptr->chroma_at_last_md_stage_cfl_th) < (context_ptr->best_intra_cost * 100))) {
+#endif
 #else
                 if (((context_ptr->best_inter_cost * (100 + cfl_th)) <
                     (context_ptr->best_intra_cost * 100)) &&
@@ -8134,6 +8141,12 @@ void md_stage_3(PictureControlSet *pcs_ptr, SuperBlock *sb_ptr, BlkStruct *blk_p
 
         context_ptr->md_staging_skip_rdoq = EB_FALSE;
         context_ptr->md_staging_spatial_sse_full_loop = context_ptr->spatial_sse_full_loop;
+#if CAND_PRUN_OPT
+        context_ptr->md_staging_tx_size_mode = candidate_ptr->disallow_txs ? 0 : context_ptr->md_staging_tx_size_mode;
+        context_ptr->md_staging_tx_search = candidate_ptr->disallow_txt ? 0 : context_ptr->md_staging_tx_search;
+        context_ptr->md_staging_skip_rdoq = candidate_ptr->disallow_rdoq ? EB_TRUE : context_ptr->md_staging_skip_rdoq;
+        context_ptr->md_staging_spatial_sse_full_loop = candidate_ptr->disallow_ssse ? EB_FALSE : context_ptr->md_staging_spatial_sse_full_loop;
+#endif
 #if !M8_CLEAN_UP
         if (pcs_ptr->slice_type != I_SLICE) {
             if ((candidate_ptr->type == INTRA_MODE || context_ptr->full_loop_escape == 2) &&
@@ -9245,6 +9258,138 @@ void interintra_class_pruning_3(ModeDecisionContext *context_ptr, uint64_t best_
 
                 // intra class pruning
                 uint32_t cand_count = 1;
+                
+#if CAND_PRUN_OPT
+                // Do not prune the best candidate from each class
+                for (uint16_t cand_index = 1; cand_index < context_ptr->md_stage_3_count[cand_class_it]; cand_index++) {
+                    ModeDecisionCandidateBuffer *candidate_buffer;
+                    ModeDecisionCandidate *      candidate_ptr;
+                    candidate_buffer = context_ptr->candidate_buffer_ptr_array[cand_buff_indices[cand_index]];
+                    candidate_ptr    = candidate_buffer->candidate_ptr;
+                    uint64_t cand_cost = *candidate_buffer->full_cost_ptr;
+                    uint64_t distance_cost = (cand_cost - class_best_cost) * 100;
+                    uint64_t band1_cost_th = (class_best_cost * 5);
+                    uint64_t band2_cost_th = (class_best_cost * 10);
+                    uint64_t band3_cost_th = (class_best_cost * 15);
+                    uint64_t band4_cost_th = (class_best_cost * 20);
+                    uint64_t band5_cost_th = (class_best_cost * 25);
+                    //init falgs
+                    candidate_ptr->skip_candidate = 0;
+                    candidate_ptr->disallow_txt = 0;
+                    candidate_ptr->disallow_txs = 0;
+                    candidate_ptr->disallow_ssse = 0;
+                    candidate_ptr->disallow_rdoq = 0;
+                    candidate_ptr->disallow_cfl = 0;
+
+                    if (distance_cost < band1_cost_th) {
+#if ACTION_1_B1
+                        candidate_ptr->skip_candidate = 1;
+#endif
+#if ACTION_2_B1
+                        candidate_ptr->disallow_txt = 1;
+#endif
+#if ACTION_3_B1
+                        candidate_ptr->disallow_txs = 1;
+#endif
+#if ACTION_4_B1
+                        candidate_ptr->disallow_ssse = 1;
+#endif
+#if ACTION_5_B1
+                        candidate_ptr->disallow_rdoq = 1;
+#endif
+#if ACTION_6_B1
+                        candidate_ptr->disallow_cfl = 1;
+#endif
+                    }
+                    else if (distance_cost < band2_cost_th) {
+#if ACTION_1_B2
+                        candidate_ptr->skip_candidate = 1;
+#endif
+#if ACTION_2_B2
+                        candidate_ptr->disallow_txt = 1;
+#endif
+#if ACTION_3_B2
+                        candidate_ptr->disallow_txs = 1;
+#endif
+#if ACTION_4_B2
+                        candidate_ptr->disallow_ssse = 1;
+#endif
+#if ACTION_5_B2
+                        candidate_ptr->disallow_rdoq = 1;
+#endif
+#if ACTION_6_B2
+                        candidate_ptr->disallow_cfl = 1;
+#endif
+                    }
+                    else if (distance_cost < band3_cost_th) {
+#if ACTION_1_B3
+                        candidate_ptr->skip_candidate = 1;
+#endif
+#if ACTION_2_B3
+                        candidate_ptr->disallow_txt = 1;
+#endif
+#if ACTION_3_B3
+                        candidate_ptr->disallow_txs = 1;
+#endif
+#if ACTION_4_B3
+                        candidate_ptr->disallow_ssse = 1;
+#endif
+#if ACTION_5_B3
+                        candidate_ptr->disallow_rdoq = 1;
+#endif
+#if ACTION_6_B3
+                        candidate_ptr->disallow_cfl = 1;
+#endif
+                    }
+                    else if (distance_cost < band4_cost_th) {
+#if ACTION_1_B4
+                        candidate_ptr->skip_candidate = 1;
+#endif
+#if ACTION_2_B4
+                        candidate_ptr->disallow_txt = 1;
+#endif
+#if ACTION_3_B4
+                        candidate_ptr->disallow_txs = 1;
+#endif
+#if ACTION_4_B4
+                        candidate_ptr->disallow_ssse = 1;
+#endif
+#if ACTION_5_B4
+                        candidate_ptr->disallow_rdoq = 1;
+#endif
+#if ACTION_6_B4
+                        candidate_ptr->disallow_cfl = 1;
+#endif
+                    }
+                    else if (distance_cost < band5_cost_th) {
+#if ACTION_1_B5
+                        candidate_ptr->skip_candidate = 1;
+#endif
+#if ACTION_2_B5
+                        candidate_ptr->disallow_txt = 1;
+#endif
+#if ACTION_3_B5
+                        candidate_ptr->disallow_txs = 1;
+#endif
+#if ACTION_4_B5
+                        candidate_ptr->disallow_ssse = 1;
+#endif
+#if ACTION_5_B5
+                        candidate_ptr->disallow_rdoq = 1;
+#endif
+#if ACTION_6_B5
+                        candidate_ptr->disallow_cfl = 1;
+#endif
+                    }
+                }
+
+                // Adjust the number of candidate
+                while (
+                        cand_count < context_ptr->md_stage_3_count[cand_class_it] &&
+                        !(context_ptr->candidate_buffer_ptr_array[cand_buff_indices[cand_count]]->candidate_ptr->skip_candidate)){
+                        cand_count++;
+                    }
+#else
                 if (class_best_cost)
                     while (
                         cand_count < context_ptr->md_stage_3_count[cand_class_it] &&
@@ -9255,6 +9400,7 @@ void interintra_class_pruning_3(ModeDecisionContext *context_ptr, uint64_t best_
                           class_best_cost) < context_ptr->md_stage_2_3_cand_prune_th)) {
                         cand_count++;
                     }
+#endif
                 context_ptr->md_stage_3_count[cand_class_it] = cand_count;
             }
         context_ptr->md_stage_3_total_count += context_ptr->md_stage_3_count[cand_class_it];

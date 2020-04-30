@@ -148,6 +148,14 @@ typedef struct ModeDecisionCandidate {
 #if !CLEAN_UP_SB_DATA_5
     int32_t                ii_wedge_sign; //inter_intra wedge sign=-1
 #endif
+#if CAND_PRUN_OPT
+    uint8_t skip_candidate;
+    uint8_t disallow_txt;
+    uint8_t disallow_txs;
+    uint8_t disallow_ssse;
+    uint8_t disallow_rdoq;
+    uint8_t disallow_cfl;
+#endif
 } ModeDecisionCandidate;
 
 /**************************************

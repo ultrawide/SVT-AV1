@@ -341,7 +341,43 @@ extern "C" {
 
 #define REMAP_MODES   0 //enc_mode remap
 #define APR25_7PM_ADOPTIONS 1
+#define CAND_PRUN_OPT       0
+#if CAND_PRUN_OPT
+#define ACTION_1_B1  0
+#define ACTION_2_B1  0
+#define ACTION_3_B1  0
+#define ACTION_4_B1  0
+#define ACTION_5_B1  0
+#define ACTION_6_B1  0
 
+#define ACTION_1_B2  0
+#define ACTION_2_B2  0
+#define ACTION_3_B2  0
+#define ACTION_4_B2  0
+#define ACTION_5_B2  0
+#define ACTION_6_B2  0
+
+#define ACTION_1_B3  0
+#define ACTION_2_B3  0
+#define ACTION_3_B3  0
+#define ACTION_4_B3  0
+#define ACTION_5_B3  0
+#define ACTION_6_B3  0
+
+#define ACTION_1_B4  0
+#define ACTION_2_B4  0
+#define ACTION_3_B4  0
+#define ACTION_4_B4  0
+#define ACTION_5_B4  0
+#define ACTION_6_B4  0
+
+#define ACTION_1_B5  0
+#define ACTION_2_B5  0
+#define ACTION_3_B5  0
+#define ACTION_4_B5  0
+#define ACTION_5_B5  0
+#define ACTION_6_B5  0
+#endif
 #endif
 // END  MAY2020 /////////////////////////////////////////////////////////
 
