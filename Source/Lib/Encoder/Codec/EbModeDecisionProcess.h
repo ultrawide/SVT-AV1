@@ -546,6 +546,9 @@ typedef struct ModeDecisionContext {
     uint8_t      block_based_depth_reduction_level;
     DepthReductionCtrls depth_reduction_ctrls;
 #endif
+#if ADD_BEST_CAND_COUNT_SIGNAL
+    uint8_t bipred3x3_number_input_mv;
+#endif
     uint8_t      md_max_ref_count;
     EbBool       md_skip_mvp_generation;
     int16_t      pred_me_full_pel_search_width;

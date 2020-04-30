@@ -1582,6 +1582,7 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
             context_ptr->enable_area_based_cycles_allocation = 1;
     }
 
+#if !APR29_MR_ADOPTIONS
     if (MR_MODE) {
         if (pcs_ptr->parent_pcs_ptr->input_resolution >= INPUT_SIZE_4K_RANGE)
             context_ptr->coeffcients_area_based_cycles_allocation_level = 2;
@@ -1593,6 +1594,9 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
             context_ptr->coeffcients_area_based_cycles_allocation_level = 0;
     }
     else if (enc_mode == ENC_M0) {
+#else
+    if (enc_mode <= ENC_M0) {
+#endif
         if (pcs_ptr->parent_pcs_ptr->input_resolution >= INPUT_SIZE_4K_RANGE)
             context_ptr->coeffcients_area_based_cycles_allocation_level = 3;
         else if (pcs_ptr->parent_pcs_ptr->input_resolution >= INPUT_SIZE_1080p_RANGE)
@@ -1708,8 +1712,10 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
         context_ptr->md_txt_search_level = 1;
     else if (pd_pass == PD_PASS_1)
         context_ptr->md_txt_search_level = 1;
+#if !APR29_MR_ADOPTIONS
     else if (MR_MODE)
         context_ptr->md_txt_search_level = 0;
+#endif
     else {
 #if APR23_ADOPTIONS_2
         // New adoption levels after UPDATE_TXT_LEVEL
@@ -1990,7 +1996,11 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
          context_ptr->chroma_level == CHROMA_MODE_0  ? 1 : 0;
 #else
 #if FIXED_LAST_STAGE_SC
+#if APR29_MR_ADOPTIONS
+    if (MR_MODE && pcs_ptr->parent_pcs_ptr->sc_content_detected) {
+#else
     if (MR_MODE) {
+#endif
         context_ptr->chroma_at_last_md_stage = 0;
     }
     else if (pcs_ptr->parent_pcs_ptr->sc_content_detected) {
@@ -3161,7 +3171,11 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
     else
 #if MAR10_ADOPTIONS
         if (MR_MODE)
+#if APR29_MR_ADOPTIONS
+            context_ptr->md_stage_2_3_cand_prune_th = 45;
+#else
             context_ptr->md_stage_2_3_cand_prune_th = (uint64_t)~0;
+#endif
 #if PRESETS_SHIFT
 #if M1_COMBO_2 || M2_COMBO_3 || NEW_M1_CAND
 #if APR23_ADOPTIONS_2
@@ -3257,11 +3271,16 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
 
     else
         if (MR_MODE)
+#if APR29_MR_ADOPTIONS
+            context_ptr->sq_weight =
+            sequence_control_set_ptr->static_config.sq_weight + 15;
+#else
 #if APR22_ADOPTIONS
             context_ptr->sq_weight = (uint32_t)~0;
 #else
             context_ptr->sq_weight =
             sequence_control_set_ptr->static_config.sq_weight + 15;
+#endif
 #endif
         else
 #if MAR12_ADOPTIONS
@@ -3291,8 +3310,13 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
                 if (enc_mode <= ENC_M3)
 #endif
 #endif
+#if APR29_M0_ADOPTIONS
+                    context_ptr->sq_weight =
+                    sequence_control_set_ptr->static_config.sq_weight + 10;
+#else
                     context_ptr->sq_weight =
                     sequence_control_set_ptr->static_config.sq_weight + 5;
+#endif
 #if NEW_M1_CAND
 #if SHIFT_M5_SC_TO_M3
                 else if (enc_mode <= ENC_M2)
@@ -3330,8 +3354,13 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
 #else
             if (enc_mode <= ENC_M0 || (enc_mode <= ENC_M1 && !(pcs_ptr->parent_pcs_ptr->sc_content_detected)))
 #endif
+#if APR29_M0_ADOPTIONS
+                context_ptr->sq_weight =
+                sequence_control_set_ptr->static_config.sq_weight + 10;
+#else
                 context_ptr->sq_weight =
                 sequence_control_set_ptr->static_config.sq_weight + 5;
+#endif
 #if M1_COMBO_1 || NEW_M1_CAND
             else if (enc_mode <= ENC_M1)
                 context_ptr->sq_weight =
@@ -3469,6 +3498,7 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
         context_ptr->coeff_based_nsq_cand_reduction = EB_FALSE;
     else if (pd_pass == PD_PASS_1)
         context_ptr->coeff_based_nsq_cand_reduction = EB_FALSE;
+#if !APR29_MR_ADOPTIONS
 #if MAR18_MR_TESTS_ADOPTIONS
     else if (MR_MODE &&
         pcs_ptr->parent_pcs_ptr->sc_content_detected == 0)
@@ -3481,7 +3511,7 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
 #endif
 #endif
         context_ptr->coeff_based_nsq_cand_reduction = EB_FALSE;
-
+#endif
     else
 #if MR_I_COEFF_RED
         context_ptr->coeff_based_nsq_cand_reduction =
@@ -3685,6 +3715,15 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
 #else
     else
         context_ptr->md_max_ref_count = 4;
+#endif
+
+#if ADD_BEST_CAND_COUNT_SIGNAL
+    if (pd_pass == PD_PASS_0)
+        context_ptr->bipred3x3_number_input_mv = 4;
+    else if (pd_pass == PD_PASS_1)
+        context_ptr->bipred3x3_number_input_mv = 4;
+    else
+        context_ptr->bipred3x3_number_input_mv = 4;
 #endif
 
     // Set md_skip_mvp_generation (and use (0,0) as MVP instead)
@@ -5730,8 +5769,12 @@ static void perform_pred_depth_refinement(SequenceControlSet *scs_ptr, PictureCo
 #if MAR19_ADOPTIONS
                         // Shut thresholds in MR_MODE
 #if APR22_ADOPTIONS
+#if APR29_MR_ADOPTIONS
+                        if (MR_MODE_MULTI_PASS_PD && !pcs_ptr->parent_pcs_ptr->sc_content_detected) {
+#else
                         if (MR_MODE_MULTI_PASS_PD || (pcs_ptr->parent_pcs_ptr->sc_content_detected && pcs_ptr->enc_mode <= ENC_M0)) {
-                            s_depth = -2;
+#endif
+                            s_depth = pcs_ptr->slice_type == I_SLICE ? -2 : -1;
                             e_depth = 2;
                         }
 #else
@@ -5742,6 +5785,13 @@ static void perform_pred_depth_refinement(SequenceControlSet *scs_ptr, PictureCo
 #endif
 #if ADOPT_SKIPPING_PD1
                         else if (pcs_ptr->parent_pcs_ptr->multi_pass_pd_level == MULTI_PASS_PD_LEVEL_0) {
+#if APR29_MR_ADOPTIONS || APR29_M0_ADOPTIONS
+                            if (pcs_ptr->parent_pcs_ptr->sc_content_detected && pcs_ptr->enc_mode <= ENC_M0) {
+                                s_depth = -2;
+                                e_depth = pcs_ptr->slice_type == I_SLICE ? 2 : 1;
+                            }
+                            else
+#endif
 #if M8_MPPD
 #if APR24_ADOPTIONS_M6_M7
                             if (pcs_ptr->enc_mode <= ENC_M6) {

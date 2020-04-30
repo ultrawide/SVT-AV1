@@ -1892,12 +1892,21 @@ void set_md_stage_counts(PictureControlSet *pcs_ptr, ModeDecisionContext *contex
                 uint32_t intra_scaling_denom = 1;
 #if APR22_ADOPTIONS
                 if (MR_MODE) {
+#if APR29_MR_ADOPTIONS
+                    // INTER
+                    inter_scaling_num = 3;
+                    inter_scaling_denom = 2;
+                    // INTRA
+                    intra_scaling_num = 5;
+                    intra_scaling_denom = 4;
+#else
                     // INTER
                     inter_scaling_num = 3;
                     inter_scaling_denom = 2;
                     // INTRA
                     intra_scaling_num = 2;
                     intra_scaling_denom = 1;
+#endif
                 }
                 else
 #endif
@@ -1999,12 +2008,21 @@ void set_md_stage_counts(PictureControlSet *pcs_ptr, ModeDecisionContext *contex
                 uint32_t intra_scaling_denom = 1;
 #if MAR12_ADOPTIONS
                 if (MR_MODE) {
+#if APR29_MR_ADOPTIONS
+                    // INTER
+                    inter_scaling_num = 5;
+                    inter_scaling_denom = 4;
+                    // INTRA
+                    intra_scaling_num = 3;
+                    intra_scaling_denom = 2;
+#else
                     // INTER
                     inter_scaling_num = 3;
                     inter_scaling_denom = 2;
                     // INTRA
                     intra_scaling_num = 2;
                     intra_scaling_denom = 1;
+#endif
                 } else
 #endif
 #if PRESETS_SHIFT

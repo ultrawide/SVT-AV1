@@ -811,9 +811,13 @@ EbErrorType signal_derivation_me_kernel_oq(
         set_me_hme_ref_prune_ctrls(context_ptr->me_context_ptr, 4);
 
     // Set hme-based me sr adjustment level
+#if !APR29_MR_ADOPTIONS
     if (MR_MODE)
         set_me_sr_adjustment_ctrls(context_ptr->me_context_ptr, 0);
     else if (pcs_ptr->sc_content_detected)
+#else
+    if (pcs_ptr->sc_content_detected)
+#endif
         set_me_sr_adjustment_ctrls(context_ptr->me_context_ptr, 1);
     else
         set_me_sr_adjustment_ctrls(context_ptr->me_context_ptr, 2);

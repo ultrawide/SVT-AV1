@@ -342,6 +342,9 @@ extern "C" {
 #define REMAP_MODES   0 //enc_mode remap
 #define APR25_7PM_ADOPTIONS 1
 #define R2R_FIX_PADDING 1
+#define ADD_BEST_CAND_COUNT_SIGNAL 1 // replace BEST_CANDIDATE_COUNT macro with a signal
+#define APR29_MR_ADOPTIONS 1 // adoptions for a 2x slower MR
+#define APR29_M0_ADOPTIONS 1
 
 #endif
 // END  MAY2020 /////////////////////////////////////////////////////////
@@ -822,10 +825,12 @@ typedef enum MdStagingMode {
 // NICS
 #define MAX_FRAME_TYPE    3  // Max number of frame type allowed for nics
 #define ALL_S0           -1  // Allow all candidates from stage0
+#if !ADD_BEST_CAND_COUNT_SIGNAL
 #if MR_MODE
 #define BEST_CANDIDATE_COUNT 23
 #else
 #define BEST_CANDIDATE_COUNT 4
+#endif
 #endif
 #define MAX_REF_TYPE_CAND 30
 #define PRUNE_REC_TH 5
