@@ -9239,11 +9239,18 @@ void interintra_class_pruning_2(ModeDecisionContext *context_ptr, uint64_t best_
 void interintra_class_pruning_3(ModeDecisionContext *context_ptr, uint64_t best_md_stage_cost) {
     for (CandClass cand_class_it = CAND_CLASS_0; cand_class_it < CAND_CLASS_TOTAL;
          cand_class_it++) {
+#if CAND_PRUN_OPT
+        if (context_ptr->md_stage_2_3_cand_prune_th != (uint64_t)~0 ||
+            context_ptr->md_stage_2_3_class_prune_th != (uint64_t)~0)
+            if (context_ptr->md_stage_3_count[cand_class_it] > 0) {
+#else
         if (context_ptr->md_stage_2_3_cand_prune_th != (uint64_t)~0 ||
             context_ptr->md_stage_2_3_class_prune_th != (uint64_t)~0)
             if (context_ptr->md_stage_2_count[cand_class_it] > 0 &&
                 context_ptr->md_stage_3_count[cand_class_it] > 0 &&
                 context_ptr->bypass_md_stage_2[cand_class_it] == EB_FALSE) {
+#endif
+
                 uint32_t *cand_buff_indices = context_ptr->cand_buff_indices[cand_class_it];
                 uint64_t  class_best_cost =
                     *(context_ptr->candidate_buffer_ptr_array[cand_buff_indices[0]]->full_cost_ptr);
