@@ -356,6 +356,9 @@ extern "C" {
 
 #define COMBO1                             0
 #define COMBO2                             0
+#define PRED_ONLY_B1                       0
+#define PRED_ONLY_B2                       0
+#define PRED_ONLY_B3                       0
 
 #endif
 

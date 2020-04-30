@@ -6140,6 +6140,18 @@ static void perform_pred_depth_refinement(SequenceControlSet *scs_ptr, PictureCo
                         }
                     }
 
+#if PRED_ONLY_B1
+                    s_depth = context_ptr->sb_class == 3 ? 0 : s_depth;
+                    e_depth = context_ptr->sb_class == 3 ? 0 : e_depth;
+#endif
+#if PRED_ONLY_B2
+                    s_depth = context_ptr->sb_class == 2 ? 0 : s_depth;
+                    e_depth = context_ptr->sb_class == 2 ? 0 : e_depth;
+#endif
+#if PRED_ONLY_B3
+                    s_depth = context_ptr->sb_class == 1 ? 0 : s_depth;
+                    e_depth = context_ptr->sb_class == 1 ? 0 : e_depth;
+#endif
 #if ADOPT_SKIPPING_PD1
                     // Check that the start and end depth are in allowed range, given other features
                     // which restrict allowable depths
