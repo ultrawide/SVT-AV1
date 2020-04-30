@@ -354,6 +354,9 @@ extern "C" {
 #define SB_CLASS_NUM_NICS                  0
 #define NICS_ACTION                        0
 
+#define COMBO1                             0
+#define COMBO2                             0
+
 #endif
 
 // END  MAY2020 /////////////////////////////////////////////////////////

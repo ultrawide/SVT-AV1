@@ -2262,6 +2262,9 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
 #else
          context_ptr->md_disallow_nsq = pcs_ptr->parent_pcs_ptr->disallow_nsq;
 #endif
+#if COMBO1 || COMBO2
+     context_ptr->md_disallow_nsq = (context_ptr->enable_area_based_cycles_allocation &&  context_ptr->sb_class == 3) ? 1 : pcs_ptr->parent_pcs_ptr->disallow_nsq;
+#endif
 #endif
 #endif
 #else
@@ -3385,7 +3388,13 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
 #if SQ_WEIGHT_ACTION
          context_ptr->sq_weight -= (context_ptr->enable_area_based_cycles_allocation &&  context_ptr->sb_class == SB_CLASS_NUM_NSQ_W) ? SQ_WEIGHT_ACTION : 0;
 #endif
-
+#if COMBO1 || COMBO2
+         context_ptr->sq_weight -= (context_ptr->enable_area_based_cycles_allocation &&  context_ptr->sb_class == 2) ? 50 :
+                                   (context_ptr->enable_area_based_cycles_allocation &&  context_ptr->sb_class == 1) ? 30 : 0;
+#endif
+#if COMBO2
+         context_ptr->sq_weight += (context_ptr->enable_area_based_cycles_allocation &&  context_ptr->sb_class == 9) ? 20:0;
+#endif
     // nsq_hv_level  needs sq_weight to be ON
     // 0: OFF
     // 1: ON 10% + skip HA/HB/H4  or skip VA/VB/V4
@@ -5701,10 +5710,8 @@ static uint8_t determine_sb_class(
         sb_class = 7;
     else if (count_non_zero_coeffs >= ((total_samples * 2) / 20))
         sb_class = 8;
-    else if (count_non_zero_coeffs >= ((total_samples * 1) / 20))
-        sb_class = 9;
     else if (count_non_zero_coeffs == 0)
-        sb_class = 10;
+        sb_class = 9;
 #endif
 #if SWICHABLE_ENC_MODE
     else if (count_non_zero_coeffs >= ((total_samples * (sb_class_ctrls->sb_class_th[LOW_COMPLEX_CLASS] - 2)) / 20))
