@@ -386,6 +386,7 @@ extern "C" {
 #define ACTION_7_B5  0
 
 #define DISALLOW_RDOQ     0
+#define DISALLOW_RDOQ_C0  0
 #define DISALLOW_RDOQ_C1  0
 #define DISALLOW_RDOQ_C2  0
 #define DISALLOW_RDOQ_C3  0
