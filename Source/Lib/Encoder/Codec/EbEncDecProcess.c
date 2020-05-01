@@ -6161,12 +6161,12 @@ static void perform_pred_depth_refinement(SequenceControlSet *scs_ptr, PictureCo
                     e_depth = context_ptr->sb_class == 2 || context_ptr->sb_class == 1 ? 0 : e_depth;
 #endif
 #if TEST3
-                    s_depth = context_ptr->sb_class == 2 || context_ptr->sb_class == 1 ? 0 : s_depth;
-                    e_depth = context_ptr->sb_class == 2 || context_ptr->sb_class == 1 ? MIN(1,e_depth) : e_depth;
+                    s_depth = context_ptr->sb_class == 2 || context_ptr->sb_class == 1 ? MAX(-1,e_depth) : s_depth;
+                    e_depth = context_ptr->sb_class == 2 || context_ptr->sb_class == 1 ? 0 : e_depth;
 #endif
 #if TEST4 || TEST5
-                    s_depth = context_ptr->sb_class == 9 ? 0 : s_depth;
-                    e_depth = context_ptr->sb_class == 9 ? MIN(1,e_depth) : e_depth;
+                    s_depth = context_ptr->sb_class == 9 ? MAX(-1,e_depth) : s_depth;
+                    e_depth = context_ptr->sb_class == 9 ? 0 : e_depth;
 #endif
 #if PRED_ONLY_B3
                     s_depth = context_ptr->sb_class == 1 ? 0 : s_depth;
