@@ -377,6 +377,18 @@ extern "C" {
 #define ACTION_4_B5  0
 #define ACTION_5_B5  0
 #define ACTION_6_B5  0
+
+// interpolation filter search action
+#define ACTION_7_B1  0
+#define ACTION_7_B2  0
+#define ACTION_7_B3  0
+#define ACTION_7_B4  0
+#define ACTION_7_B5  0
+
+#define DISALLOW_RDOQ     0
+#define DISALLOW_RDOQ_C1  0
+#define DISALLOW_RDOQ_C2  0
+#define DISALLOW_RDOQ_C3  0
 #endif
 #endif
 // END  MAY2020 /////////////////////////////////////////////////////////

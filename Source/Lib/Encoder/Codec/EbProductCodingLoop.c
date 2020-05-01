@@ -8146,6 +8146,7 @@ void md_stage_3(PictureControlSet *pcs_ptr, SuperBlock *sb_ptr, BlkStruct *blk_p
         context_ptr->md_staging_tx_search = candidate_ptr->disallow_txt ? 0 : context_ptr->md_staging_tx_search;
         context_ptr->md_staging_skip_rdoq = candidate_ptr->disallow_rdoq ? EB_TRUE : context_ptr->md_staging_skip_rdoq;
         context_ptr->md_staging_spatial_sse_full_loop = candidate_ptr->disallow_ssse ? EB_FALSE : context_ptr->md_staging_spatial_sse_full_loop;
+        context_ptr->md_staging_skip_interpolation_search = candidate_ptr->disallow_if ? EB_TRUE : context_ptr->md_staging_skip_interpolation_search;
 #endif
 #if !M8_CLEAN_UP
         if (pcs_ptr->slice_type != I_SLICE) {
@@ -9281,12 +9282,30 @@ void interintra_class_pruning_3(ModeDecisionContext *context_ptr, uint64_t best_
                     uint64_t band4_cost_th = (class_best_cost * 20);
                     uint64_t band5_cost_th = (class_best_cost * 25);
                     //init falgs
+
                     candidate_ptr->skip_candidate = 0;
                     candidate_ptr->disallow_txt = 0;
                     candidate_ptr->disallow_txs = 0;
                     candidate_ptr->disallow_ssse = 0;
                     candidate_ptr->disallow_rdoq = 0;
                     candidate_ptr->disallow_cfl = 0;
+                    candidate_ptr->disallow_if = 0;
+
+#if DISALLOW_RDOQ
+                    candidate_ptr->disallow_rdoq = 1;
+#endif
+#if DISALLOW_RDOQ_C0
+                    if(cand_class_it == CAND_CLASS_0)
+                        candidate_ptr->disallow_rdoq = 1;
+#endif
+#if DISALLOW_RDOQ_C1
+                    if(cand_class_it == CAND_CLASS_1)
+                        candidate_ptr->disallow_rdoq = 1;
+#endif
+#if DISALLOW_RDOQ_C2
+                    if(cand_class_it == CAND_CLASS_2)
+                        candidate_ptr->disallow_rdoq = 1;
+#endif
 
                     if (distance_cost < band1_cost_th) {
 #if ACTION_1_B1
@@ -9306,6 +9325,9 @@ void interintra_class_pruning_3(ModeDecisionContext *context_ptr, uint64_t best_
 #endif
 #if ACTION_6_B1
                         candidate_ptr->disallow_cfl = 1;
+#endif
+#if ACTION_7_B1
+                        candidate_ptr->disallow_if = 1;
 #endif
                     }
                     else if (distance_cost < band2_cost_th) {
@@ -9327,6 +9349,9 @@ void interintra_class_pruning_3(ModeDecisionContext *context_ptr, uint64_t best_
 #if ACTION_6_B2
                         candidate_ptr->disallow_cfl = 1;
 #endif
+#if ACTION_7_B2
+                        candidate_ptr->disallow_if = 1;
+#endif
                     }
                     else if (distance_cost < band3_cost_th) {
 #if ACTION_1_B3
@@ -9346,6 +9371,9 @@ void interintra_class_pruning_3(ModeDecisionContext *context_ptr, uint64_t best_
 #endif
 #if ACTION_6_B3
                         candidate_ptr->disallow_cfl = 1;
+#endif
+#if ACTION_7_B3
+                        candidate_ptr->disallow_if = 1;
 #endif
                     }
                     else if (distance_cost < band4_cost_th) {
@@ -9367,6 +9395,9 @@ void interintra_class_pruning_3(ModeDecisionContext *context_ptr, uint64_t best_
 #if ACTION_6_B4
                         candidate_ptr->disallow_cfl = 1;
 #endif
+#if ACTION_7_B4
+                        candidate_ptr->disallow_if = 1;
+#endif
                     }
                     else if (distance_cost < band5_cost_th) {
 #if ACTION_1_B5
@@ -9386,6 +9417,9 @@ void interintra_class_pruning_3(ModeDecisionContext *context_ptr, uint64_t best_
 #endif
 #if ACTION_6_B5
                         candidate_ptr->disallow_cfl = 1;
+#endif
+#if ACTION_7_B5
+                        candidate_ptr->disallow_if = 1;
 #endif
                     }
                 }

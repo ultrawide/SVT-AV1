@@ -155,6 +155,7 @@ typedef struct ModeDecisionCandidate {
     uint8_t disallow_ssse;
     uint8_t disallow_rdoq;
     uint8_t disallow_cfl;
+    uint8_t disallow_if;
 #endif
 } ModeDecisionCandidate;
 
