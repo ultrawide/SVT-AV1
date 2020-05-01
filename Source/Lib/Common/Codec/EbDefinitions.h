@@ -367,6 +367,7 @@ extern "C" {
 #define TEST3                              0 // 3.	Sq_weight_50 + (Pred + m1) [80% | 60%]
 #define TEST4                              0 // 4.	Sq_weight_70 + (Pred + m1) [10% | 0%]
 #define TEST5                              0 // 5.	Sq_weight_90 + (Pred + m1) [10% | 0%]
+#define TEST11                             0 // 5.	NSQ + Pred [100% | 90%] + NSQ + Pred [90% | 80%]
 
 #endif
 

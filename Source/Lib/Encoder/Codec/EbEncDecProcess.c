@@ -2265,8 +2265,11 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
 #if COMBO1 || COMBO2
      context_ptr->md_disallow_nsq = (context_ptr->enable_area_based_cycles_allocation &&  context_ptr->sb_class == 3) ? 1 : pcs_ptr->parent_pcs_ptr->disallow_nsq;
 #endif
-#if TEST1
+#if TEST1  
      context_ptr->md_disallow_nsq = (context_ptr->enable_area_based_cycles_allocation &&  context_ptr->sb_class == 3) ? 1 : pcs_ptr->parent_pcs_ptr->disallow_nsq;
+#endif
+#if TEST11  
+     context_ptr->md_disallow_nsq = (context_ptr->enable_area_based_cycles_allocation &&  context_ptr->sb_class == 33) ? 1 : pcs_ptr->parent_pcs_ptr->disallow_nsq;
 #endif
 #endif
 #endif
@@ -5705,7 +5708,13 @@ static uint8_t determine_sb_class(
             d1_depth_offset[scs_ptr->seq_header.sb_size == BLOCK_128X128][blk_geom->depth] :
             ns_depth_offset[scs_ptr->seq_header.sb_size == BLOCK_128X128][blk_geom->depth];
     }
+#if ADD_MORE_CALSS
+    if (count_non_zero_coeffs >= ((total_samples * 18) / 20))
+        sb_class = 33;
+    else if (count_non_zero_coeffs >= ((total_samples * 16) / 20))
+#else
     if (count_non_zero_coeffs >= ((total_samples * sb_class_ctrls->sb_class_th[HIGH_COMPLEX_CLASS]) / 20))
+#endif
         sb_class = HIGH_COMPLEX_CLASS;
     else if (count_non_zero_coeffs >= ((total_samples * sb_class_ctrls->sb_class_th[MEDIUM_COMPLEX_CLASS]) / 20))
         sb_class = MEDIUM_COMPLEX_CLASS;
@@ -6152,7 +6161,11 @@ static void perform_pred_depth_refinement(SequenceControlSet *scs_ptr, PictureCo
                         }
                     }
 
-#if PRED_ONLY_B1 || TEST1 
+#if TEST11
+                    s_depth = context_ptr->sb_class == 33 ? 0 : s_depth;
+                    e_depth = context_ptr->sb_class == 33 ? 0 : e_depth;
+#endif
+#if PRED_ONLY_B1 || TEST1 || TEST11 
                     s_depth = context_ptr->sb_class == 3 ? 0 : s_depth;
                     e_depth = context_ptr->sb_class == 3 ? 0 : e_depth;
 #endif
