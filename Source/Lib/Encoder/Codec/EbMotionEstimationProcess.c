@@ -332,6 +332,9 @@ void* set_me_hme_params_oq(
     }
     else {
 #if APR22_ADOPTIONS
+#if MAY01_M1_NSC_ADOPT
+        if (pcs_ptr->enc_mode <= ENC_M2) {
+#else
 #if APR23_ADOPTIONS
 #if M1_COMBO_3 || M2_COMBO_2 || M2_COMBO_3 || NEW_M1_CAND
         if (pcs_ptr->enc_mode <= ENC_M0) {
@@ -340,6 +343,7 @@ void* set_me_hme_params_oq(
 #endif
 #else
         if (pcs_ptr->enc_mode <= ENC_M0) {
+#endif
 #endif
             me_context_ptr->hme_level0_total_search_area_width = me_context_ptr->hme_level0_total_search_area_height = 120;
             me_context_ptr->hme_level0_max_total_search_area_width = me_context_ptr->hme_level0_max_total_search_area_height = 480;
@@ -795,6 +799,10 @@ EbErrorType signal_derivation_me_kernel_oq(
 #else
         set_me_hme_ref_prune_ctrls(context_ptr->me_context_ptr, 0);
 #endif
+#if MAY01_M1_NSC_ADOPT
+    else if (enc_mode <= ENC_M2)
+        set_me_hme_ref_prune_ctrls(context_ptr->me_context_ptr, 2);
+#else
 #if M1_COMBO_1 || NEW_M1_CAND
     else if (enc_mode <= ENC_M0)
 #else
@@ -807,6 +815,7 @@ EbErrorType signal_derivation_me_kernel_oq(
     else if (enc_mode <= ENC_M2)
 #endif
         set_me_hme_ref_prune_ctrls(context_ptr->me_context_ptr, 3);
+#endif
     else
         set_me_hme_ref_prune_ctrls(context_ptr->me_context_ptr, 4);
 

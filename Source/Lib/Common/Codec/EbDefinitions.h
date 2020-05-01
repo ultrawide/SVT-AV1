@@ -342,9 +342,13 @@ extern "C" {
 #define REMAP_MODES   0 //enc_mode remap
 #define APR25_7PM_ADOPTIONS 1
 #define R2R_FIX_PADDING 1
+
+// Adoptions macros - after svt-01 branch created
 #define ADD_BEST_CAND_COUNT_SIGNAL 1 // replace BEST_CANDIDATE_COUNT macro with a signal
 #define APR29_MR_ADOPTIONS 1 // adoptions for a 2x slower MR
 #define APR29_M0_ADOPTIONS 1
+#define MAY01_M1_NSC_ADOPT 1 // M1 NSC adoptions
+#define MAY01_M1_SC_ADOPT 1 // M1 SC adoptions
 
 #endif
 // END  MAY2020 /////////////////////////////////////////////////////////
