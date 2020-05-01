@@ -2265,6 +2265,9 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
 #if COMBO1 || COMBO2
      context_ptr->md_disallow_nsq = (context_ptr->enable_area_based_cycles_allocation &&  context_ptr->sb_class == 3) ? 1 : pcs_ptr->parent_pcs_ptr->disallow_nsq;
 #endif
+#if TEST1
+     context_ptr->md_disallow_nsq = (context_ptr->enable_area_based_cycles_allocation &&  context_ptr->sb_class == 3) ? 1 : pcs_ptr->parent_pcs_ptr->disallow_nsq;
+#endif
 #endif
 #endif
 #else
@@ -3394,6 +3397,15 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
 #endif
 #if COMBO2
          context_ptr->sq_weight += (context_ptr->enable_area_based_cycles_allocation &&  context_ptr->sb_class == 9) ? 20:0;
+#endif
+#if TEST2 || TEST3
+         context_ptr->sq_weight = (context_ptr->enable_area_based_cycles_allocation &&  (context_ptr->sb_class == 2 || context_ptr->sb_class == 1)) ? 50 : context_ptr->sq_weight;
+#endif
+#if TEST4
+         context_ptr->sq_weight = (context_ptr->enable_area_based_cycles_allocation &&  context_ptr->sb_class == 9 ) ? 70 : context_ptr->sq_weight;
+#endif
+#if TEST5
+         context_ptr->sq_weight = (context_ptr->enable_area_based_cycles_allocation &&  context_ptr->sb_class == 9 ) ? 90 : context_ptr->sq_weight;
 #endif
     // nsq_hv_level  needs sq_weight to be ON
     // 0: OFF
@@ -6140,13 +6152,21 @@ static void perform_pred_depth_refinement(SequenceControlSet *scs_ptr, PictureCo
                         }
                     }
 
-#if PRED_ONLY_B1
+#if PRED_ONLY_B1 || TEST1 
                     s_depth = context_ptr->sb_class == 3 ? 0 : s_depth;
                     e_depth = context_ptr->sb_class == 3 ? 0 : e_depth;
 #endif
-#if PRED_ONLY_B2
-                    s_depth = context_ptr->sb_class == 2 ? 0 : s_depth;
-                    e_depth = context_ptr->sb_class == 2 ? 0 : e_depth;
+#if PRED_ONLY_B2 || TEST2
+                    s_depth = context_ptr->sb_class == 2 || context_ptr->sb_class == 1 ? 0 : s_depth;
+                    e_depth = context_ptr->sb_class == 2 || context_ptr->sb_class == 1 ? 0 : e_depth;
+#endif
+#if TEST3
+                    s_depth = context_ptr->sb_class == 2 || context_ptr->sb_class == 1 ? 0 : s_depth;
+                    e_depth = context_ptr->sb_class == 2 || context_ptr->sb_class == 1 ? MIN(1,e_depth) : e_depth;
+#endif
+#if TEST4 || TEST5
+                    s_depth = context_ptr->sb_class == 9 ? 0 : s_depth;
+                    e_depth = context_ptr->sb_class == 9 ? MIN(1,e_depth) : e_depth;
 #endif
 #if PRED_ONLY_B3
                     s_depth = context_ptr->sb_class == 1 ? 0 : s_depth;

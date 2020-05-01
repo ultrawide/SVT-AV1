@@ -344,9 +344,7 @@ extern "C" {
 #define SB_ENC_MODE_BAND6              0
 #endif
 
-#define ADD_MORE_CALSS                     0
-#define ENABLE_CYCLES_ALLOCATION_1         0
-#define DISABLE_OLD_ACTIONS                0
+
 #define SB_CLASS_NUM_NSQ_OFF               0 
 #define NSQ_OFF_ACTION                     0
 #define SB_CLASS_NUM_NSQ_W                 0
@@ -359,6 +357,16 @@ extern "C" {
 #define PRED_ONLY_B1                       0
 #define PRED_ONLY_B2                       0
 #define PRED_ONLY_B3                       0
+
+#define ADD_MORE_CALSS                     0
+#define ENABLE_CYCLES_ALLOCATION_1         0
+#define DISABLE_OLD_ACTIONS                0
+
+#define TEST1                              0 // 1.	NSQ + Pred [100% | 80%]
+#define TEST2                              0 // 2.	Sq_weight 50 + (Pred) [80% | 60%]
+#define TEST3                              0 // 3.	Sq_weight_50 + (Pred + m1) [80% | 60%]
+#define TEST4                              0 // 4.	Sq_weight_70 + (Pred + m1) [10% | 0%]
+#define TEST5                              0 // 5.	Sq_weight_90 + (Pred + m1) [10% | 0%]
 
 #endif
 
