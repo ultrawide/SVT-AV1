@@ -1789,7 +1789,7 @@ void set_md_stage_counts(PictureControlSet *pcs_ptr, ModeDecisionContext *contex
         context_ptr->md_stage_1_count[CAND_CLASS_0] = MAX(context_ptr->md_stage_1_count[CAND_CLASS_0], 1);
 
 #endif
-#if SB_CLASSIFIER
+#if SB_CLASSIFIER && !DISABLE_OLD_ACTIONS
         if (context_ptr->sb_class == LOW_COMPLEX_CLASS && context_ptr->enable_area_based_cycles_allocation) {
             for (uint8_t cidx = 0; cidx < CAND_CLASS_TOTAL; ++cidx) {
                 context_ptr->md_stage_1_count[cidx] = (context_ptr->md_stage_1_count[cidx] + 1) / 2;

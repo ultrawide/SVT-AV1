@@ -343,6 +343,15 @@ extern "C" {
 #define APR25_7PM_ADOPTIONS 1
 #define R2R_FIX_PADDING 1
 
+#define ENABLE_CYCLES_ALLOCATION_1         1
+
+#define NEW_CYCLE_ALLOCATION               0
+#if NEW_CYCLE_ALLOCATION
+#define DISABLE_OLD_ACTIONS                1
+#define TEST1                              0
+#define TEST2                              0
+#define TEST3                              0
+#endif
 #endif
 // END  MAY2020 /////////////////////////////////////////////////////////
 
@@ -5686,6 +5695,9 @@ static const uint16_t ep_to_pa_block_index[BLOCK_MAX_COUNT_SB_64] = {
 #if SB_CLASSIFIER
 typedef enum ATTRIBUTE_PACKED {
     NONE_CLASS, // Do nothing class
+#if NEW_CYCLE_ALLOCATION
+    VERY_LOW_COMPLEX_CLASS,// Very Low complex SB Class
+#endif
     LOW_COMPLEX_CLASS, // Low complex SB Class
     MEDIUM_COMPLEX_CLASS, // Meduim complex SB Class
     HIGH_COMPLEX_CLASS, // High complex SB Class
