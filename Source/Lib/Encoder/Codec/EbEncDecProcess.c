@@ -1513,38 +1513,38 @@ void set_sb_class_controls(ModeDecisionContext *context_ptr) {
 #else
         sb_class_ctrls->sb_class_th[LOW_COMPLEX_CLASS] = 12; 
 #endif
-        sb_class_ctrls->sb_class_th[VERY_LOW_COMPLEX_CLASS] = 2;
+        sb_class_ctrls->sb_class_th[VERY_LOW_COMPLEX_CLASS] = 0;
         break;
     case 2: // TH 70%
         sb_class_ctrls->sb_class_th[HIGH_COMPLEX_CLASS] = 16;
         sb_class_ctrls->sb_class_th[MEDIUM_COMPLEX_CLASS] = 14;
         sb_class_ctrls->sb_class_th[LOW_COMPLEX_CLASS] = 10;
-        sb_class_ctrls->sb_class_th[VERY_LOW_COMPLEX_CLASS] = 2;
+        sb_class_ctrls->sb_class_th[VERY_LOW_COMPLEX_CLASS] = 0;
         break;
     case 3: // TH 60%
         sb_class_ctrls->sb_class_th[HIGH_COMPLEX_CLASS] = 14;
         sb_class_ctrls->sb_class_th[MEDIUM_COMPLEX_CLASS] = 12;
         sb_class_ctrls->sb_class_th[LOW_COMPLEX_CLASS] = 8;
-        sb_class_ctrls->sb_class_th[VERY_LOW_COMPLEX_CLASS] = 2;
+        sb_class_ctrls->sb_class_th[VERY_LOW_COMPLEX_CLASS] = 0;
         break;
     case 4: // TH 50%
         sb_class_ctrls->sb_class_th[HIGH_COMPLEX_CLASS] = 12;
         sb_class_ctrls->sb_class_th[MEDIUM_COMPLEX_CLASS] = 10;
         sb_class_ctrls->sb_class_th[LOW_COMPLEX_CLASS] = 6;
-        sb_class_ctrls->sb_class_th[VERY_LOW_COMPLEX_CLASS] = 2;
+        sb_class_ctrls->sb_class_th[VERY_LOW_COMPLEX_CLASS] = 0;
         break;
     case 5: // TH 40%
         sb_class_ctrls->sb_class_th[HIGH_COMPLEX_CLASS] = 10;
         sb_class_ctrls->sb_class_th[MEDIUM_COMPLEX_CLASS] = 8;
         sb_class_ctrls->sb_class_th[LOW_COMPLEX_CLASS] = 4;
-        sb_class_ctrls->sb_class_th[VERY_LOW_COMPLEX_CLASS] = 2;
+        sb_class_ctrls->sb_class_th[VERY_LOW_COMPLEX_CLASS] = 0;
         break;
 #if UPGRADE_M8
     case 6:
         sb_class_ctrls->sb_class_th[HIGH_COMPLEX_CLASS] = 8;
         sb_class_ctrls->sb_class_th[MEDIUM_COMPLEX_CLASS] = 6;
         sb_class_ctrls->sb_class_th[LOW_COMPLEX_CLASS] = 2;
-        sb_class_ctrls->sb_class_th[VERY_LOW_COMPLEX_CLASS] = 2;
+        sb_class_ctrls->sb_class_th[VERY_LOW_COMPLEX_CLASS] = 0;
         break;
 #endif
     default:
@@ -5742,7 +5742,7 @@ static uint8_t determine_sb_class(
     else if (count_non_zero_coeffs >= ((total_samples * sb_class_ctrls->sb_class_th[LOW_COMPLEX_CLASS]) / 20))
         sb_class = LOW_COMPLEX_CLASS;
 #if NEW_CYCLE_ALLOCATION
-    else if (count_non_zero_coeffs < ((total_samples * sb_class_ctrls->sb_class_th[VERY_LOW_COMPLEX_CLASS]) / 20))
+    else if (count_non_zero_coeffs == ((total_samples * sb_class_ctrls->sb_class_th[VERY_LOW_COMPLEX_CLASS]) / 20))
         sb_class = VERY_LOW_COMPLEX_CLASS;
 #endif
     return sb_class;
