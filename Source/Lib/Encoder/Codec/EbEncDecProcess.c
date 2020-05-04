@@ -1494,6 +1494,66 @@ void set_block_based_depth_reduction_controls(ModeDecisionContext *mdctxt, uint8
 * Derive SB classifier thresholds
 ******************************************************/
 #if NEW_CYCLE_ALLOCATION
+#if NEW_TH_SET
+void set_sb_class_controls(ModeDecisionContext *context_ptr) {
+    SbClassControls *sb_class_ctrls = &context_ptr->sb_class_ctrls;
+    for (uint8_t sb_class_idx = 0; sb_class_idx < NUMBER_OF_SB_CLASS; sb_class_idx++)
+        sb_class_ctrls->sb_class_th[sb_class_idx] = 20;
+    switch (context_ptr->coeffcients_area_based_cycles_allocation_level) {
+    case 0:
+        sb_class_ctrls->sb_class_th[HIGH_COMPLEX_CLASS] = 20;
+        sb_class_ctrls->sb_class_th[MEDIUM_COMPLEX_CLASS] = 20;
+        sb_class_ctrls->sb_class_th[LOW_COMPLEX_CLASS] = 20;
+        sb_class_ctrls->sb_class_th[VERY_LOW_COMPLEX_CLASS] = 20;
+        break;
+    case 1: // TH 80%
+        sb_class_ctrls->sb_class_th[HIGH_COMPLEX_CLASS] = 18;
+        sb_class_ctrls->sb_class_th[MEDIUM_COMPLEX_CLASS] = 16;
+#if TEST3
+        sb_class_ctrls->sb_class_th[LOW_COMPLEX_CLASS] = 14;
+#else
+        sb_class_ctrls->sb_class_th[LOW_COMPLEX_CLASS] = 12; 
+#endif
+        sb_class_ctrls->sb_class_th[VERY_LOW_COMPLEX_CLASS] = 0;
+        break;
+    case 2: // TH 70%
+        sb_class_ctrls->sb_class_th[HIGH_COMPLEX_CLASS] = 18;
+        sb_class_ctrls->sb_class_th[MEDIUM_COMPLEX_CLASS] = 14;
+        sb_class_ctrls->sb_class_th[LOW_COMPLEX_CLASS] = 10;
+        sb_class_ctrls->sb_class_th[VERY_LOW_COMPLEX_CLASS] = 0;
+        break;
+    case 3: // TH 60%
+        sb_class_ctrls->sb_class_th[HIGH_COMPLEX_CLASS] = 18;
+        sb_class_ctrls->sb_class_th[MEDIUM_COMPLEX_CLASS] = 12;
+        sb_class_ctrls->sb_class_th[LOW_COMPLEX_CLASS] = 8;
+        sb_class_ctrls->sb_class_th[VERY_LOW_COMPLEX_CLASS] = 0;
+        break;
+    case 4: // TH 50%
+        sb_class_ctrls->sb_class_th[HIGH_COMPLEX_CLASS] = 18;
+        sb_class_ctrls->sb_class_th[MEDIUM_COMPLEX_CLASS] = 10;
+        sb_class_ctrls->sb_class_th[LOW_COMPLEX_CLASS] = 6;
+        sb_class_ctrls->sb_class_th[VERY_LOW_COMPLEX_CLASS] = 0;
+        break;
+    case 5: // TH 40%
+        sb_class_ctrls->sb_class_th[HIGH_COMPLEX_CLASS] = 18;
+        sb_class_ctrls->sb_class_th[MEDIUM_COMPLEX_CLASS] = 8;
+        sb_class_ctrls->sb_class_th[LOW_COMPLEX_CLASS] = 4;
+        sb_class_ctrls->sb_class_th[VERY_LOW_COMPLEX_CLASS] = 0;
+        break;
+#if UPGRADE_M8
+    case 6:
+        sb_class_ctrls->sb_class_th[HIGH_COMPLEX_CLASS] = 18;
+        sb_class_ctrls->sb_class_th[MEDIUM_COMPLEX_CLASS] = 6;
+        sb_class_ctrls->sb_class_th[LOW_COMPLEX_CLASS] = 2;
+        sb_class_ctrls->sb_class_th[VERY_LOW_COMPLEX_CLASS] = 0;
+        break;
+#endif
+    default:
+        printf("Error - Invalid sb_class_level");
+        break;
+    }
+}
+#else
 void set_sb_class_controls(ModeDecisionContext *context_ptr) {
     SbClassControls *sb_class_ctrls = &context_ptr->sb_class_ctrls;
     for (uint8_t sb_class_idx = 0; sb_class_idx < NUMBER_OF_SB_CLASS; sb_class_idx++)
@@ -1552,6 +1612,7 @@ void set_sb_class_controls(ModeDecisionContext *context_ptr) {
         break;
     }
 }
+#endif
 #else
 void set_sb_class_controls(ModeDecisionContext *context_ptr) {
     SbClassControls *sb_class_ctrls = &context_ptr->sb_class_ctrls;

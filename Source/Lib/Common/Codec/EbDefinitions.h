@@ -351,6 +351,7 @@ extern "C" {
 #define TEST1                              0
 #define TEST2                              0
 #define TEST3                              0
+#define NEW_TH_SET                         0
 #endif
 #endif
 // END  MAY2020 /////////////////////////////////////////////////////////
