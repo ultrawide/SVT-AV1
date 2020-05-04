@@ -1558,6 +1558,7 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
 #if PD1_MX
     if (pd_pass == PD_PASS_1 && pcs_ptr->slice_type != I_SLICE) {
         enc_mode = PD1_MX;
+        pd_pass = PD_PASS_2;
     }
     context_ptr->md_enc_mode = enc_mode;
 #endif
