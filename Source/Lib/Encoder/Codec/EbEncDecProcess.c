@@ -1555,6 +1555,12 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
 
     uint8_t enc_mode = pcs_ptr->enc_mode;
     uint8_t pd_pass = context_ptr->pd_pass;
+#if PD1_MX
+    if (pd_pass == PD_PASS_1 && pcs_ptr->slice_type != I_SLICE) {
+        enc_mode = PD1_MX;
+    }
+    context_ptr->md_enc_mode = enc_mode;
+#endif
 #if USE_M8_IN_PD1
     if (pd_pass == PD_PASS_1) {
         enc_mode = ENC_M8;
@@ -2216,6 +2222,46 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
          context_ptr->disallow_4x4 = EB_FALSE;
      }
 #endif
+
+#if PD1_MX
+     uint8_t disallow_nsq;
+#if APR25_12AM_ADOPTIONS
+#if APR25_1PM_ADOPTIONS
+    if (enc_mode <= ENC_M5 || (enc_mode <= ENC_M6 && pcs_ptr->parent_pcs_ptr->sc_content_detected)) {
+#else
+    if (enc_mode <= ENC_M5) {
+#endif
+        disallow_nsq = EB_FALSE;
+    }
+#if APR25_3AM_ADOPTIONS
+    else if (enc_mode <= ENC_M6 && !pcs_ptr->parent_pcs_ptr->sc_content_detected) {
+#else
+    else if (enc_mode <= ENC_M6) {
+#endif
+        disallow_nsq = pcs_ptr->parent_pcs_ptr->is_used_as_reference_flag ? EB_FALSE : EB_TRUE;
+    }
+    else if (enc_mode <= ENC_M7) {
+#if APR25_7PM_ADOPTIONS
+        if (pcs_ptr->parent_pcs_ptr->sc_content_detected)
+            disallow_nsq = EB_FALSE;
+        else
+            disallow_nsq = pcs_ptr->slice_type == I_SLICE ? EB_FALSE : EB_TRUE;
+#else
+        pcs_ptr->disallow_nsq = pcs_ptr->slice_type == I_SLICE ? EB_FALSE : EB_TRUE;
+#endif
+    }
+    else {
+#if APR25_7PM_ADOPTIONS
+        if (pcs_ptr->parent_pcs_ptr->sc_content_detected)
+            disallow_nsq = pcs_ptr->slice_type == I_SLICE ? EB_FALSE : EB_TRUE;
+        else
+            disallow_nsq = EB_TRUE;
+#else
+        pcs_ptr->disallow_nsq = EB_TRUE;
+#endif
+    }
+#endif
+#endif
 #if SB_CLASSIFIER
 #if OPT_BLOCK_INDICES_GEN_2
 
@@ -2226,7 +2272,11 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
          context_ptr->md_disallow_nsq = (enc_mode <= ENC_M0) ? 0 : 1;
      else
          // Update nsq settings based on the sb_class
+#if PD1_MX
+         context_ptr->md_disallow_nsq = (context_ptr->enable_area_based_cycles_allocation &&  context_ptr->sb_class == HIGH_COMPLEX_CLASS) ? 1 : disallow_nsq;
+#else
          context_ptr->md_disallow_nsq = (context_ptr->enable_area_based_cycles_allocation &&  context_ptr->sb_class == HIGH_COMPLEX_CLASS) ? 1 : pcs_ptr->parent_pcs_ptr->disallow_nsq;
+#endif
 #else
      // Update nsq settings based on the sb_class
      context_ptr->md_disallow_nsq = (context_ptr->enable_area_based_cycles_allocation &&  context_ptr->sb_class == HIGH_COMPLEX_CLASS ) ? 1 : pcs_ptr->parent_pcs_ptr->disallow_nsq;
@@ -6051,6 +6101,10 @@ static void perform_pred_depth_refinement(SequenceControlSet *scs_ptr, PictureCo
                             e_depth = 1;
 #endif
                         }
+#if PD1_DEPTH_ONLY
+                        s_depth = 0;
+                        e_depth = 1;
+#endif
                     }
 
 #if ADOPT_SKIPPING_PD1

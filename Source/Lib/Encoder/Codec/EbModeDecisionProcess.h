@@ -607,6 +607,9 @@ typedef struct ModeDecisionContext {
     uint8_t sb_class;
     SbClassControls sb_class_ctrls;
 #endif
+#if PD1_MX
+    uint8_t md_enc_mode;
+#endif
 } ModeDecisionContext;
 
 typedef void (*EbAv1LambdaAssignFunc)(uint32_t *fast_lambda, uint32_t *full_lambda,

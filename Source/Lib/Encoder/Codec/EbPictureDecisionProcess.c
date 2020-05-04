@@ -966,6 +966,9 @@ EbErrorType signal_derivation_multi_processes_oq(
 #if ADD_NEW_MPPD_LEVEL
 #if ADOPT_SKIPPING_PD1
     pcs_ptr->multi_pass_pd_level = MULTI_PASS_PD_LEVEL_0;
+#if ENABLE_PD1
+    pcs_ptr->multi_pass_pd_level = MULTI_PASS_PD_LEVEL_1;
+#endif
 #else
 #if MAR23_ADOPTIONS
     if (sc_content_detected)
