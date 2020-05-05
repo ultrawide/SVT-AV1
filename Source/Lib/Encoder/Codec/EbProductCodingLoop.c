@@ -1660,6 +1660,20 @@ void set_md_stage_counts(PictureControlSet *pcs_ptr, ModeDecisionContext *contex
         if (nics_level == NIC_C4) { // C4
             // Step 2: set md_stage count
 #if CLASS_MERGING
+#if NICS_CLEANUP
+            context_ptr->md_stage_1_count[CAND_CLASS_0] =
+                (pcs_ptr->slice_type == I_SLICE)? 64 :
+                (pcs_ptr->parent_pcs_ptr->is_used_as_reference_flag) ? 32     : 16    ;
+            context_ptr->md_stage_1_count[CAND_CLASS_1] =
+                (pcs_ptr->slice_type == I_SLICE)? 0 :
+                (pcs_ptr->parent_pcs_ptr->is_used_as_reference_flag) ? 32     : 16    ;
+            context_ptr->md_stage_1_count[CAND_CLASS_2] =
+                (pcs_ptr->slice_type == I_SLICE)? 0 :
+                (pcs_ptr->parent_pcs_ptr->is_used_as_reference_flag) ? 32     : 16    ;
+            context_ptr->md_stage_1_count[CAND_CLASS_3] =
+                (pcs_ptr->slice_type == I_SLICE)? 16 :
+                (pcs_ptr->parent_pcs_ptr->is_used_as_reference_flag) ? 8      : 4     ;
+#else
             context_ptr->md_stage_1_count[CAND_CLASS_0] =
                 (pcs_ptr->slice_type == I_SLICE)
                     ? fastCandidateTotalCount + 5
@@ -1676,6 +1690,7 @@ void set_md_stage_counts(PictureControlSet *pcs_ptr, ModeDecisionContext *contex
                 (pcs_ptr->slice_type == I_SLICE)
                     ? 16
                     : (pcs_ptr->parent_pcs_ptr->is_used_as_reference_flag) ? 8 : 4;
+#endif
 #else
             context_ptr->md_stage_1_count[CAND_CLASS_0] =
                 (pcs_ptr->slice_type == I_SLICE)
@@ -1721,6 +1736,37 @@ void set_md_stage_counts(PictureControlSet *pcs_ptr, ModeDecisionContext *contex
             }
 #endif
 #if CLASS_MERGING
+#if NICS_CLEANUP
+            if (pcs_ptr->parent_pcs_ptr->sc_content_detected) {
+                context_ptr->md_stage_2_count[CAND_CLASS_0] =
+                    (pcs_ptr->slice_type == I_SLICE) ? 16 :
+                    (pcs_ptr->parent_pcs_ptr->is_used_as_reference_flag) ? 8  : 4;
+                context_ptr->md_stage_2_count[CAND_CLASS_1] =
+                    (pcs_ptr->slice_type == I_SLICE) ? 0 :
+                    (pcs_ptr->parent_pcs_ptr->is_used_as_reference_flag) ? 8  : 4;
+                context_ptr->md_stage_2_count[CAND_CLASS_2] =
+                    (pcs_ptr->slice_type == I_SLICE) ? 0 :
+                    (pcs_ptr->parent_pcs_ptr->is_used_as_reference_flag) ? 8  : 4;
+                context_ptr->md_stage_2_count[CAND_CLASS_3] =
+                    (pcs_ptr->slice_type == I_SLICE) ? 8  :
+                    (pcs_ptr->parent_pcs_ptr->is_used_as_reference_flag) ? 4  : 2 ;
+            }
+            else {
+                context_ptr->md_stage_2_count[CAND_CLASS_0] =
+                    (pcs_ptr->slice_type == I_SLICE)? 32 :
+                    (pcs_ptr->parent_pcs_ptr->is_used_as_reference_flag) ? 16     : 8     ;
+                context_ptr->md_stage_2_count[CAND_CLASS_1] =
+                    (pcs_ptr->slice_type == I_SLICE)? 0  :
+                    (pcs_ptr->parent_pcs_ptr->is_used_as_reference_flag) ? 16     : 8     ;
+                context_ptr->md_stage_2_count[CAND_CLASS_2] =
+                    (pcs_ptr->slice_type == I_SLICE)? 0  :
+                    (pcs_ptr->parent_pcs_ptr->is_used_as_reference_flag) ? 16     : 8     ;
+                context_ptr->md_stage_2_count[CAND_CLASS_3] =
+                    (pcs_ptr->slice_type == I_SLICE)? 8  :
+                    (pcs_ptr->parent_pcs_ptr->is_used_as_reference_flag) ? 4      : 2     ;
+            }
+
+#else
             context_ptr->md_stage_2_count[CAND_CLASS_0] =
                 (pcs_ptr->slice_type == I_SLICE)
                     ? 28
@@ -1737,6 +1783,7 @@ void set_md_stage_counts(PictureControlSet *pcs_ptr, ModeDecisionContext *contex
                 (pcs_ptr->slice_type == I_SLICE)
                     ? 8
                     : (pcs_ptr->parent_pcs_ptr->is_used_as_reference_flag) ? 4 : 2;
+#endif
 #else
             context_ptr->md_stage_2_count[CAND_CLASS_0] =
                 (pcs_ptr->slice_type == I_SLICE)
@@ -1782,11 +1829,44 @@ void set_md_stage_counts(PictureControlSet *pcs_ptr, ModeDecisionContext *contex
             }
 #endif
 
-#if CLASS_MERGING
+#if CLASS_MERGING && !NICS_CLEANUP
         uint32_t scaling_num = 3;
         uint32_t scaling_denom = 4;
         context_ptr->md_stage_1_count[CAND_CLASS_0] = (uint32_t)round((scaling_num * ((float)context_ptr->md_stage_1_count[CAND_CLASS_0])) / scaling_denom);
         context_ptr->md_stage_1_count[CAND_CLASS_0] = MAX(context_ptr->md_stage_1_count[CAND_CLASS_0], 1);
+
+#endif
+#if NICS_CLEANUP
+
+            uint32_t min_nics =   pcs_ptr->parent_pcs_ptr->is_used_as_reference_flag ?
+                2 : 1 ;
+
+            uint32_t scale_num   ;
+            uint32_t scale_denum ;
+            if (pcs_ptr->enc_mode <= ENC_M0) {
+                scale_num   = 7;
+                scale_denum = 8;
+            }else if (pcs_ptr->enc_mode <= ENC_M1) {
+                scale_num   = 6;
+                scale_denum = 8;
+            }else if (pcs_ptr->enc_mode <= ENC_M5) {
+                scale_num   = pcs_ptr->parent_pcs_ptr->sc_content_detected == 0 ? 4 : 2;
+                scale_denum = pcs_ptr->parent_pcs_ptr->sc_content_detected == 0 ? 8 : 8;
+            } else if (pcs_ptr->enc_mode <= ENC_M7) {
+                scale_num   = 1;
+                scale_denum = 8;
+            }
+            else {
+                scale_num   = pcs_ptr->parent_pcs_ptr->sc_content_detected == 0 ? 1 : 1;
+                scale_denum = pcs_ptr->parent_pcs_ptr->sc_content_detected == 0 ? 8 : 16;
+            }
+
+            for (uint8_t cidx = 0; cidx < CAND_CLASS_TOTAL; ++cidx) {
+                context_ptr->md_stage_1_count[cidx] = MAX(min_nics,
+                    DIVIDE_AND_ROUND(context_ptr->md_stage_1_count[cidx] * scale_num, scale_denum));
+                context_ptr->md_stage_2_count[cidx] = MAX(min_nics,
+                    DIVIDE_AND_ROUND(context_ptr->md_stage_2_count[cidx] * scale_num, scale_denum));
+            }
 
 #endif
 #if SB_CLASSIFIER
@@ -1797,6 +1877,7 @@ void set_md_stage_counts(PictureControlSet *pcs_ptr, ModeDecisionContext *contex
             }
         }
 #endif
+#if !NICS_CLEANUP
             ////MULT
 #if MAY01_M1_SC_ADOPT
         if (((pcs_ptr->enc_mode <= ENC_M2) && !(pcs_ptr->parent_pcs_ptr->sc_content_detected)) ||
@@ -2218,6 +2299,7 @@ void set_md_stage_counts(PictureControlSet *pcs_ptr, ModeDecisionContext *contex
                     context_ptr->md_stage_2_count[i] = MAX(context_ptr->md_stage_2_count[i], 1);
                 }
             }
+#endif
         }
 #if !CLASS_MERGING
 #if INTRA_COMPOUND_OPT

@@ -357,6 +357,8 @@ extern "C" {
 #define MAY05_M3_NSC_ADOPT 1 // M3 NSC adoptions
 #define MAY05_M3_SC_ADOPT 1 // M3 SC adoptions
 
+#define NICS_CLEANUP         1
+
 #endif
 // END  MAY2020 /////////////////////////////////////////////////////////
 
