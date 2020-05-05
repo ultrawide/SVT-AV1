@@ -6104,9 +6104,53 @@ static void perform_pred_depth_refinement(SequenceControlSet *scs_ptr, PictureCo
                         }
 #if PD1_DEPTH_ONLY
                         s_depth = 0;
+                        e_depth = 0;
+#endif
+#if PD1_DEPTH_M1
+                        s_depth = -1;
+                        e_depth = 0;
+#endif
+#if PD1_DEPTH_P1
+                        s_depth = 0;
+                        e_depth = 1;
+#endif
+#if PD1_DEPTH_MP1
+                        s_depth = -1;
                         e_depth = 1;
 #endif
                     }
+
+#if ENABLE_PD1
+                    if (context_ptr->pd_pass == PD_PASS_0) {
+                        s_depth = -1;
+                        e_depth = 1;
+                    }
+#endif
+
+#if PD0_PRED_ONLY
+                    if (context_ptr->pd_pass == PD_PASS_0) {
+                        s_depth = 0;
+                        e_depth = 0;
+                    }
+#endif
+#if PD0_PRED_M1
+                    if (context_ptr->pd_pass == PD_PASS_0) {
+                        s_depth = -1;
+                        e_depth = 0;
+                    }
+#endif
+#if PD0_PRED_P1
+                    if (context_ptr->pd_pass == PD_PASS_0) {
+                        s_depth = 0;
+                        e_depth = 1;
+                    }
+#endif
+#if PD0_PRED_MP1
+                    if (context_ptr->pd_pass == PD_PASS_0) {
+                        s_depth = -1;
+                        e_depth = 1;
+                    }
+#endif
 
 #if ADOPT_SKIPPING_PD1
                     // Check that the start and end depth are in allowed range, given other features

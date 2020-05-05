@@ -354,8 +354,18 @@ extern "C" {
 #define REU_MEM_OPT                 1 // Memory reduction for rate estimation tables
 #define SB_MEM_OPT                  1 // memory reduction for SB array. Removing memory allocation for av1xd per blk
 #define MD_FRAME_CONTEXT_MEM_OPT    1 // Memory reduction for frame context used in MD
-#define ENABLE_PD1                  0
+
+
+
+#define PD0_PRED_ONLY               0
 #define PD1_DEPTH_ONLY              0
+#define PD0_PRED_M1                 0
+#define PD1_DEPTH_M1                0
+#define PD0_PRED_P1                 0
+#define PD1_DEPTH_P1                0
+#define PD0_PRED_MP1                0
+#define PD1_DEPTH_MP1               0
+#define ENABLE_PD1                  0
 #define PD1_MX                      0
 #endif
 // END  SVT_01 /////////////////////////////////////////////////////////
