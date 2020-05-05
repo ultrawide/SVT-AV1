@@ -350,6 +350,13 @@ extern "C" {
 #define MAY01_M1_NSC_ADOPT 1 // M1 NSC adoptions
 #define MAY01_M1_SC_ADOPT 1 // M1 SC adoptions
 
+#define MAY03_4K_10BIT_ADOPTS 1 // disable chroma blind @ MD for 10bit; 4k setting adopt - already in svt-01
+
+#define M8_MPPD_ISLICE_ADOPT 1 //Send [-2,+2] for I_SLICE in M8
+#define PUSH_NOISE_FEATURES 1 // remove features that are giving noise deviations, even in M8
+#define MAY05_M3_NSC_ADOPT 1 // M3 NSC adoptions
+#define MAY05_M3_SC_ADOPT 1 // M3 SC adoptions
+
 #endif
 // END  MAY2020 /////////////////////////////////////////////////////////
 

@@ -1955,10 +1955,14 @@ EbErrorType signal_derivation_multi_processes_oq(
 #if PRESETS_SHIFT
 #if APR23_ADOPTIONS
             if (pcs_ptr->sc_content_detected)
+#if MAY05_M3_SC_ADOPT
+                pcs_ptr->compound_mode = MR_MODE ? 1 : pcs_ptr->enc_mode <= ENC_M4 ? 2 : 0;
+#else
 #if SHIFT_M5_SC_TO_M3
                 pcs_ptr->compound_mode = MR_MODE ? 1 : pcs_ptr->enc_mode <= ENC_M2 ? 2 : 0;
 #else
                 pcs_ptr->compound_mode = MR_MODE ? 1 : pcs_ptr->enc_mode <= ENC_M4 ? 2 : 0;
+#endif
 #endif
             else
 #endif

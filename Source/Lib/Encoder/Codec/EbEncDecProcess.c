@@ -1620,6 +1620,18 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
     }
 #endif
 #endif
+#if MAY03_4K_10BIT_ADOPTS
+    else if (enc_mode <= ENC_M1) {
+        if (pcs_ptr->parent_pcs_ptr->input_resolution >= INPUT_SIZE_4K_RANGE)
+            context_ptr->coeffcients_area_based_cycles_allocation_level = 4;
+        else if (pcs_ptr->parent_pcs_ptr->input_resolution >= INPUT_SIZE_1080p_RANGE)
+            context_ptr->coeffcients_area_based_cycles_allocation_level = 4;
+        else if (pcs_ptr->parent_pcs_ptr->input_resolution >= INPUT_SIZE_720p_RANGE)
+            context_ptr->coeffcients_area_based_cycles_allocation_level = 3;
+        else
+            context_ptr->coeffcients_area_based_cycles_allocation_level = 2;
+    }
+#endif
 #if APR24_ADOPTIONS_M6_M7
     else if (enc_mode <= ENC_M6) {
 #else
@@ -1927,10 +1939,14 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
 #if MAR2_M7_ADOPTIONS
 #if MAR10_ADOPTIONS
 #if FIX_CHROMA_PALETTE_INTERACTION
+#if MAY05_M3_SC_ADOPT
+            if (enc_mode <= ENC_M4)
+#else
 #if MAY01_M1_SC_ADOPT
             if (enc_mode <= ENC_M2)
 #else
             if (enc_mode <= ENC_M0)
+#endif
 #endif
                 context_ptr->chroma_level = CHROMA_MODE_0;
             else if (enc_mode <= ENC_M8)
@@ -1973,6 +1989,9 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
 #endif
 #endif
         else
+#if MAY03_4K_10BIT_ADOPTS
+            context_ptr->chroma_level = CHROMA_MODE_1;
+#else
             context_ptr->chroma_level =
             (sequence_control_set_ptr->encoder_bit_depth == EB_8BIT)
 #if ADOPT_CHROMA_MODE1_CFL_OFF
@@ -1981,7 +2000,7 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
             ? CHROMA_MODE_2
 #endif
             : CHROMA_MODE_3;
-
+#endif
     }
     else // use specified level
         context_ptr->chroma_level =
@@ -2047,6 +2066,9 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
     // Level                Settings
     // 0                    All supported modes.
     // 1                    All supported modes in  Intra picture and 4 in inter picture
+#if PUSH_NOISE_FEATURES
+    context_ptr->independent_chroma_nics = 0;
+#else
 #if SHIFT_M5_SC_TO_M3
     if (pcs_ptr->parent_pcs_ptr->sc_content_detected)
         if (enc_mode <= ENC_M2)
@@ -2065,6 +2087,7 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
     context_ptr->independent_chroma_nics = enc_mode <= ENC_M4 ? 0 : 1;
 #else
     context_ptr->independent_chroma_nics = enc_mode == ENC_M5 ? 1 : 0;
+#endif
 #endif
 #endif
 #endif
@@ -2110,6 +2133,9 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
     // libaom_short_cuts_ths
     // 1                    faster than libaom
     // 2                    libaom - default
+#if PUSH_NOISE_FEATURES
+    context_ptr->libaom_short_cuts_ths = 2;
+#else
 #if SHIFT_M5_SC_TO_M3
     if (pcs_ptr->parent_pcs_ptr->sc_content_detected)
         if (enc_mode <= ENC_M2)
@@ -2141,9 +2167,13 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
 #endif
 #endif
 #endif
+#endif
 #if UV_SEARCH_MODE_INJCECTION
     // 0                    inject all supprted chroma mode
     // 1                    follow the luma injection
+#if PUSH_NOISE_FEATURES
+    context_ptr->intra_chroma_search_follows_intra_luma_injection = 0;
+#else
 #if SHIFT_M5_SC_TO_M3
     if (pcs_ptr->parent_pcs_ptr->sc_content_detected)
         if (enc_mode <= ENC_M2)
@@ -2172,6 +2202,7 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
         context_ptr->intra_chroma_search_follows_intra_luma_injection = 1;
     else
         context_ptr->intra_chroma_search_follows_intra_luma_injection = 0;
+#endif
 #endif
 #endif
 #endif
@@ -2367,6 +2398,9 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
         else
 #if MAR4_M6_ADOPTIONS
             if (pcs_ptr->parent_pcs_ptr->sc_content_detected)
+#if MAY05_M3_SC_ADOPT
+                if (enc_mode <= ENC_M4)
+#else
 #if SHIFT_M5_SC_TO_M3
                 if (enc_mode <= ENC_M2)
 #else
@@ -2388,6 +2422,7 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
 #endif
 #else
                 if (enc_mode <= ENC_M3)
+#endif
 #endif
 #endif
 #endif
@@ -2432,6 +2467,9 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
 
             if (pcs_ptr->parent_pcs_ptr->sc_content_detected)
 #if MAR30_ADOPTIONS
+#if MAY05_M3_SC_ADOPT
+                if (enc_mode <= ENC_M4)
+#else
 #if SHIFT_M5_SC_TO_M3
                 if (enc_mode <= ENC_M2)
 #else
@@ -2442,6 +2480,7 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
                 if (enc_mode <= ENC_M2)
 #else
                 if (enc_mode <= ENC_M0)
+#endif
 #endif
 #endif
 #endif
@@ -2526,6 +2565,9 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
     else if (sequence_control_set_ptr->static_config.bipred_3x3_inject ==
         DEFAULT)
         if (pcs_ptr->parent_pcs_ptr->sc_content_detected)
+#if MAY05_M3_SC_ADOPT
+            if (enc_mode <= ENC_M4)
+#else
 #if SHIFT_M5_SC_TO_M3
             if (enc_mode <= ENC_M2)
 #else
@@ -2539,6 +2581,7 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
             if (enc_mode <= ENC_M3)
 #else
             if (enc_mode <= ENC_M4)
+#endif
 #endif
 #endif
 #endif
@@ -2967,6 +3010,9 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
         else if (sequence_control_set_ptr->static_config.edge_skp_angle_intra == DEFAULT) {
 #if MAR12_ADOPTIONS
             if (pcs_ptr->parent_pcs_ptr->sc_content_detected)
+#if MAY05_M3_SC_ADOPT
+                if (enc_mode <= ENC_M4)
+#else
 #if SHIFT_M5_SC_TO_M3
                 if (enc_mode <= ENC_M2)
 #else
@@ -2977,6 +3023,7 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
                 if (enc_mode <= ENC_M7)
 #else
                 if (enc_mode <= ENC_M3)
+#endif
 #endif
 #endif
 #endif
@@ -3400,6 +3447,9 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
     // 0: OFF
     // 1: ON 10% + skip HA/HB/H4  or skip VA/VB/V4
     // 2: ON 10% + skip HA/HB  or skip VA/VB   ,  5% + skip H4  or skip V4
+#if MAY05_M3_SC_ADOPT
+            if (enc_mode <= ENC_M0 || pd_pass < PD_PASS_2 || (enc_mode <= ENC_M4 && pcs_ptr->parent_pcs_ptr->sc_content_detected))
+#else
 #if SHIFT_M5_SC_TO_M3
     if (enc_mode <= ENC_M0 || pd_pass < PD_PASS_2 || (enc_mode <= ENC_M2 && pcs_ptr->parent_pcs_ptr->sc_content_detected))
 #else
@@ -3416,6 +3466,7 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
     if (MR_MODE || pd_pass < PD_PASS_2 || (enc_mode <= ENC_M3 && pcs_ptr->parent_pcs_ptr->sc_content_detected))
 #else
     if (MR_MODE || pd_pass < PD_PASS_2)
+#endif
 #endif
 #endif
 #endif
@@ -3744,8 +3795,15 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
         context_ptr->bipred3x3_number_input_mv = 4;
     else if (pd_pass == PD_PASS_1)
         context_ptr->bipred3x3_number_input_mv = 4;
+#if MAY05_M3_NSC_ADOPT
+    else if (enc_mode <= ENC_M2)
+        context_ptr->bipred3x3_number_input_mv = 4;
+    else
+        context_ptr->bipred3x3_number_input_mv = 1;
+#else
     else
         context_ptr->bipred3x3_number_input_mv = 4;
+#endif
 #endif
 
     // Set md_skip_mvp_generation (and use (0,0) as MVP instead)
@@ -5835,12 +5893,17 @@ static void perform_pred_depth_refinement(SequenceControlSet *scs_ptr, PictureCo
                                     e_depth = pcs_ptr->slice_type == I_SLICE ? 2 : pcs_ptr->parent_pcs_ptr->is_used_as_reference_flag ? 1 : 0;
                                 }
                                 else {
+#if M8_MPPD_ISLICE_ADOPT
+                                    s_depth = pcs_ptr->slice_type == I_SLICE ? -2 : 0;
+                                    e_depth = pcs_ptr->slice_type == I_SLICE ? 2 : 0;
+#else
 #if REVERT_WHITE // MPPD
                                     s_depth = pcs_ptr->slice_type == I_SLICE ? -1 : 0;
                                     e_depth = pcs_ptr->slice_type == I_SLICE ? 1 : 0;
 #else
                                     s_depth = pcs_ptr->slice_type == I_SLICE ? -2 : 0;
                                     e_depth = pcs_ptr->slice_type == I_SLICE ? 2 : 0;
+#endif
 #endif
                                 }
 #else

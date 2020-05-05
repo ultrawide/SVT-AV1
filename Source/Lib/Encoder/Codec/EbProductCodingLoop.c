@@ -8518,7 +8518,11 @@ void set_inter_comp_controls(ModeDecisionContext *mdctxt, uint8_t inter_comp_mod
         inter_comp_ctrls->mrp_pruning_w_distortion  = 1;
         inter_comp_ctrls->mrp_pruning_w_distance = 1;
         inter_comp_ctrls->wedge_search_mode = 1;
+#if PUSH_NOISE_FEATURES
+        inter_comp_ctrls->wedge_variance_th = 0;
+#else
         inter_comp_ctrls->wedge_variance_th = 100;
+#endif
         inter_comp_ctrls->similar_previous_blk=2;
         break;
     case 1://FULL
@@ -8528,10 +8532,14 @@ void set_inter_comp_controls(ModeDecisionContext *mdctxt, uint8_t inter_comp_mod
         inter_comp_ctrls->mrp_pruning_w_distortion  = 0;
         inter_comp_ctrls->mrp_pruning_w_distance = 4;
         inter_comp_ctrls->wedge_search_mode = 1;
+#if PUSH_NOISE_FEATURES
+        inter_comp_ctrls->wedge_variance_th = 0;
+#else
 #if APR22_ADOPTIONS
         inter_comp_ctrls->wedge_variance_th = 100;
 #else
         inter_comp_ctrls->wedge_variance_th = MR_MODE ? 0 : 100;
+#endif
 #endif
         inter_comp_ctrls->similar_previous_blk=1;
         break;
@@ -8542,7 +8550,11 @@ void set_inter_comp_controls(ModeDecisionContext *mdctxt, uint8_t inter_comp_mod
         inter_comp_ctrls->mrp_pruning_w_distortion  = 1;
         inter_comp_ctrls->mrp_pruning_w_distance = 1;
         inter_comp_ctrls->wedge_search_mode = 1;
+#if PUSH_NOISE_FEATURES
+        inter_comp_ctrls->wedge_variance_th = 0;
+#else
         inter_comp_ctrls->wedge_variance_th = 100;
+#endif
         inter_comp_ctrls->similar_previous_blk=2;
         break;
     default:
@@ -8572,6 +8584,7 @@ EbErrorType signal_derivation_block(
         set_inter_comp_controls(context_ptr,pcs->parent_pcs_ptr->compound_mode);
 
     context_ptr->compound_types_to_try = context_ptr->inter_comp_ctrls.enabled ? MD_COMP_WEDGE : MD_COMP_AVG;
+#if !PUSH_NOISE_FEATURES
 #if APR22_ADOPTIONS
 #if MAY01_M1_SC_ADOPT
     if (pcs->enc_mode <= ENC_M2)
@@ -8583,6 +8596,7 @@ EbErrorType signal_derivation_block(
 #endif
 #endif
         context_ptr->inter_comp_ctrls.wedge_variance_th = 0;
+#endif
 #endif
 
 #else
