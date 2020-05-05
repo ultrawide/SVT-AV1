@@ -3499,6 +3499,17 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
 #endif
         else if (context_ptr->sb_class == VERY_LOW_COMPLEX_CLASS)
             context_ptr->sq_weight = 100 - (10 * context_ptr->coeffcients_area_based_cycles_allocation_level);
+
+#if SC_TEST1 || SC_TEST2
+#if SC_TEST1
+        if (context_ptr->sb_class == MEDIUM_COMPLEX_CLASS)
+            context_ptr->sq_weight = 50;
+#endif
+#if SC_TEST2
+        if(context_ptr->sb_class == HIGH_COMPLEX_CLASS || context_ptr->sb_class == MEDIUM_COMPLEX_CLASS)
+            context_ptr->sq_weight = 50;
+#endif
+#endif
     }
 #endif
     // nsq_hv_level  needs sq_weight to be ON
@@ -6213,8 +6224,28 @@ static void perform_pred_depth_refinement(SequenceControlSet *scs_ptr, PictureCo
                         }
                     }
 #if TEST1 || TEST2 || TEST3
+#if SC_TEST1 || SC_TEST2
+#if SC_TEST1
+                    if (pcs_ptr->parent_pcs_ptr->sc_content_detected) {
+                        s_depth = (context_ptr->sb_class == HIGH_COMPLEX_CLASS) ? 0 : s_depth;
+                        e_depth = (context_ptr->sb_class == HIGH_COMPLEX_CLASS) ? 0 : e_depth;
+                    }
+                    else {
+                        s_depth = (context_ptr->sb_class == HIGH_COMPLEX_CLASS || context_ptr->sb_class == MEDIUM_COMPLEX_CLASS) ? 0 : s_depth;
+                        e_depth = (context_ptr->sb_class == HIGH_COMPLEX_CLASS || context_ptr->sb_class == MEDIUM_COMPLEX_CLASS) ? 0 : e_depth;
+                    }
+#endif
+#if SC_TEST2
+                    if (!pcs_ptr->parent_pcs_ptr->sc_content_detected) {
+                        s_depth = (context_ptr->sb_class == HIGH_COMPLEX_CLASS || context_ptr->sb_class == MEDIUM_COMPLEX_CLASS) ? 0 : s_depth;
+                        e_depth = (context_ptr->sb_class == HIGH_COMPLEX_CLASS || context_ptr->sb_class == MEDIUM_COMPLEX_CLASS) ? 0 : e_depth;
+                    }
+#endif
+
+#else
                     s_depth = (context_ptr->sb_class == HIGH_COMPLEX_CLASS || context_ptr->sb_class == MEDIUM_COMPLEX_CLASS) ? 0 : s_depth;
                     e_depth = (context_ptr->sb_class == HIGH_COMPLEX_CLASS || context_ptr->sb_class == MEDIUM_COMPLEX_CLASS) ? 0 : e_depth;
+#endif
 #endif
 #if ADOPT_SKIPPING_PD1
                     // Check that the start and end depth are in allowed range, given other features

@@ -353,6 +353,8 @@ extern "C" {
 #define TEST3                              0
 #define NEW_TH_SET                         0
 #define MORE_AGRESSIVE_M87                 0
+#define SC_TEST1                           0
+#define SC_TEST2                           0
 #endif
 #endif
 // END  MAY2020 /////////////////////////////////////////////////////////
