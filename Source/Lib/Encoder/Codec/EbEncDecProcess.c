@@ -1540,13 +1540,24 @@ void set_sb_class_controls(ModeDecisionContext *context_ptr) {
         sb_class_ctrls->sb_class_th[LOW_COMPLEX_CLASS] = 4;
         sb_class_ctrls->sb_class_th[VERY_LOW_COMPLEX_CLASS] = 0;
         break;
+#if MORE_AGRESSIVE_M8
 #if UPGRADE_M8
     case 6:
-        sb_class_ctrls->sb_class_th[HIGH_COMPLEX_CLASS] = 18;
+        sb_class_ctrls->sb_class_th[HIGH_COMPLEX_CLASS] = 8;
+        sb_class_ctrls->sb_class_th[MEDIUM_COMPLEX_CLASS] = 6;
+        sb_class_ctrls->sb_class_th[LOW_COMPLEX_CLASS] = 1;
+        sb_class_ctrls->sb_class_th[VERY_LOW_COMPLEX_CLASS] = 0;
+        break;
+#endif
+#else
+#if UPGRADE_M8
+    case 6:
+        sb_class_ctrls->sb_class_th[HIGH_COMPLEX_CLASS] = 8;
         sb_class_ctrls->sb_class_th[MEDIUM_COMPLEX_CLASS] = 6;
         sb_class_ctrls->sb_class_th[LOW_COMPLEX_CLASS] = 2;
         sb_class_ctrls->sb_class_th[VERY_LOW_COMPLEX_CLASS] = 0;
         break;
+#endif
 #endif
     default:
         printf("Error - Invalid sb_class_level");
@@ -3481,7 +3492,7 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
 #if TEST1 || TEST2 || TEST3
     if (context_ptr->enable_area_based_cycles_allocation) {
         if (context_ptr->sb_class == LOW_COMPLEX_CLASS)
-            context_ptr->sq_weight = 50;
+            context_ptr->sq_weight = pcs_ptr->parent_pcs_ptr->sc_content_detected && enc_mode <= ENC_M6 ? 90 : 50;
 #if TEST2
         else if (context_ptr->sb_class == MEDIUM_COMPLEX_CLASS)
             context_ptr->sq_weight = 50;
