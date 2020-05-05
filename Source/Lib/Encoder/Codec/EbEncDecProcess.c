@@ -1540,11 +1540,11 @@ void set_sb_class_controls(ModeDecisionContext *context_ptr) {
         sb_class_ctrls->sb_class_th[LOW_COMPLEX_CLASS] = 4;
         sb_class_ctrls->sb_class_th[VERY_LOW_COMPLEX_CLASS] = 0;
         break;
-#if MORE_AGRESSIVE_M8
+#if MORE_AGRESSIVE_M87
 #if UPGRADE_M8
     case 6:
         sb_class_ctrls->sb_class_th[HIGH_COMPLEX_CLASS] = 8;
-        sb_class_ctrls->sb_class_th[MEDIUM_COMPLEX_CLASS] = 6;
+        sb_class_ctrls->sb_class_th[MEDIUM_COMPLEX_CLASS] = 4;
         sb_class_ctrls->sb_class_th[LOW_COMPLEX_CLASS] = 1;
         sb_class_ctrls->sb_class_th[VERY_LOW_COMPLEX_CLASS] = 0;
         break;
