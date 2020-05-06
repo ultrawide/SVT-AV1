@@ -3492,7 +3492,7 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
 #if TEST1 || TEST2 || TEST3
     if (context_ptr->enable_area_based_cycles_allocation) {
         if (context_ptr->sb_class == LOW_COMPLEX_CLASS)
-            context_ptr->sq_weight = pcs_ptr->parent_pcs_ptr->sc_content_detected && enc_mode <= ENC_M6 ? 90 : 50;
+            context_ptr->sq_weight = pcs_ptr->parent_pcs_ptr->sc_content_detected && enc_mode <= ENC_M6 ? 70 : 50;
 #if TEST2
         else if (context_ptr->sb_class == MEDIUM_COMPLEX_CLASS)
             context_ptr->sq_weight = 50;
@@ -3502,12 +3502,16 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
 
 #if SC_TEST1 || SC_TEST2
 #if SC_TEST1
-        if (context_ptr->sb_class == MEDIUM_COMPLEX_CLASS)
-            context_ptr->sq_weight = 50;
+        if (pcs_ptr->parent_pcs_ptr->sc_content_detected) {
+            if (context_ptr->sb_class == MEDIUM_COMPLEX_CLASS)
+                context_ptr->sq_weight = 50;
+        }
 #endif
 #if SC_TEST2
-        if(context_ptr->sb_class == HIGH_COMPLEX_CLASS || context_ptr->sb_class == MEDIUM_COMPLEX_CLASS)
-            context_ptr->sq_weight = 50;
+        if (pcs_ptr->parent_pcs_ptr->sc_content_detected) {
+            if (context_ptr->sb_class == HIGH_COMPLEX_CLASS || context_ptr->sb_class == MEDIUM_COMPLEX_CLASS)
+                context_ptr->sq_weight = 10;
+        }
 #endif
 #endif
     }
