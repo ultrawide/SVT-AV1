@@ -1612,7 +1612,11 @@ void set_sb_class_controls(ModeDecisionContext *context_ptr) {
         break;
 #if UPGRADE_M8
     case 6:
+#if FASTER_M8
+        sb_class_ctrls->sb_class_th[HIGH_COMPLEX_CLASS] = 7;
+#else
         sb_class_ctrls->sb_class_th[HIGH_COMPLEX_CLASS] = 8;
+#endif
         sb_class_ctrls->sb_class_th[MEDIUM_COMPLEX_CLASS] = 6;
         sb_class_ctrls->sb_class_th[LOW_COMPLEX_CLASS] = 2;
         sb_class_ctrls->sb_class_th[VERY_LOW_COMPLEX_CLASS] = 0;
@@ -2365,7 +2369,15 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
          // Update nsq settings based on the sb_class
 #if DISABLE_OLD_ACTIONS
 #if TEST1 || TEST2 || TEST3
+#if SC_TEST2
+        if (pcs_ptr->parent_pcs_ptr->sc_content_detected)
+            context_ptr->md_disallow_nsq = (context_ptr->enable_area_based_cycles_allocation &&  (context_ptr->sb_class == HIGH_COMPLEX_CLASS) || (context_ptr->sb_class == MEDIUM_COMPLEX_CLASS)) ? 1 : pcs_ptr->parent_pcs_ptr->disallow_nsq;
+        else
+            context_ptr->md_disallow_nsq = (context_ptr->enable_area_based_cycles_allocation &&  context_ptr->sb_class == HIGH_COMPLEX_CLASS) ? 1 : pcs_ptr->parent_pcs_ptr->disallow_nsq;
+#else
          context_ptr->md_disallow_nsq = (context_ptr->enable_area_based_cycles_allocation &&  context_ptr->sb_class == HIGH_COMPLEX_CLASS) ? 1 : pcs_ptr->parent_pcs_ptr->disallow_nsq;
+#endif
+
 #else
          context_ptr->md_disallow_nsq = pcs_ptr->parent_pcs_ptr->disallow_nsq;
 #endif
@@ -3500,19 +3512,11 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
         else if (context_ptr->sb_class == VERY_LOW_COMPLEX_CLASS)
             context_ptr->sq_weight = 100 - (10 * context_ptr->coeffcients_area_based_cycles_allocation_level);
 
-#if SC_TEST1 || SC_TEST2
-#if SC_TEST1
+#if SC_TEST1 
         if (pcs_ptr->parent_pcs_ptr->sc_content_detected) {
             if (context_ptr->sb_class == MEDIUM_COMPLEX_CLASS)
                 context_ptr->sq_weight = 50;
         }
-#endif
-#if SC_TEST2
-        if (pcs_ptr->parent_pcs_ptr->sc_content_detected) {
-            if (context_ptr->sb_class == HIGH_COMPLEX_CLASS || context_ptr->sb_class == MEDIUM_COMPLEX_CLASS)
-                context_ptr->sq_weight = 10;
-        }
-#endif
 #endif
     }
 #endif

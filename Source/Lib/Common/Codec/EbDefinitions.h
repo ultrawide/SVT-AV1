@@ -350,11 +350,12 @@ extern "C" {
 #define DISABLE_OLD_ACTIONS                1
 #define TEST1                              0
 #define TEST2                              0
-#define TEST3                              0
+#define TEST3                              1
 #define NEW_TH_SET                         0
 #define MORE_AGRESSIVE_M87                 0
 #define SC_TEST1                           0
-#define SC_TEST2                           0
+#define SC_TEST2                           1
+#define FASTER_M8                          1
 #endif
 #endif
 // END  MAY2020 /////////////////////////////////////////////////////////
