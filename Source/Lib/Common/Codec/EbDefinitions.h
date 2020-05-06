@@ -367,6 +367,9 @@ extern "C" {
 #define PD1_DEPTH_MP1               0
 #define ENABLE_PD1                  0
 #define PD1_MX                      0
+
+#define NEW_CASE                    0
+#define ADJUST_SQ_NSQ               0
 #endif
 // END  SVT_01 /////////////////////////////////////////////////////////
 #define COMMON_16BIT 1 // 16Bit pipeline support for common

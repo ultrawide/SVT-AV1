@@ -1482,6 +1482,23 @@ void set_block_based_depth_reduction_controls(ModeDecisionContext *mdctxt, uint8
         depth_reduction_ctrls->h_v_to_h4_v4_th = 0;
 
         break;
+#if NEW_CASE
+        case 3:
+
+        depth_reduction_ctrls->enabled = 1;
+
+        depth_reduction_ctrls->cost_sq_vs_nsq_energy_based_depth_reduction_enabled = 0;
+        depth_reduction_ctrls->current_to_parent_deviation_th = 0;
+        depth_reduction_ctrls->sq_to_best_nsq_deviation_th = 0;
+#if !M8_CLEAN_UP
+        depth_reduction_ctrls->quant_coeff_energy_th = 0;
+#endif
+        depth_reduction_ctrls->nsq_data_based_depth_reduction_enabled = 1;
+        depth_reduction_ctrls->sq_to_4_sq_children_th = 0;
+        depth_reduction_ctrls->h_v_to_h4_v4_th = 0;
+
+        break;
+#endif
 
     default:
         assert(0);
@@ -3688,7 +3705,11 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
     else
 #if NEW_M1_CAND
         if (enc_mode <= ENC_M0)
+#if NEW_CASE
+            context_ptr->block_based_depth_reduction_level = NEW_CASE;
+#else
             context_ptr->block_based_depth_reduction_level = 0;
+#endif
         else
             context_ptr->block_based_depth_reduction_level = 2;
 #else

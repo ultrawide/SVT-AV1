@@ -10476,9 +10476,96 @@ void block_based_depth_reduction(
                 (context_ptr->blk_geom->quadi - 3) * ns_depth_offset[scs_ptr->seq_header.sb_size == BLOCK_128X128][context_ptr->blk_geom->depth]) -
                 parent_depth_offset[scs_ptr->seq_header.sb_size == BLOCK_128X128][context_ptr->blk_geom->depth];
             int64_t current_to_parent_deviation = MIN_SIGNED_VALUE;
+#if ADJUST_SQ_NSQ
+            // Derive sub_group_0_cost (if nsq_5, nsq_6, nsq_9, nsq_10 are available)
+                uint64_t first_estimate_child_depth_cost = MAX_MODE_COST;
+                uint64_t current_blk_cost = context_ptr->md_local_blk_unit[context_ptr->blk_geom->sqi_mds].cost;
+                if (
+                    context_ptr->md_local_blk_unit[parent_depth_sqi_mds + 5].avail_blk_flag  &&
+                    context_ptr->md_local_blk_unit[parent_depth_sqi_mds + 6].avail_blk_flag  &&
+                    context_ptr->md_local_blk_unit[parent_depth_sqi_mds + 9].avail_blk_flag  &&
+                    context_ptr->md_local_blk_unit[parent_depth_sqi_mds + 10].avail_blk_flag) {
+
+                    if (context_ptr->blk_geom->quadi == 0) {
+                        first_estimate_child_depth_cost = current_blk_cost +
+                            context_ptr->md_local_blk_unit[context_ptr->blk_geom->sqi_mds + 6].default_cost +
+                            context_ptr->md_local_blk_unit[context_ptr->blk_geom->sqi_mds + 9].default_cost +
+                            context_ptr->md_local_blk_unit[context_ptr->blk_geom->sqi_mds + 10].default_cost;
+                    }
+                    else if (context_ptr->blk_geom->quadi == 1) {
+                        uint64_t quad_0_idx = (context_ptr->blk_geom->sqi_mds - ns_depth_offset[scs_ptr->seq_header.sb_size == BLOCK_128X128][context_ptr->blk_geom->depth]);
+                        first_estimate_child_depth_cost = context_ptr->md_local_blk_unit[quad_0_idx].cost +
+                            current_blk_cost +
+                            context_ptr->md_local_blk_unit[context_ptr->blk_geom->sqi_mds + 9].default_cost +
+                            context_ptr->md_local_blk_unit[context_ptr->blk_geom->sqi_mds + 10].default_cost;
+                    
+                    }else if (context_ptr->blk_geom->quadi == 2) {
+                        uint64_t quad_0_idx = (context_ptr->blk_geom->sqi_mds - (2 * ns_depth_offset[scs_ptr->seq_header.sb_size == BLOCK_128X128][context_ptr->blk_geom->depth]));
+                        uint64_t quad_1_idx = (context_ptr->blk_geom->sqi_mds - ( ns_depth_offset[scs_ptr->seq_header.sb_size == BLOCK_128X128][context_ptr->blk_geom->depth]));
+                        first_estimate_child_depth_cost = context_ptr->md_local_blk_unit[quad_0_idx].cost +
+                            context_ptr->md_local_blk_unit[quad_1_idx].cost +
+                            current_blk_cost +
+                            context_ptr->md_local_blk_unit[context_ptr->blk_geom->sqi_mds + 10].default_cost;
+                    }else if (context_ptr->blk_geom->quadi == 3) {
+                        uint64_t quad_0_idx = (context_ptr->blk_geom->sqi_mds - (3 * ns_depth_offset[scs_ptr->seq_header.sb_size == BLOCK_128X128][context_ptr->blk_geom->depth]));
+                        uint64_t quad_1_idx = (context_ptr->blk_geom->sqi_mds - (2* ns_depth_offset[scs_ptr->seq_header.sb_size == BLOCK_128X128][context_ptr->blk_geom->depth]));
+                        uint64_t quad_2_idx = (context_ptr->blk_geom->sqi_mds - ( ns_depth_offset[scs_ptr->seq_header.sb_size == BLOCK_128X128][context_ptr->blk_geom->depth]));
+                        first_estimate_child_depth_cost = context_ptr->md_local_blk_unit[quad_0_idx].cost +
+                            context_ptr->md_local_blk_unit[quad_1_idx].cost +
+                            context_ptr->md_local_blk_unit[quad_2_idx].cost+
+                            current_blk_cost;
+                    }
+                }
+
+                // Derive sub_group_1_cost (if nsq_11, nsq_12, nsq_15, nsq_16 are available)
+                uint64_t second_estimate_child_depth_cost = MAX_MODE_COST;
+                if (
+                    context_ptr->md_local_blk_unit[context_ptr->blk_geom->sqi_mds + 11].avail_blk_flag  &&
+                    context_ptr->md_local_blk_unit[context_ptr->blk_geom->sqi_mds + 12].avail_blk_flag  &&
+                    context_ptr->md_local_blk_unit[context_ptr->blk_geom->sqi_mds + 15].avail_blk_flag  &&
+                    context_ptr->md_local_blk_unit[context_ptr->blk_geom->sqi_mds + 16].avail_blk_flag) {
+                    if (context_ptr->blk_geom->quadi == 0) {
+                        second_estimate_child_depth_cost =
+                            current_blk_cost +
+                            context_ptr->md_local_blk_unit[context_ptr->blk_geom->sqi_mds + 12].default_cost +
+                            context_ptr->md_local_blk_unit[context_ptr->blk_geom->sqi_mds + 15].default_cost +
+                            context_ptr->md_local_blk_unit[context_ptr->blk_geom->sqi_mds + 16].default_cost;
+                    }else if (context_ptr->blk_geom->quadi == 1) {
+                        uint64_t quad_0_idx = (context_ptr->blk_geom->sqi_mds - ns_depth_offset[scs_ptr->seq_header.sb_size == BLOCK_128X128][context_ptr->blk_geom->depth]);
+                        second_estimate_child_depth_cost = context_ptr->md_local_blk_unit[quad_0_idx].cost +
+                            current_blk_cost +
+                            context_ptr->md_local_blk_unit[context_ptr->blk_geom->sqi_mds + 12].default_cost +
+                            context_ptr->md_local_blk_unit[context_ptr->blk_geom->sqi_mds + 16].default_cost;
+                    
+                    }else if (context_ptr->blk_geom->quadi == 2) {
+                        uint64_t quad_0_idx = (context_ptr->blk_geom->sqi_mds - (2 * ns_depth_offset[scs_ptr->seq_header.sb_size == BLOCK_128X128][context_ptr->blk_geom->depth]));
+                        uint64_t quad_1_idx = (context_ptr->blk_geom->sqi_mds - ( ns_depth_offset[scs_ptr->seq_header.sb_size == BLOCK_128X128][context_ptr->blk_geom->depth]));
+                        second_estimate_child_depth_cost = context_ptr->md_local_blk_unit[quad_0_idx].cost +
+                            context_ptr->md_local_blk_unit[quad_1_idx].cost +
+                            current_blk_cost +
+                            context_ptr->md_local_blk_unit[context_ptr->blk_geom->sqi_mds + 16].default_cost;
+                    }else if (context_ptr->blk_geom->quadi == 3) {
+                        uint64_t quad_0_idx = (context_ptr->blk_geom->sqi_mds - (3 * ns_depth_offset[scs_ptr->seq_header.sb_size == BLOCK_128X128][context_ptr->blk_geom->depth]));
+                        uint64_t quad_1_idx = (context_ptr->blk_geom->sqi_mds - (2* ns_depth_offset[scs_ptr->seq_header.sb_size == BLOCK_128X128][context_ptr->blk_geom->depth]));
+                        uint64_t quad_2_idx = (context_ptr->blk_geom->sqi_mds - ( ns_depth_offset[scs_ptr->seq_header.sb_size == BLOCK_128X128][context_ptr->blk_geom->depth]));
+                        second_estimate_child_depth_cost = context_ptr->md_local_blk_unit[quad_0_idx].cost +
+                            context_ptr->md_local_blk_unit[quad_1_idx].cost +
+                            context_ptr->md_local_blk_unit[quad_2_idx].cost+
+                            current_blk_cost;
+                    }
+                }
+                uint64_t best_estimate_child_depth_cost = MIN(first_estimate_child_depth_cost, second_estimate_child_depth_cost);
+                if (context_ptr->md_local_blk_unit[parent_depth_sqi_mds].avail_blk_flag) {
+                    if (best_estimate_child_depth_cost != MAX_MODE_COST) 
+                        current_to_parent_deviation = (int64_t)(((int64_t)(best_estimate_child_depth_cost) - (int64_t)context_ptr->md_local_blk_unit[parent_depth_sqi_mds].cost) * 100) / (int64_t)context_ptr->md_local_blk_unit[parent_depth_sqi_mds].cost;
+                    else
+                        current_to_parent_deviation = (int64_t)(((int64_t)(context_ptr->md_local_blk_unit[context_ptr->blk_geom->sqi_mds].cost * 4) - (int64_t)context_ptr->md_local_blk_unit[parent_depth_sqi_mds].cost) * 100) / (int64_t)context_ptr->md_local_blk_unit[parent_depth_sqi_mds].cost;
+                }    
+#else
             if (context_ptr->md_local_blk_unit[parent_depth_sqi_mds].avail_blk_flag) {
                 current_to_parent_deviation = (int64_t)(((int64_t)(context_ptr->md_local_blk_unit[context_ptr->blk_geom->sqi_mds].cost * 4) - (int64_t)context_ptr->md_local_blk_unit[parent_depth_sqi_mds].cost) * 100) / (int64_t)context_ptr->md_local_blk_unit[parent_depth_sqi_mds].cost;
             }
+#endif
 
             // Get sq_to_best_nsq_deviation
             int64_t sq_to_best_nsq_deviation = (int64_t)(((int64_t)context_ptr->md_local_blk_unit[context_ptr->blk_geom->sqi_mds].default_cost - (int64_t)context_ptr->best_nsq_default_cost) * 100) / (int64_t)context_ptr->best_nsq_default_cost;
