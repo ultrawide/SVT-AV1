@@ -5952,8 +5952,13 @@ static void perform_pred_depth_refinement(SequenceControlSet *scs_ptr, PictureCo
                                 }
                                 else {
 #if REVERT_WHITE // MPPD
+#if NEW_DEPTH_M8
+                                    s_depth = pcs_ptr->slice_type == I_SLICE ? -2 : pcs_ptr->parent_pcs_ptr->is_used_as_reference_flag ? -1 : 0;
+                                    e_depth = pcs_ptr->slice_type == I_SLICE ? 2 :  0;
+#else
                                     s_depth = pcs_ptr->slice_type == I_SLICE ? -1 : 0;
                                     e_depth = pcs_ptr->slice_type == I_SLICE ? 1 : 0;
+#endif
 #else
                                     s_depth = pcs_ptr->slice_type == I_SLICE ? -2 : 0;
                                     e_depth = pcs_ptr->slice_type == I_SLICE ? 2 : 0;
