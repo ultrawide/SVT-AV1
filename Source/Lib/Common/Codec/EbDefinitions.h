@@ -358,7 +358,7 @@ extern "C" {
 #define MAY05_M3_SC_ADOPT 1 // M3 SC adoptions
 
 #define NICS_CLEANUP         1
-
+#define NEW_CYCLE_ALLOCATION               1
 #endif
 // END  MAY2020 /////////////////////////////////////////////////////////
 
@@ -5704,6 +5704,9 @@ static const uint16_t ep_to_pa_block_index[BLOCK_MAX_COUNT_SB_64] = {
 #if SB_CLASSIFIER
 typedef enum ATTRIBUTE_PACKED {
     NONE_CLASS, // Do nothing class
+#if NEW_CYCLE_ALLOCATION
+    VERY_LOW_COMPLEX_CLASS,// Very Low complex SB Class
+#endif
     LOW_COMPLEX_CLASS, // Low complex SB Class
     MEDIUM_COMPLEX_CLASS, // Meduim complex SB Class
     HIGH_COMPLEX_CLASS, // High complex SB Class

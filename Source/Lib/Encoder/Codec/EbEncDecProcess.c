@@ -1493,6 +1493,60 @@ void set_block_based_depth_reduction_controls(ModeDecisionContext *mdctxt, uint8
 /******************************************************
 * Derive SB classifier thresholds
 ******************************************************/
+#if NEW_CYCLE_ALLOCATION
+void set_sb_class_controls(ModeDecisionContext *context_ptr) {
+    SbClassControls *sb_class_ctrls = &context_ptr->sb_class_ctrls;
+    for (uint8_t sb_class_idx = 0; sb_class_idx < NUMBER_OF_SB_CLASS; sb_class_idx++)
+        sb_class_ctrls->sb_class_th[sb_class_idx] = 20;
+    switch (context_ptr->coeffcients_area_based_cycles_allocation_level) {
+    case 0:
+        sb_class_ctrls->sb_class_th[HIGH_COMPLEX_CLASS] = 20;
+        sb_class_ctrls->sb_class_th[MEDIUM_COMPLEX_CLASS] = 20;
+        sb_class_ctrls->sb_class_th[LOW_COMPLEX_CLASS] = 20;
+        sb_class_ctrls->sb_class_th[VERY_LOW_COMPLEX_CLASS] = 20;
+        break;
+    case 1: // TH 80%
+        sb_class_ctrls->sb_class_th[HIGH_COMPLEX_CLASS] = 18;
+        sb_class_ctrls->sb_class_th[MEDIUM_COMPLEX_CLASS] = 16;
+        sb_class_ctrls->sb_class_th[LOW_COMPLEX_CLASS] = 14;
+        sb_class_ctrls->sb_class_th[VERY_LOW_COMPLEX_CLASS] = 0;
+        break;
+    case 2: // TH 70%
+        sb_class_ctrls->sb_class_th[HIGH_COMPLEX_CLASS] = 16;
+        sb_class_ctrls->sb_class_th[MEDIUM_COMPLEX_CLASS] = 14;
+        sb_class_ctrls->sb_class_th[LOW_COMPLEX_CLASS] = 10;
+        sb_class_ctrls->sb_class_th[VERY_LOW_COMPLEX_CLASS] = 0;
+        break;
+    case 3: // TH 60%
+        sb_class_ctrls->sb_class_th[HIGH_COMPLEX_CLASS] = 14;
+        sb_class_ctrls->sb_class_th[MEDIUM_COMPLEX_CLASS] = 12;
+        sb_class_ctrls->sb_class_th[LOW_COMPLEX_CLASS] = 8;
+        sb_class_ctrls->sb_class_th[VERY_LOW_COMPLEX_CLASS] = 0;
+        break;
+    case 4: // TH 50%
+        sb_class_ctrls->sb_class_th[HIGH_COMPLEX_CLASS] = 12;
+        sb_class_ctrls->sb_class_th[MEDIUM_COMPLEX_CLASS] = 10;
+        sb_class_ctrls->sb_class_th[LOW_COMPLEX_CLASS] = 6;
+        sb_class_ctrls->sb_class_th[VERY_LOW_COMPLEX_CLASS] = 0;
+        break;
+    case 5: // TH 40%
+        sb_class_ctrls->sb_class_th[HIGH_COMPLEX_CLASS] = 10;
+        sb_class_ctrls->sb_class_th[MEDIUM_COMPLEX_CLASS] = 8;
+        sb_class_ctrls->sb_class_th[LOW_COMPLEX_CLASS] = 4;
+        sb_class_ctrls->sb_class_th[VERY_LOW_COMPLEX_CLASS] = 0;
+        break;
+    case 6:
+        sb_class_ctrls->sb_class_th[HIGH_COMPLEX_CLASS] = 7;
+        sb_class_ctrls->sb_class_th[MEDIUM_COMPLEX_CLASS] = 6;
+        sb_class_ctrls->sb_class_th[LOW_COMPLEX_CLASS] = 2;
+        sb_class_ctrls->sb_class_th[VERY_LOW_COMPLEX_CLASS] = 0;
+        break;
+    default:
+        printf("Error - Invalid sb_class_level");
+        break;
+    }
+}
+#else
 void set_sb_class_controls(ModeDecisionContext *context_ptr) {
     SbClassControls *sb_class_ctrls = &context_ptr->sb_class_ctrls;
     for (uint8_t sb_class_idx = 0; sb_class_idx < NUMBER_OF_SB_CLASS; sb_class_idx++)
@@ -1540,6 +1594,7 @@ void set_sb_class_controls(ModeDecisionContext *context_ptr) {
         break;
     }
 }
+#endif
 #endif
 /******************************************************
 * Derive EncDec Settings for OQ
@@ -2275,7 +2330,14 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
          context_ptr->md_disallow_nsq = (enc_mode <= ENC_M0) ? 0 : 1;
      else
          // Update nsq settings based on the sb_class
+#if NEW_CYCLE_ALLOCATION
+        if (pcs_ptr->parent_pcs_ptr->sc_content_detected)
+            context_ptr->md_disallow_nsq = (context_ptr->enable_area_based_cycles_allocation &&  (context_ptr->sb_class == HIGH_COMPLEX_CLASS) || (context_ptr->sb_class == MEDIUM_COMPLEX_CLASS)) ? 1 : pcs_ptr->parent_pcs_ptr->disallow_nsq;
+        else
+            context_ptr->md_disallow_nsq = (context_ptr->enable_area_based_cycles_allocation &&  context_ptr->sb_class == HIGH_COMPLEX_CLASS) ? 1 : pcs_ptr->parent_pcs_ptr->disallow_nsq;
+#else
          context_ptr->md_disallow_nsq = (context_ptr->enable_area_based_cycles_allocation &&  context_ptr->sb_class == HIGH_COMPLEX_CLASS) ? 1 : pcs_ptr->parent_pcs_ptr->disallow_nsq;
+#endif
 #else
      // Update nsq settings based on the sb_class
      context_ptr->md_disallow_nsq = (context_ptr->enable_area_based_cycles_allocation &&  context_ptr->sb_class == HIGH_COMPLEX_CLASS ) ? 1 : pcs_ptr->parent_pcs_ptr->disallow_nsq;
@@ -3443,6 +3505,15 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
                 context_ptr->sq_weight =
                 sequence_control_set_ptr->static_config.sq_weight - 5;
 
+#if NEW_CYCLE_ALLOCATION
+    if (context_ptr->enable_area_based_cycles_allocation) {
+        if (context_ptr->sb_class == LOW_COMPLEX_CLASS)
+            context_ptr->sq_weight = pcs_ptr->parent_pcs_ptr->sc_content_detected && enc_mode <= ENC_M6 ? 70 : 50;
+        else if (context_ptr->sb_class == VERY_LOW_COMPLEX_CLASS)
+            context_ptr->sq_weight = 100 - (10 * context_ptr->coeffcients_area_based_cycles_allocation_level);
+    }
+#endif
+
     // nsq_hv_level  needs sq_weight to be ON
     // 0: OFF
     // 1: ON 10% + skip HA/HB/H4  or skip VA/VB/V4
@@ -3646,7 +3717,7 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
         context_ptr->md_tx_size_search_mode = 0;
     else
         context_ptr->md_tx_size_search_mode = pcs_ptr->parent_pcs_ptr->tx_size_search_mode;
-#if OPT_BLOCK_INDICES_GEN_2
+#if OPT_BLOCK_INDICES_GEN_2 && !NEW_CYCLE_ALLOCATION
     // Update txs settings based on the sb_class
     context_ptr->md_tx_size_search_mode = (context_ptr->enable_area_based_cycles_allocation && context_ptr->sb_class == MEDIUM_COMPLEX_CLASS) ? 0 : context_ptr->md_tx_size_search_mode;
 #endif
@@ -5776,6 +5847,10 @@ static uint8_t determine_sb_class(
         sb_class = MEDIUM_COMPLEX_CLASS;
     else if (count_non_zero_coeffs >= ((total_samples * sb_class_ctrls->sb_class_th[LOW_COMPLEX_CLASS]) / 20))
         sb_class = LOW_COMPLEX_CLASS;
+#if NEW_CYCLE_ALLOCATION
+    else if (count_non_zero_coeffs == ((total_samples * sb_class_ctrls->sb_class_th[VERY_LOW_COMPLEX_CLASS]) / 20))
+        sb_class = VERY_LOW_COMPLEX_CLASS;
+#endif
     return sb_class;
 }
 #endif
@@ -6191,7 +6266,12 @@ static void perform_pred_depth_refinement(SequenceControlSet *scs_ptr, PictureCo
 #endif
                         }
                     }
-
+#if NEW_CYCLE_ALLOCATION
+                    if (!pcs_ptr->parent_pcs_ptr->sc_content_detected) {
+                        s_depth = (context_ptr->sb_class == HIGH_COMPLEX_CLASS || context_ptr->sb_class == MEDIUM_COMPLEX_CLASS) ? 0 : s_depth;
+                        e_depth = (context_ptr->sb_class == HIGH_COMPLEX_CLASS || context_ptr->sb_class == MEDIUM_COMPLEX_CLASS) ? 0 : e_depth;
+                    }
+#endif
 #if ADOPT_SKIPPING_PD1
                     // Check that the start and end depth are in allowed range, given other features
                     // which restrict allowable depths
