@@ -11048,7 +11048,7 @@ EB_EXTERN EbErrorType mode_decision_sb(SequenceControlSet *scs_ptr, PictureContr
                     if (context_ptr->blk_geom->shape != PART_N) {
                         uint32_t count_non_zero_coeffs = context_ptr->md_local_blk_unit[blk_geom->sqi_mds].count_non_zero_coeffs;
                         uint32_t total_samples = (blk_geom->bwidth*blk_geom->bheight);
-                        if (count_non_zero_coeffs >= ((total_samples * TCB1) / 20)) {
+                        if (count_non_zero_coeffs >= ((total_samples * (TCB1-1)) / 40)) {
                             skip_nsq_m1 = 1;
                         }
                     }
@@ -11066,7 +11066,7 @@ EB_EXTERN EbErrorType mode_decision_sb(SequenceControlSet *scs_ptr, PictureContr
                     if (context_ptr->blk_geom->shape != PART_N) {
                         uint32_t count_non_zero_coeffs = context_ptr->md_local_blk_unit[blk_geom->sqi_mds].count_non_zero_coeffs;
                         uint32_t total_samples = (blk_geom->bwidth*blk_geom->bheight);
-                        if (count_non_zero_coeffs <= ((total_samples * TCB2) / 40)) {
+                        if (count_non_zero_coeffs <= ((total_samples * (TCB2-1)) / 40)) {
                             skip_nsq_p1 = 1;
                         }
                     }
