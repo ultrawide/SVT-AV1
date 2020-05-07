@@ -150,6 +150,10 @@ typedef struct EbMdcLeafData {
     EbBool   split_flag;
     uint8_t  consider_block;
     uint8_t  refined_split_flag;
+#if DEPTH_STATISTICS
+    int8_t  block_type;
+    int8_t  b_type;
+#endif
 } EbMdcLeafData;
 
 typedef struct MdcSbData {

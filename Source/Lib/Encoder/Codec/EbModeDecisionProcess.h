@@ -137,6 +137,9 @@ typedef struct MdBlkStruct {
     uint64_t cr_quant_coeff_energy;
 #endif
 #endif
+#if DEPTH_STATISTICS
+    int8_t block_type;
+#endif
 } MdBlkStruct;
 
 struct ModeDecisionCandidate;

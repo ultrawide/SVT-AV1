@@ -370,6 +370,12 @@ extern "C" {
 
 #define NEW_CASE                    0
 #define ADJUST_SQ_NSQ               0
+#define DEPTH_STATISTICS            0
+#define COEFF_BASED_SKIP_BLK        0
+#if COEFF_BASED_SKIP_BLK
+#define TCB1                 0
+#define TCB2                 0
+#endif
 #endif
 // END  SVT_01 /////////////////////////////////////////////////////////
 #define COMMON_16BIT 1 // 16Bit pipeline support for common
