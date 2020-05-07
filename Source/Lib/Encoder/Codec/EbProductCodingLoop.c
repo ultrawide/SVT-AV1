@@ -11043,12 +11043,14 @@ EB_EXTERN EbErrorType mode_decision_sb(SequenceControlSet *scs_ptr, PictureContr
 #if COEFF_BASED_SKIP_BLK
 #if TCB1
             skip_nsq_m1 = 0;
-            if (context_ptr->md_local_blk_unit[blk_index].block_type == 0) {
-                if (context_ptr->blk_geom->shape != PART_N) {
-                    uint32_t count_non_zero_coeffs = context_ptr->md_local_blk_unit[blk_geom->sqi_mds].count_non_zero_coeffs;
-                    uint32_t total_samples = (blk_geom->bwidth*blk_geom->bheight);
-                    if (count_non_zero_coeffs >= ((total_samples * 6) / 20)) {
-                        skip_nsq_m1 = 1;
+            if (pcs_ptr->slice_type != I_SLICE) {
+                if (context_ptr->md_local_blk_unit[blk_index].block_type == 0) {
+                    if (context_ptr->blk_geom->shape != PART_N) {
+                        uint32_t count_non_zero_coeffs = context_ptr->md_local_blk_unit[blk_geom->sqi_mds].count_non_zero_coeffs;
+                        uint32_t total_samples = (blk_geom->bwidth*blk_geom->bheight);
+                        if (count_non_zero_coeffs >= ((total_samples * TCB1) / 20)) {
+                            skip_nsq_m1 = 1;
+                        }
                     }
                 }
             }
@@ -11059,12 +11061,14 @@ EB_EXTERN EbErrorType mode_decision_sb(SequenceControlSet *scs_ptr, PictureContr
                 !skip_nsq_m1) {
 #elif TCB2
             skip_nsq_p1 = 0;
-            if (context_ptr->md_local_blk_unit[blk_index].block_type == 2) {
-                if (context_ptr->blk_geom->shape != PART_N) {
-                    uint32_t count_non_zero_coeffs = context_ptr->md_local_blk_unit[blk_geom->sqi_mds].count_non_zero_coeffs;
-                    uint32_t total_samples = (blk_geom->bwidth*blk_geom->bheight);
-                    if (count_non_zero_coeffs < ((total_samples * 2) / 20)) {
-                        skip_nsq_p1 = 1;
+            if (pcs_ptr->slice_type != I_SLICE) {
+                if (context_ptr->md_local_blk_unit[blk_index].block_type == 2) {
+                    if (context_ptr->blk_geom->shape != PART_N) {
+                        uint32_t count_non_zero_coeffs = context_ptr->md_local_blk_unit[blk_geom->sqi_mds].count_non_zero_coeffs;
+                        uint32_t total_samples = (blk_geom->bwidth*blk_geom->bheight);
+                        if (count_non_zero_coeffs <= ((total_samples * TCB2) / 40)) {
+                            skip_nsq_p1 = 1;
+                        }
                     }
                 }
             }
