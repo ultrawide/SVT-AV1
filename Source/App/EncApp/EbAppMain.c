@@ -191,7 +191,7 @@ int32_t main(int32_t argc, char *argv[]) {
                     else
                         break;
                 }
-                fprintf(stderr, "Encoding          ");
+                //fprintf(stderr, "Encoding          ");
                 fflush(stdout);
 
                 while (exit_condition == APP_ExitConditionNone) {

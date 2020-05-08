@@ -405,6 +405,9 @@ typedef struct PictureControlSet {
     // pointer to a scratch buffer used by self-guided restoration
     int32_t *                       rst_tmpbuf;
 #endif
+#if GEN_STAT
+    uint32_t part_cnt[6][10][20];
+#endif
 } PictureControlSet;
 
 // To optimize based on the max input size

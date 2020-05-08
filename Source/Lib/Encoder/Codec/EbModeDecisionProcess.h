@@ -613,6 +613,9 @@ typedef struct ModeDecisionContext {
 #if PD1_MX
     uint8_t md_enc_mode;
 #endif
+#if GEN_STAT
+    uint32_t part_cnt[6][10][20];
+#endif
 } ModeDecisionContext;
 
 typedef void (*EbAv1LambdaAssignFunc)(uint32_t *fast_lambda, uint32_t *full_lambda,

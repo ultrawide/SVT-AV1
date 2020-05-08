@@ -864,6 +864,16 @@ void *resource_coordination_kernel(void *input_ptr) {
 
         // Init SB Params
         if (context_ptr->scs_instance_array[instance_index]->encode_context_ptr->initial_picture) {
+#if GEN_STAT
+        uint8_t band,depthidx,partidx;
+        for (depthidx = 0; depthidx < 6; depthidx++) {
+            for (partidx = 0; partidx < 10; partidx++) {
+                for (band = 0; band < 20; band+=2) {
+                    scs_ptr->part_cnt[depthidx][partidx][band] = 0;
+                }
+            }
+        }
+#endif
             derive_input_resolution(&scs_ptr->input_resolution, input_size);
 
             sb_params_init(scs_ptr);

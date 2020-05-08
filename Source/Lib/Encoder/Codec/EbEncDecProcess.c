@@ -1292,6 +1292,16 @@ void copy_statistics_to_ref_obj_ect(PictureControlSet *pcs_ptr, SequenceControlS
         (100 * pcs_ptr->below32_coded_area) /
         (pcs_ptr->parent_pcs_ptr->aligned_width * pcs_ptr->parent_pcs_ptr->aligned_height);
 #endif
+#if GEN_STAT
+        uint8_t band,depthidx,partidx;
+        for (depthidx = 0; depthidx < 6; depthidx++) {
+            for (partidx = 0; partidx < 10; partidx++) {
+                for (band = 0; band < 20; band+=2) {
+                    scs_ptr->part_cnt[depthidx][partidx][band] += pcs_ptr->part_cnt[depthidx][partidx][band];
+                }
+            }
+        }
+#endif
     if (pcs_ptr->slice_type == I_SLICE) pcs_ptr->intra_coded_area = 0;
 #if REDUCE_COMPLEX_CLIP_CYCLES
     if (pcs_ptr->slice_type == I_SLICE) pcs_ptr->coef_coded_area = 0;
@@ -1606,6 +1616,9 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
             context_ptr->enable_area_based_cycles_allocation = 1;
     }
 
+#if GEN_STAT
+    context_ptr->enable_area_based_cycles_allocation = 0;
+#endif
     if (MR_MODE) {
         if (pcs_ptr->parent_pcs_ptr->input_resolution >= INPUT_SIZE_4K_RANGE)
             context_ptr->coeffcients_area_based_cycles_allocation_level = 2;
@@ -3412,6 +3425,9 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
             else
                 context_ptr->sq_weight =
                 sequence_control_set_ptr->static_config.sq_weight - 5;
+#if GEN_STAT
+    context_ptr->sq_weight = (uint32_t)~0;
+#endif
 
     // nsq_hv_level  needs sq_weight to be ON
     // 0: OFF
@@ -5715,6 +5731,18 @@ static uint64_t generate_best_part_cost(
     return best_part_cost;
 }
 #if DEPTH_STATISTICS
+Part part_to_shape[10] = {
+    PART_N,
+    PART_H,
+    PART_V,
+    PART_S,
+    PART_HA,
+    PART_HB,
+    PART_VA,
+    PART_VB,
+    PART_H4,
+    PART_V4
+};
 void generate_statistics(
     SequenceControlSet  *scs_ptr,
     PictureControlSet   *pcs_ptr,
@@ -5727,6 +5755,19 @@ void generate_statistics(
     uint32_t m1_count[20] = { 0 };
     uint32_t p_count[20] = { 0 };
     uint32_t p1_count[20] = { 0 };
+
+    uint32_t part_cnt[6][10][20];
+
+    uint8_t band,depthidx,partidx;
+
+    // init stat
+    for (depthidx = 0; depthidx < 6; depthidx++) {
+        for (partidx = 0; partidx < 10; partidx++) {
+            for (band = 0; band < 20; band++) {
+                part_cnt[depthidx][partidx][band] = 0;
+            }
+        }
+    }
     
     SbClassControls *sb_class_ctrls = &context_ptr->sb_class_ctrls;
     EbBool split_flag;
@@ -5743,48 +5784,31 @@ void generate_statistics(
                     if (block_type < 0 || block_type >2)
                         printf("block_type error\n");
                     count_non_zero_coeffs = context_ptr->md_local_blk_unit[blk_index].count_non_zero_coeffs;
+
                     total_samples = (blk_geom->bwidth*blk_geom->bheight);
+
                     if (count_non_zero_coeffs >= ((total_samples * 18) / 20)) {
-                         m1_count[18] += block_type == 0 ? (blk_geom->bwidth*blk_geom->bheight) : 0;
-                         p_count [18] += block_type == 1 ? (blk_geom->bwidth*blk_geom->bheight) : 0;
-                         p1_count[18] += block_type == 2 ? (blk_geom->bwidth*blk_geom->bheight) : 0;
+                         part_cnt[blk_geom->depth][part_to_shape[context_ptr->md_blk_arr_nsq[blk_index].part]][18] +=  (blk_geom->bwidth*blk_geom->bheight);
+                         
                     }else if (count_non_zero_coeffs >= ((total_samples * 16) / 20)) {
-                         m1_count[16] += block_type == 0 ? (blk_geom->bwidth*blk_geom->bheight) : 0;
-                         p_count [16] += block_type == 1 ? (blk_geom->bwidth*blk_geom->bheight) : 0;
-                         p1_count[16] += block_type == 2 ? (blk_geom->bwidth*blk_geom->bheight) : 0;
+                        part_cnt[blk_geom->depth][part_to_shape[context_ptr->md_blk_arr_nsq[blk_index].part]][16] +=  (blk_geom->bwidth*blk_geom->bheight);
                     }else if (count_non_zero_coeffs >= ((total_samples * 14) / 20)) {
-                         m1_count[14] += block_type == 0 ? (blk_geom->bwidth*blk_geom->bheight) : 0;
-                         p_count [14] += block_type == 1 ? (blk_geom->bwidth*blk_geom->bheight) : 0;
-                         p1_count[14] += block_type == 2 ? (blk_geom->bwidth*blk_geom->bheight) : 0;
+                         part_cnt[blk_geom->depth][part_to_shape[context_ptr->md_blk_arr_nsq[blk_index].part]][14] +=  (blk_geom->bwidth*blk_geom->bheight);
                      }else if (count_non_zero_coeffs >= ((total_samples * 12) / 20)) {
-                         m1_count[12] += block_type == 0 ? (blk_geom->bwidth*blk_geom->bheight) : 0;
-                         p_count [12] += block_type == 1 ? (blk_geom->bwidth*blk_geom->bheight) : 0;
-                         p1_count[12] += block_type == 2 ? (blk_geom->bwidth*blk_geom->bheight) : 0;
+                        part_cnt[blk_geom->depth][part_to_shape[context_ptr->md_blk_arr_nsq[blk_index].part]][12] +=  (blk_geom->bwidth*blk_geom->bheight);
                      }else if (count_non_zero_coeffs >= ((total_samples * 10) / 20)) {
-                         m1_count[10] += block_type == 0 ? (blk_geom->bwidth*blk_geom->bheight) : 0;
-                         p_count [10] += block_type == 1 ? (blk_geom->bwidth*blk_geom->bheight) : 0;
-                         p1_count[10] += block_type == 2 ? (blk_geom->bwidth*blk_geom->bheight) : 0;
+                         part_cnt[blk_geom->depth][part_to_shape[context_ptr->md_blk_arr_nsq[blk_index].part]][10] +=  (blk_geom->bwidth*blk_geom->bheight);
                      }else if (count_non_zero_coeffs >= ((total_samples * 8) / 20)) {
-                         m1_count[8] += block_type == 0 ? (blk_geom->bwidth*blk_geom->bheight) : 0;
-                         p_count [8] += block_type == 1 ? (blk_geom->bwidth*blk_geom->bheight) : 0;
-                         p1_count[8] += block_type == 2 ? (blk_geom->bwidth*blk_geom->bheight) : 0;
+                         part_cnt[blk_geom->depth][part_to_shape[context_ptr->md_blk_arr_nsq[blk_index].part]][8] +=  (blk_geom->bwidth*blk_geom->bheight);
                      }else if (count_non_zero_coeffs >= ((total_samples * 6) / 20)) {
-                         m1_count[6] += block_type == 0 ? (blk_geom->bwidth*blk_geom->bheight) : 0;
-                         p_count [6] += block_type == 1 ? (blk_geom->bwidth*blk_geom->bheight) : 0;
-                         p1_count[6] += block_type == 2 ? (blk_geom->bwidth*blk_geom->bheight) : 0;
+                         part_cnt[blk_geom->depth][part_to_shape[context_ptr->md_blk_arr_nsq[blk_index].part]][6] +=  (blk_geom->bwidth*blk_geom->bheight);
                      }else if (count_non_zero_coeffs >= ((total_samples * 4) / 20)) {
-                         m1_count[4] += block_type == 0 ? (blk_geom->bwidth*blk_geom->bheight) : 0;
-                         p_count [4] += block_type == 1 ? (blk_geom->bwidth*blk_geom->bheight) : 0;
-                         p1_count[4] += block_type == 2 ? (blk_geom->bwidth*blk_geom->bheight) : 0;
+                         part_cnt[blk_geom->depth][part_to_shape[context_ptr->md_blk_arr_nsq[blk_index].part]][4] +=  (blk_geom->bwidth*blk_geom->bheight);
                      }else if (count_non_zero_coeffs >= ((total_samples * 2) / 20)) {
-                         m1_count[2] += block_type == 0 ? (blk_geom->bwidth*blk_geom->bheight) : 0;
-                         p_count [2] += block_type == 1 ? (blk_geom->bwidth*blk_geom->bheight) : 0;
-                         p1_count[2] += block_type == 2 ? (blk_geom->bwidth*blk_geom->bheight) : 0;
+                        part_cnt[blk_geom->depth][part_to_shape[context_ptr->md_blk_arr_nsq[blk_index].part]][2] +=  (blk_geom->bwidth*blk_geom->bheight);
                      }
                      else {
-                        m1_count[0] += block_type == 0 ? (blk_geom->bwidth*blk_geom->bheight) : 0;
-                        p_count[0] += block_type == 1 ? (blk_geom->bwidth*blk_geom->bheight)  : 0;
-                        p1_count[0] += block_type == 2 ? (blk_geom->bwidth*blk_geom->bheight) : 0;
+                        part_cnt[blk_geom->depth][part_to_shape[context_ptr->md_blk_arr_nsq[blk_index].part]][0] +=  (blk_geom->bwidth*blk_geom->bheight);
                      } 
                 }
             }
@@ -5793,21 +5817,202 @@ void generate_statistics(
             d1_depth_offset[scs_ptr->seq_header.sb_size == BLOCK_128X128][blk_geom->depth] :
             ns_depth_offset[scs_ptr->seq_header.sb_size == BLOCK_128X128][blk_geom->depth];
     }
-        
-    uint8_t band;
+  
+   for (depthidx = 0; depthidx < 6; depthidx++) {
+        for (partidx = 0; partidx < 10; partidx++) {
+            for (band = 0; band < 20; band++) {
+                context_ptr->part_cnt[depthidx][partidx][band] += part_cnt[depthidx][partidx][band];
+            }
+        }
+    }
+#if 0
+    //Depth 0
     for (band = 0; band < 20; band += 2) {
-        printf("%d\t", m1_count[band]);
+        printf("%d\t", part_cnt[0][PART_N][band]);
     }
     printf("\t");
     for (band = 0; band < 20; band += 2) {
-        printf("%d\t", p_count[band]);
+        printf("%d\t", part_cnt[0][PART_H][band]);
     }
     printf("\t");
     for (band = 0; band < 20; band += 2) {
-        printf("%d\t", p1_count[band]);
+        printf("%d\t", part_cnt[0][PART_V][band]);
+    }
+    printf("\t");
+    for (band = 0; band < 20; band += 2) {
+        printf("%d\t", part_cnt[0][PART_HA][band]);
+    }
+    printf("\t");
+    for (band = 0; band < 20; band += 2) {
+        printf("%d\t", part_cnt[0][PART_HB][band]);
+    }
+    printf("\t");
+    for (band = 0; band < 20; band += 2) {
+        printf("%d\t", part_cnt[0][PART_VA][band]);
+    }
+    printf("\t");
+    for (band = 0; band < 20; band += 2) {
+        printf("%d\t", part_cnt[0][PART_VB][band]);
+    }
+    printf("\t");
+    for (band = 0; band < 20; band += 2) {
+        printf("%d\t", part_cnt[0][PART_H4][band]);
+    }
+    printf("\t");
+    for (band = 0; band < 20; band += 2) {
+        printf("%d\t", part_cnt[0][PART_V4][band]);
+    }
+
+    //Depth 1
+    printf("\t");
+    for (band = 0; band < 20; band += 2) {
+        printf("%d\t", part_cnt[1][PART_V][band]);
+    }
+    printf("\t");
+    for (band = 0; band < 20; band += 2) {
+        printf("%d\t", part_cnt[1][PART_HA][band]);
+    }
+    printf("\t");
+    for (band = 0; band < 20; band += 2) {
+        printf("%d\t", part_cnt[1][PART_HB][band]);
+    }
+    printf("\t");
+    for (band = 0; band < 20; band += 2) {
+        printf("%d\t", part_cnt[1][PART_VA][band]);
+    }
+    printf("\t");
+    for (band = 0; band < 20; band += 2) {
+        printf("%d\t", part_cnt[1][PART_VB][band]);
+    }
+    printf("\t");
+    for (band = 0; band < 20; band += 2) {
+        printf("%d\t", part_cnt[1][PART_H4][band]);
+    }
+    printf("\t");
+    for (band = 0; band < 20; band += 2) {
+        printf("%d\t", part_cnt[1][PART_V4][band]);
+    }
+    //Depth 2
+    printf("\t");
+    for (band = 0; band < 20; band += 2) {
+        printf("%d\t", part_cnt[2][PART_V][band]);
+    }
+    printf("\t");
+    for (band = 0; band < 20; band += 2) {
+        printf("%d\t", part_cnt[2][PART_HA][band]);
+    }
+    printf("\t");
+    for (band = 0; band < 20; band += 2) {
+        printf("%d\t", part_cnt[2][PART_HB][band]);
+    }
+    printf("\t");
+    for (band = 0; band < 20; band += 2) {
+        printf("%d\t", part_cnt[2][PART_VA][band]);
+    }
+    printf("\t");
+    for (band = 0; band < 20; band += 2) {
+        printf("%d\t", part_cnt[2][PART_VB][band]);
+    }
+    printf("\t");
+    for (band = 0; band < 20; band += 2) {
+        printf("%d\t", part_cnt[2][PART_H4][band]);
+    }
+    printf("\t");
+    for (band = 0; band < 20; band += 2) {
+        printf("%d\t", part_cnt[2][PART_V4][band]);
+    }
+
+    //Depth 3
+    printf("\t");
+    for (band = 0; band < 20; band += 2) {
+        printf("%d\t", part_cnt[3][PART_V][band]);
+    }
+    printf("\t");
+    for (band = 0; band < 20; band += 2) {
+        printf("%d\t", part_cnt[3][PART_HA][band]);
+    }
+    printf("\t");
+    for (band = 0; band < 20; band += 2) {
+        printf("%d\t", part_cnt[3][PART_HB][band]);
+    }
+    printf("\t");
+    for (band = 0; band < 20; band += 2) {
+        printf("%d\t", part_cnt[3][PART_VA][band]);
+    }
+    printf("\t");
+    for (band = 0; band < 20; band += 2) {
+        printf("%d\t", part_cnt[3][PART_VB][band]);
+    }
+    printf("\t");
+    for (band = 0; band < 20; band += 2) {
+        printf("%d\t", part_cnt[3][PART_H4][band]);
+    }
+    printf("\t");
+    for (band = 0; band < 20; band += 2) {
+        printf("%d\t", part_cnt[3][PART_V4][band]);
+    }
+    //Depth 4
+    printf("\t");
+    for (band = 0; band < 20; band += 2) {
+        printf("%d\t", part_cnt[4][PART_V][band]);
+    }
+    printf("\t");
+    for (band = 0; band < 20; band += 2) {
+        printf("%d\t", part_cnt[4][PART_HA][band]);
+    }
+    printf("\t");
+    for (band = 0; band < 20; band += 2) {
+        printf("%d\t", part_cnt[4][PART_HB][band]);
+    }
+    printf("\t");
+    for (band = 0; band < 20; band += 2) {
+        printf("%d\t", part_cnt[4][PART_VA][band]);
+    }
+    printf("\t");
+    for (band = 0; band < 20; band += 2) {
+        printf("%d\t", part_cnt[4][PART_VB][band]);
+    }
+    printf("\t");
+    for (band = 0; band < 20; band += 2) {
+        printf("%d\t", part_cnt[4][PART_H4][band]);
+    }
+    printf("\t");
+    for (band = 0; band < 20; band += 2) {
+        printf("%d\t", part_cnt[4][PART_V4][band]);
+    }
+
+    //Depth 5
+    printf("\t");
+    for (band = 0; band < 20; band += 2) {
+        printf("%d\t", part_cnt[5][PART_V][band]);
+    }
+    printf("\t");
+    for (band = 0; band < 20; band += 2) {
+        printf("%d\t", part_cnt[5][PART_HA][band]);
+    }
+    printf("\t");
+    for (band = 0; band < 20; band += 2) {
+        printf("%d\t", part_cnt[5][PART_HB][band]);
+    }
+    printf("\t");
+    for (band = 0; band < 20; band += 2) {
+        printf("%d\t", part_cnt[5][PART_VA][band]);
+    }
+    printf("\t");
+    for (band = 0; band < 20; band += 2) {
+        printf("%d\t", part_cnt[5][PART_VB][band]);
+    }
+    printf("\t");
+    for (band = 0; band < 20; band += 2) {
+        printf("%d\t", part_cnt[5][PART_H4][band]);
+    }
+    printf("\t");
+    for (band = 0; band < 20; band += 2) {
+        printf("%d\t", part_cnt[5][PART_V4][band]);
     }
     printf("\t");
     printf("\n");
+#endif
 }
 #endif
 #if SB_CLASSIFIER
@@ -6703,7 +6908,17 @@ void *enc_dec_kernel(void *input_ptr) {
         end_of_row_flag    = EB_FALSE;
         sb_row_index_start = sb_row_index_count = 0;
         context_ptr->tot_intra_coded_area       = 0;
-
+#if GEN_STAT
+    uint8_t band,depthidx,partidx;
+    // init stat
+    for (depthidx = 0; depthidx < 6; depthidx++) {
+        for (partidx = 0; partidx < 10; partidx++) {
+            for (band = 0; band < 20; band++) {
+                context_ptr->md_context->part_cnt[depthidx][partidx][band] = 0;
+            }
+        }
+    }
+#endif
 #if REDUCE_COMPLEX_CLIP_CYCLES
         context_ptr->tot_coef_coded_area = 0;
         context_ptr->tot_below32_coded_area = 0;
@@ -7152,7 +7367,7 @@ void *enc_dec_kernel(void *input_ptr) {
                                      sb_origin_y,
                                      sb_index,
                                      context_ptr->md_context);
-#if 0//DEPTH_STATISTICS
+#if GEN_STAT
                     generate_statistics(scs_ptr, pcs_ptr, context_ptr->md_context, sb_index);
 #endif
 
@@ -7190,6 +7405,17 @@ void *enc_dec_kernel(void *input_ptr) {
 #if REDUCE_COMPLEX_CLIP_CYCLES
         pcs_ptr->coef_coded_area += (uint32_t)context_ptr->tot_coef_coded_area;
         pcs_ptr->below32_coded_area += (uint32_t)context_ptr->tot_below32_coded_area;
+#endif
+#if GEN_STAT
+        //uint8_t band,depthidx,partidx;
+        // init stat
+        for (depthidx = 0; depthidx < 6; depthidx++) {
+            for (partidx = 0; partidx < 10; partidx++) {
+                for (band = 0; band < 20; band++) {
+                    pcs_ptr->part_cnt[depthidx][partidx][band] += context_ptr->md_context->part_cnt[depthidx][partidx][band];
+                }
+            }
+        }
 #endif
         pcs_ptr->enc_dec_coded_sb_count += (uint32_t)context_ptr->coded_sb_count;
         last_sb_flag = (pcs_ptr->sb_total_count_pix == pcs_ptr->enc_dec_coded_sb_count);
