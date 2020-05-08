@@ -625,6 +625,9 @@ typedef struct ModeDecisionContext {
     uint8_t sb_class;
     SbClassControls sb_class_ctrls;
 #endif
+#if SSE_BASED_SPLITTING
+    uint8_t mark_part_to_process[NUMBER_OF_SHAPES];
+#endif
 } ModeDecisionContext;
 
 typedef void (*EbAv1LambdaAssignFunc)(uint32_t *fast_lambda, uint32_t *full_lambda,
