@@ -10918,6 +10918,66 @@ void block_based_depth_reduction(
 }
 #endif
 
+#if NSQ_STAT
+uint8_t allowed_part_weight[5][9][10] = {
+{
+{77,	0,	0,	0,	0,	0,	0,	0,	0,	0},
+{ 8,	0,	0,	0,	0,	0,	0,	0,	0,	0},
+{ 5,	0,	0,	0,	0,	0,	0,	0,	0,	0},
+{ 3,	0,	0,	0,	0,	0,	0,	0,	0,	0},
+{ 3,	0,	0,	0,	0,	0,	0,	0,	0,	0},
+{ 1,	0,	0,	0,	0,	0,	0,	0,	0,	0},
+{ 3,	0,	0,	0,	0,	0,	0,	0,	0,	0},
+{ 0,	0,	0,	0,	0,	0,	0,	0,	0,	0},
+{ 0,	0,	0,	0,	0,	0,	0,	0,	0,	0}
+},
+{
+{ 63,	44,	5,	4,	9,	0,	0,	0,	0,	0},
+{ 5,	3,	13,	0,	9,	0,	0,	0,	0,	0},
+{ 10,	17,	0,	0,	0,	0,	0,	0,	0,	0},
+{ 2,	1,	8,	9,	9,	0,	0,	0,	0,	0},
+{ 2,	3,	5,	0,	14,	0,	0,	0,	0,	0},
+{ 2,	1,	3,	9,	0,	0,	0,	0,	0,	0},
+{ 2,	2,	5,	9,	5,	0,	0,	0,	0,	0},
+{ 4,	7,	41,	52,	55,	0,	0,	0,	0,	0},
+{ 11,	22,	21,	17,	0,	0,	0,	0,	0,	0}
+},
+{
+{ 59,	10,	8,	7,	16,	20,	16,	20,	21,	22},
+{ 7,	8,	7,	7,	8,	10,	8,	3,	6,	8},
+{ 8,	7,	6,	9,	8,	6,	8,	11,	12,	8},
+{ 4,	11,	10,	9,	10,	11,	11,	10,	5,	4},
+{ 3,	10,	10,	9,	9,	8,	13,	9,	5,	12},
+{ 4,	10,	10,	12,	8,	8,	8,	9,	7,	7},
+{ 4,	9,	10,	10,	8,	6,	8,	9,	9,	13},
+{ 4,	13,	17,	15,	13,	20,	14,	9,	11,	12},
+{ 8,	22,	20,	21,	21,	11,	14,	20,	24,	16}
+},
+{
+{ 65,	16,	11,	8,	9,	15,	15,	16,	17,	17},
+{ 10,	16,	16,	14,	15,	14,	13,	13,	13,	13},
+{ 12,	21,	17,	16,	15,	14,	15,	15,	15,	14},
+{ 2,	8,	9,	10,	9,	9,	9,	9,	9,	8},
+{ 2,	7,	9,	10,	10,	9,	9,	9,	10,	11},
+{ 3,	9,	10,	11,	11,	10,	10,	11,	11,	10},
+{ 3,	9,	10,	11,	11,	10,	10,	10,	9,	12},
+{ 1,	6,	8,	10,	11,	11,	11,	10,	10,	9},
+{ 2,	8,	9,	9,	9,	8,	7,	7,	7,	6}
+},
+{
+{ 89,	67,	59,	53,	51,	50,	51,	51,	52,	59},
+{ 5,	14,	17,	23,	20,	25,	24,	24,	23,	21},
+{ 6,	19,	24,	24,	29,	25,	25,	25,	25,	19},
+{ 0,	0,	0,	0,	0,	0,	0,	0,	0,	0},
+{ 0,	0,	0,	0,	0,	0,	0,	0,	0,	0},
+{ 0,	0,	0,	0,	0,	0,	0,	0,	0,	0},
+{ 0,	0,	0,	0,	0,	0,	0,	0,	0,	0},
+{ 0,	0,	0,	0,	0,	0,	0,	0,	0,	0},
+{ 0,	0,	0,	0,	0,	0,	0,	0,	0,	0}
+}
+};
+
+#endif
 EB_EXTERN EbErrorType mode_decision_sb(SequenceControlSet *scs_ptr, PictureControlSet *pcs_ptr,
                                        const MdcSbData *const mdcResultTbPtr, SuperBlock *sb_ptr,
                                        uint16_t sb_origin_x, uint16_t sb_origin_y, uint32_t sb_addr,
@@ -11120,7 +11180,9 @@ EB_EXTERN EbErrorType mode_decision_sb(SequenceControlSet *scs_ptr, PictureContr
 
         context_ptr->md_blk_arr_nsq[blk_idx_mds].mdc_split_flag =
             (uint16_t)leaf_data_ptr->split_flag;
-
+#if NSQ_STAT
+        context_ptr->md_local_blk_unit[blk_idx_mds].block_type = leaf_data_ptr->b_type;
+#endif
         context_ptr->md_blk_arr_nsq[blk_geom->sqi_mds].split_flag =
             (uint16_t)leaf_data_ptr->split_flag;
         blk_ptr->split_flag =
@@ -11250,11 +11312,12 @@ EB_EXTERN EbErrorType mode_decision_sb(SequenceControlSet *scs_ptr, PictureContr
                 context_ptr->parent_sq_has_coeff[sq_index] = src_cu->block_has_coeff;
                 context_ptr->parent_sq_pred_mode[sq_index] = src_cu->pred_mode;
             }
-        } else {
+        }
+        else {
             // Initialize tx_depth
             blk_ptr->tx_depth = 0;
             if (blk_geom->quadi > 0 && d1_block_itr == 0 && !skip_next_sq) {
-                uint32_t            blk_mds           = context_ptr->blk_geom->sqi_mds;
+                uint32_t            blk_mds = context_ptr->blk_geom->sqi_mds;
                 uint64_t            parent_depth_cost = 0, current_depth_cost = 0;
                 SequenceControlSet *scs_ptr =
                     (SequenceControlSet *)pcs_ptr->scs_wrapper_ptr->object_ptr;
@@ -11263,11 +11326,11 @@ EB_EXTERN EbErrorType mode_decision_sb(SequenceControlSet *scs_ptr, PictureContr
                 // from a given child index, derive the index of the parent
                 parent_depth_idx_mds =
                     (context_ptr->blk_geom->sqi_mds -
-                     (context_ptr->blk_geom->quadi - 3) *
-                         ns_depth_offset[scs_ptr->seq_header.sb_size == BLOCK_128X128]
-                                        [context_ptr->blk_geom->depth]) -
+                    (context_ptr->blk_geom->quadi - 3) *
+                        ns_depth_offset[scs_ptr->seq_header.sb_size == BLOCK_128X128]
+                        [context_ptr->blk_geom->depth]) -
                     parent_depth_offset[scs_ptr->seq_header.sb_size == BLOCK_128X128]
-                                       [blk_geom->depth];
+                    [blk_geom->depth];
 
                 if (pcs_ptr->slice_type == I_SLICE && parent_depth_idx_mds == 0 &&
                     scs_ptr->seq_header.sb_size == BLOCK_128X128)
@@ -11279,7 +11342,7 @@ EB_EXTERN EbErrorType mode_decision_sb(SequenceControlSet *scs_ptr, PictureContr
                         pcs_ptr->parent_pcs_ptr,
                         parent_depth_idx_mds,
                         ns_depth_offset[scs_ptr->seq_header.sb_size == BLOCK_128X128]
-                                       [context_ptr->blk_geom->depth],
+                        [context_ptr->blk_geom->depth],
                         &parent_depth_cost,
                         &current_depth_cost);
 
@@ -11302,8 +11365,9 @@ EB_EXTERN EbErrorType mode_decision_sb(SequenceControlSet *scs_ptr, PictureContr
                     next_non_skip_blk_idx_mds =
                         parent_depth_idx_mds +
                         ns_depth_offset[scs_ptr->seq_header.sb_size == BLOCK_128X128]
-                                       [context_ptr->blk_geom->depth - 1];
-                } else
+                        [context_ptr->blk_geom->depth - 1];
+                }
+                else
                     skip_next_sq = 0;
             }
             // skip until we reach the next block @ the parent block depth
@@ -11314,13 +11378,62 @@ EB_EXTERN EbErrorType mode_decision_sb(SequenceControlSet *scs_ptr, PictureContr
 #if !CLEAN_UP_SB_DATA_6
             skip_next_depth = context_ptr->blk_ptr->do_not_process_block;
 #endif
-#if SSE_BASED_SPLITTING
+#if SSE_BASED_SPLITTING || NSQ_STAT
+
             uint8_t skip_nsq = 0;
-            if(context_ptr->blk_geom->shape == PART_N)
-                for (uint8_t shape_idx = 0; shape_idx < NUMBER_OF_SHAPES; shape_idx++)
-                    context_ptr->mark_part_to_process[shape_idx] = 1;
-            else
-                skip_nsq = context_ptr->mark_part_to_process[context_ptr->blk_geom->shape] == 0 ? 1 : skip_nsq;
+#if SSE_BASED_SPLITTING
+            if (pcs_ptr->slice_type != I_SLICE) {
+                if (context_ptr->pd_pass == PD_PASS_2) {
+                    if (context_ptr->blk_geom->shape == PART_N)
+                        for (uint8_t shape_idx = 0; shape_idx < NUMBER_OF_SHAPES; shape_idx++)
+                            context_ptr->mark_part_to_process[shape_idx] = 1;
+                    else
+                        skip_nsq = context_ptr->mark_part_to_process[context_ptr->blk_geom->shape] == 0 ? 1 : skip_nsq;
+                }
+            }
+#elif NSQ_STAT
+            if (pcs_ptr->slice_type != I_SLICE) {
+                if (context_ptr->pd_pass == PD_PASS_2) {
+                    if (context_ptr->blk_geom->shape != PART_N) {
+                        uint32_t count_non_zero_coeffs = context_ptr->md_local_blk_unit[blk_geom->sqi_mds].count_non_zero_coeffs;
+                        uint32_t total_samples = (blk_geom->bwidth*blk_geom->bheight);
+                        uint8_t band_idx = 0;
+                        if (count_non_zero_coeffs >= ((total_samples * 18) / 20)) {
+                            band_idx = 9;
+                        }
+                        else if (count_non_zero_coeffs >= ((total_samples * 16) / 20)) {
+                            band_idx = 8;
+                        }
+                        else if (count_non_zero_coeffs >= ((total_samples * 14) / 20)) {
+                            band_idx = 7;
+                        }
+                        else if (count_non_zero_coeffs >= ((total_samples * 12) / 20)) {
+                            band_idx = 6;
+                        }
+                        else if (count_non_zero_coeffs >= ((total_samples * 10) / 20)) {
+                            band_idx = 5;
+                        }
+                        else if (count_non_zero_coeffs >= ((total_samples * 8) / 20)) {
+                            band_idx = 4;
+                        }
+                        else if (count_non_zero_coeffs >= ((total_samples * 6) / 20)) {
+                            band_idx = 3;
+                        }
+                        else if (count_non_zero_coeffs >= ((total_samples * 4) / 20)) {
+                            band_idx = 2;
+                        }
+                        else if (count_non_zero_coeffs >= ((total_samples * 2) / 20)) {
+                            band_idx = 1;
+                        }
+                        else {
+                            band_idx = 0;
+                        }
+                        if (allowed_part_weight[context_ptr->blk_geom->depth][context_ptr->blk_geom->shape][band_idx] < STAT_TH)
+                            skip_nsq = 1;
+                    }
+                }
+            }
+#endif
 
             if (pcs_ptr->parent_pcs_ptr->sb_geom[sb_addr].block_is_allowed[blk_ptr->mds_idx] &&
                 !skip_next_nsq && !skip_next_sq &&
@@ -11338,7 +11451,7 @@ EB_EXTERN EbErrorType mode_decision_sb(SequenceControlSet *scs_ptr, PictureContr
                                 input_picture_ptr,
                                 bestcandidate_buffers);
             }
-#if SSE_BASED_SPLITTING
+#if SSE_BASED_SPLITTING || NSQ_STAT
             else if (sq_weight_based_nsq_skip || skip_next_depth || skip_nsq) {
 #else
             else if (sq_weight_based_nsq_skip || skip_next_depth) {

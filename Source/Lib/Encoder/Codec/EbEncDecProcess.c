@@ -2326,6 +2326,9 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
 #else
      context_ptr->md_disallow_nsq = pcs_ptr->parent_pcs_ptr->disallow_nsq;
 #endif
+#if DISALLOW_NSQ
+     context_ptr->md_disallow_nsq = 1;
+#endif
 #elif REDUCE_COMPLEX_CLIP_CYCLES
      context_ptr->md_disallow_nsq = context_ptr->pic_class == 2 ? 1 : pcs_ptr->parent_pcs_ptr->disallow_nsq;
 #endif
@@ -3436,6 +3439,7 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
             else
                 context_ptr->sq_weight =
                 sequence_control_set_ptr->static_config.sq_weight - 5;
+
 #if NEW_CYCLE_ALLOCATION
     if (context_ptr->enable_area_based_cycles_allocation) {
         if (context_ptr->sb_class == LOW_COMPLEX_CLASS)
@@ -3444,7 +3448,9 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
             context_ptr->sq_weight = 100 - (10 * context_ptr->coeffcients_area_based_cycles_allocation_level);
     }
 #endif
-
+#if DISALLOW_SQ_WEIGHT
+    context_ptr->sq_weight = (uint32_t)~0;
+#endif
     // nsq_hv_level  needs sq_weight to be ON
     // 0: OFF
     // 1: ON 10% + skip HA/HB/H4  or skip VA/VB/V4
@@ -5244,6 +5250,9 @@ static void set_parent_to_be_considered(MdcSbData *results_ptr, uint32_t blk_ind
                 : parent_blk_geom->sq_size > 8 ? 25 : parent_blk_geom->sq_size == 8 ? 5 : 1;
         for (block_1d_idx = 0; block_1d_idx < parent_tot_d1_blocks; block_1d_idx++) {
             results_ptr->leaf_data_array[parent_depth_idx_mds + block_1d_idx].consider_block = 1;
+#if NSQ_STAT
+            results_ptr->leaf_data_array[parent_depth_idx_mds + block_1d_idx].block_type = 0;
+#endif
         }
 
         if (depth_step < -1)
@@ -5277,6 +5286,9 @@ static void set_child_to_be_considered(MdcSbData *results_ptr, uint32_t blk_inde
 
         for (block_1d_idx = 0; block_1d_idx < child1_tot_d1_blocks; block_1d_idx++) {
             results_ptr->leaf_data_array[child_block_idx_1 + block_1d_idx].consider_block = 1;
+#if NSQ_STAT
+            results_ptr->leaf_data_array[child_block_idx_1 + block_1d_idx].block_type = 2;
+#endif
             results_ptr->leaf_data_array[child_block_idx_1 + block_1d_idx].refined_split_flag =
                 EB_FALSE;
         }
@@ -5298,6 +5310,9 @@ static void set_child_to_be_considered(MdcSbData *results_ptr, uint32_t blk_inde
                 : child2_blk_geom->sq_size > 8 ? 25 : child2_blk_geom->sq_size == 8 ? 5 : 1;
         for (block_1d_idx = 0; block_1d_idx < child2_tot_d1_blocks; block_1d_idx++) {
             results_ptr->leaf_data_array[child_block_idx_2 + block_1d_idx].consider_block = 1;
+#if NSQ_STAT
+            results_ptr->leaf_data_array[child_block_idx_2 + block_1d_idx].block_type = 2;
+#endif
             results_ptr->leaf_data_array[child_block_idx_2 + block_1d_idx].refined_split_flag =
                 EB_FALSE;
         }
@@ -5321,6 +5336,9 @@ static void set_child_to_be_considered(MdcSbData *results_ptr, uint32_t blk_inde
 
         for (block_1d_idx = 0; block_1d_idx < child3_tot_d1_blocks; block_1d_idx++) {
             results_ptr->leaf_data_array[child_block_idx_3 + block_1d_idx].consider_block = 1;
+#if NSQ_STAT
+            results_ptr->leaf_data_array[child_block_idx_3 + block_1d_idx].block_type = 2;
+#endif
             results_ptr->leaf_data_array[child_block_idx_3 + block_1d_idx].refined_split_flag =
                 EB_FALSE;
         }
@@ -5343,6 +5361,9 @@ static void set_child_to_be_considered(MdcSbData *results_ptr, uint32_t blk_inde
                 : child4_blk_geom->sq_size > 8 ? 25 : child4_blk_geom->sq_size == 8 ? 5 : 1;
         for (block_1d_idx = 0; block_1d_idx < child4_tot_d1_blocks; block_1d_idx++) {
             results_ptr->leaf_data_array[child_block_idx_4 + block_1d_idx].consider_block = 1;
+#if NSQ_STAT
+            results_ptr->leaf_data_array[child_block_idx_4 + block_1d_idx].block_type = 2;
+#endif
             results_ptr->leaf_data_array[child_block_idx_4 + block_1d_idx].refined_split_flag =
                 EB_FALSE;
         }
@@ -5427,6 +5448,11 @@ static void build_cand_block_array(SequenceControlSet *scs_ptr, PictureControlSe
 
                     results_ptr->leaf_data_array[results_ptr->leaf_count].mds_idx = blk_index;
                     results_ptr->leaf_data_array[results_ptr->leaf_count].tot_d1_blocks = tot_d1_blocks;
+#if NSQ_STAT
+                    results_ptr->leaf_data_array[results_ptr->leaf_count].b_type = results_ptr->leaf_data_array[blk_index].block_type; 
+                    if (results_ptr->leaf_data_array[results_ptr->leaf_count].b_type == -1)
+                        printf("b_type error\n");
+#endif
                     results_ptr->leaf_data_array[results_ptr->leaf_count++].split_flag = results_ptr->leaf_data_array[blk_index].refined_split_flag;
 
                 }
@@ -5721,6 +5747,7 @@ static uint64_t generate_best_part_cost(
     }
     return best_part_cost;
 }
+
 #if SB_CLASSIFIER
 static uint8_t determine_sb_class(
     SequenceControlSet  *scs_ptr,
@@ -5781,6 +5808,9 @@ static void perform_pred_depth_refinement(SequenceControlSet *scs_ptr, PictureCo
             blk_geom->sq_size > 4 ? EB_TRUE : EB_FALSE;
         results_ptr->leaf_data_array[blk_index].refined_split_flag =
             blk_geom->sq_size > 4 ? EB_TRUE : EB_FALSE;
+#if NSQ_STAT
+        results_ptr->leaf_data_array[blk_index].block_type = -1;
+#endif
         blk_index++;
     }
 
@@ -6185,6 +6215,9 @@ static void perform_pred_depth_refinement(SequenceControlSet *scs_ptr, PictureCo
                     // Add current pred depth block(s)
                     for (block_1d_idx = 0; block_1d_idx < tot_d1_blocks; block_1d_idx++) {
                         results_ptr->leaf_data_array[blk_index + block_1d_idx].consider_block = 1;
+#if NSQ_STAT
+                        results_ptr->leaf_data_array[blk_index + block_1d_idx].block_type = 1;
+#endif
                         results_ptr->leaf_data_array[blk_index + block_1d_idx].refined_split_flag =
                             EB_FALSE;
                     }

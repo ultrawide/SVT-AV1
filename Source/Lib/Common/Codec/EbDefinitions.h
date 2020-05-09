@@ -382,8 +382,14 @@ extern "C" {
 #define ME_MEM_OPT2                 1 // Memory reduction for ME Context
 
 #define NEW_CYCLE_ALLOCATION        1 // New cycle allocation where the action of the TXS and NICs was replaced by NSQ
+
+// For testing
+#define DISALLOW_NSQ                0
+#define DISALLOW_SQ_WEIGHT          0
 #define SSE_BASED_SPLITTING         0 // Decide on the H/V splitting based on the SSE of the base block
-#define SSE_BASED_SPLIT_TH          0
+#define SSE_BASED_SPLIT_TH          0 // TH%
+#define NSQ_STAT                    0 
+#define STAT_TH                     0 // TH%
 #endif
 // END  SVT_01 /////////////////////////////////////////////////////////
 #define COMMON_16BIT 1 // 16Bit pipeline support for common
