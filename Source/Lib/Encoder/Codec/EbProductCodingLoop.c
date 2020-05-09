@@ -9959,10 +9959,11 @@ void md_encode_block(PictureControlSet *pcs_ptr,
 
                     uint64_t part_dist[25] = { 0 };
                     uint8_t mark_part_to_process[NUMBER_OF_SHAPES] = { 0 };
+                    mark_part_to_process[0] = 1;
                     uint64_t part_theshold = SSE_BASED_SPLIT_TH;
 
-                    uint32_t min_size = sq_size == 128 ? 64 : sq_size == 64 ? 16 : sq_size == 32 ? 8 : 4;
-                    uint32_t min_size_num = sq_size / min_size;
+                    int32_t min_size = sq_size == 128 ? 64 : sq_size == 64 ? 16 : sq_size == 32 ? 8 : 4;
+                    int32_t min_size_num = sq_size / min_size;
 
                     for (r = 0; r < min_size_num; r++) {
                         for (c = 0; c < min_size_num; c++) {
@@ -10057,7 +10058,7 @@ void md_encode_block(PictureControlSet *pcs_ptr,
                             mark_part_to_process[PART_VB] = 1;
 
                         // PART_H4 decision
-                        min_dist = MIN(part_dist[15],MIN(part_dist[16],MIN(part_dist[16],part_dist[16])));
+                        min_dist = MIN(part_dist[17],MIN(part_dist[18],MIN(part_dist[19],part_dist[20])));
                         for (part_idx = 17; part_idx <= 20; part_idx++) {
                             distance_dist = part_dist[part_idx] - min_dist;
                             if (distance_dist * 100 > part_theshold * min_dist)
