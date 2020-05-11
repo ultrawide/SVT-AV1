@@ -9482,6 +9482,66 @@ EbBool is_block_allowed(PictureControlSet *pcs_ptr, ModeDecisionContext *context
         return EB_TRUE;
 }
 #endif
+#if MIXED_STAT_SSE
+uint64_t emp_nsq_weight[5][9][10] = {
+    {
+        {340,	0,	0,	0,	0,	0,	0,	0,	0,	0},
+        {36,	0,	0,	0,	0,	0,	0,	0,	0,	0},
+        {23,	0,	0,	0,	0,	0,	0,	0,	0,	0},
+        {12,	0,	0,	0,	0,	0,	0,	0,	0,	0},
+        {13,	0,	0,	0,	0,	0,	0,	0,	0,	0},
+        {3,	0,	0,	0,	0,	0,	0,	0,	0,	0},
+        {12,	0,	0,	0,	0,	0,	0,	0,	0,	0},
+        {0,	0,	0,	0,	0,	0,	0,	0,	0,	0},
+        {0,	0,	0,	0,	0,	0,	0,	0,	0,	0}
+    },
+    {
+        {168,	80,	5,	5,	10,	0,	0,	0,	0,	0},
+        {14,	6,	14,	0,	10,	0,	0,	0,	0,	0},
+        {27,	30,	0,	0,	0,	0,	0,	0,	0,	0},
+        {5,	2,	8,	9,	10,	0,	0,	0,	0,	0},
+        {6,	5,	5,	0,	15,	0,	0,	0,	0,	0},
+        {4,	2,	3,	9,	0,	0,	0,	0,	0,	0},
+        {4,	3,	5,	9,	5,	0,	0,	0,	0,	0},
+        {11,	12,	43,	55,	60,	0,	0,	0,	0,	0},
+        {29,	39,	22,	18,	0,	0,	0,	0,	0,	0}
+     },
+     {
+         {141,	11,	9,	8,	19,	25,	19,	24,	26,	28},
+         {17,	9,	8,	8,	9,	13,	10,	4,	8,	10},
+         {19,	8,	7,	9,	9,	7,	10,	14,	16,	10},
+         {9,	12,	11,	10,	12,	14,	13,	13,	6,	5, },
+         {8,	11,	11,	10,	11,	11,	15,	12,	6,	15,},
+         {9,	11,	11,	13,	10,	9,	10,	11,	9,	9, },
+         {9,	9,	11,	11,	9,	8,	10,	11,	11,	16},
+         {9,	15,	19,	16,	15,	25,	16,	11,	13,	15},
+         {20,	24,	22,	22,	25,	13,	17,	25,	30,	21}
+     },
+     {
+         {185,	19,	12,	9,	10,	18,	18,	20,	21,	20},
+         {27,	19,	18,	16,	17,	17,	16,	16,	16,	16},
+         {35,	25,	19,	17,	17,	16,	17,	18,	18,	17},
+         {7,	9,	10,	11,	10,	11,	11,	10,	10,	10},
+         {7,	9,	10,	11,	11,	11,	11,	11,	12,	14},
+         {8,	11,	12,	12,	12,	12,	12,	13,	13,	12},
+         {7,	11,	12,	12,	12,	11,	12,	12,	11,	14},
+         {3,	7,	9,	11,	12,	13,	13,	12,	12,	10},
+         {6,	9,	10,	10,	10,	9,	9,	8,	8,	8 }
+     },
+     {
+         {804,	204,	145,	112,	103,	100	,103,	105,	110,	147},
+         {42,	42,	42,	50,	41,	50,	49,	49,	48,	53},
+         {58,	58,	58,	50,	59,	50,	51,	51,	52,	47},
+         {0,	0,	0,	0,	0,	0,	0,	0,	0,	0 },
+         {0,	0,	0,	0,	0,	0,	0,	0,	0,	0 },
+         {0,	0,	0,	0,	0,	0,	0,	0,	0,	0 },
+         {0,	0,	0,	0,	0,	0,	0,	0,	0,	0 },
+         {0,	0,	0,	0,	0,	0,	0,	0,	0,	0 },
+         {0,	0,	0,	0,	0,	0,	0,	0,	0,	0 }
+     }
+};
+#endif
+
 void md_encode_block(PictureControlSet *pcs_ptr,
                      ModeDecisionContext *context_ptr, EbPictureBufferDesc *input_picture_ptr,
                      ModeDecisionCandidateBuffer *bestcandidate_buffers[5]) {
@@ -9965,6 +10025,42 @@ void md_encode_block(PictureControlSet *pcs_ptr,
                     int32_t min_size = sq_size == 128 ? 64 : sq_size == 64 ? 16 : sq_size == 32 ? 8 : 4;
                     int32_t min_size_num = sq_size / min_size;
 
+#if MIXED_STAT_SSE
+                    uint32_t count_non_zero_coeffs = context_ptr->md_local_blk_unit[blk_geom->sqi_mds].count_non_zero_coeffs;
+                    uint32_t total_samples = (blk_geom->bwidth*blk_geom->bheight);
+                    uint8_t band_idx = 0;
+                    if (count_non_zero_coeffs >= ((total_samples * 18) / 20)) {
+                        band_idx = 9;
+                    }
+                    else if (count_non_zero_coeffs >= ((total_samples * 16) / 20)) {
+                        band_idx = 8;
+                    }
+                    else if (count_non_zero_coeffs >= ((total_samples * 14) / 20)) {
+                        band_idx = 7;
+                    }
+                    else if (count_non_zero_coeffs >= ((total_samples * 12) / 20)) {
+                        band_idx = 6;
+                    }
+                    else if (count_non_zero_coeffs >= ((total_samples * 10) / 20)) {
+                        band_idx = 5;
+                    }
+                    else if (count_non_zero_coeffs >= ((total_samples * 8) / 20)) {
+                        band_idx = 4;
+                    }
+                    else if (count_non_zero_coeffs >= ((total_samples * 6) / 20)) {
+                        band_idx = 3;
+                    }
+                    else if (count_non_zero_coeffs >= ((total_samples * 4) / 20)) {
+                        band_idx = 2;
+                    }
+                    else if (count_non_zero_coeffs >= ((total_samples * 2) / 20)) {
+                        band_idx = 1;
+                    }
+                    else {
+                        band_idx = 0;
+                    }                    
+#endif
+
                     for (r = 0; r < min_size_num; r++) {
                         for (c = 0; c < min_size_num; c++) {
 
@@ -10014,6 +10110,7 @@ void md_encode_block(PictureControlSet *pcs_ptr,
                         part_dist[24] = min_blk_dist[0][3] + min_blk_dist[1][3] + min_blk_dist[2][3] + min_blk_dist[3][3];
 
                         // PART_H decision
+                        part_theshold = (part_theshold * (100 - (emp_nsq_weight[context_ptr->blk_geom->depth][PART_H][band_idx])))/100;
                         uint64_t min_dist;
                         uint8_t part_idx;
                         uint8_t min_idx = part_dist[1] < part_dist[2] ? 1 : 2;
@@ -10023,6 +10120,7 @@ void md_encode_block(PictureControlSet *pcs_ptr,
                             mark_part_to_process[PART_H] = 1;
 
                         // PART_V decision
+                        part_theshold = (part_theshold * (100 - (emp_nsq_weight[context_ptr->blk_geom->depth][PART_V][band_idx])))/100;
                         min_idx = part_dist[3] < part_dist[4] ? 3 : 4;
                         max_idx = part_dist[3] < part_dist[4] ? 4 : 3;
                         distance_dist = part_dist[max_idx] - part_dist[min_idx];
@@ -10030,6 +10128,7 @@ void md_encode_block(PictureControlSet *pcs_ptr,
                             mark_part_to_process[PART_V] = 1;
 
                         // PART_HA decision
+                       part_theshold = (part_theshold * (100 - (emp_nsq_weight[context_ptr->blk_geom->depth][PART_HA][band_idx])))/100;
                         min_idx = part_dist[5] < part_dist[6] ? 5 : 6;
                         max_idx = part_dist[5] < part_dist[6] ? 6 : 5;
                         distance_dist = part_dist[max_idx] - part_dist[min_idx];
@@ -10037,6 +10136,7 @@ void md_encode_block(PictureControlSet *pcs_ptr,
                             mark_part_to_process[PART_HA] = 1;
 
                         // PART_HB decision
+                        part_theshold = (part_theshold * (100 - (emp_nsq_weight[context_ptr->blk_geom->depth][PART_HB][band_idx])))/100;
                         min_idx = part_dist[9] < part_dist[10] ? 9 : 10;
                         max_idx = part_dist[9] < part_dist[10] ? 10 : 9;
                         distance_dist = part_dist[max_idx] - part_dist[min_idx];
@@ -10044,6 +10144,7 @@ void md_encode_block(PictureControlSet *pcs_ptr,
                             mark_part_to_process[PART_HB] = 1;
 
                         // PART_VA decision
+                        part_theshold = (part_theshold * (100 - (emp_nsq_weight[context_ptr->blk_geom->depth][PART_VA][band_idx])))/100;
                         min_idx = part_dist[11] < part_dist[12] ? 11 : 12;
                         max_idx = part_dist[11] < part_dist[12] ? 12 : 11;
                         distance_dist = part_dist[max_idx] - part_dist[min_idx];
@@ -10051,6 +10152,7 @@ void md_encode_block(PictureControlSet *pcs_ptr,
                             mark_part_to_process[PART_VA] = 1;
 
                         // PART_VB decision
+                        part_theshold = (part_theshold * (100 - (emp_nsq_weight[context_ptr->blk_geom->depth][PART_VB][band_idx])))/100;
                         min_idx = part_dist[15] < part_dist[16] ? 15 : 16;
                         max_idx = part_dist[15] < part_dist[16] ? 16 : 15;
                         distance_dist = part_dist[max_idx] - part_dist[min_idx];
@@ -10058,6 +10160,7 @@ void md_encode_block(PictureControlSet *pcs_ptr,
                             mark_part_to_process[PART_VB] = 1;
 
                         // PART_H4 decision
+                        part_theshold = (part_theshold * (100 - (emp_nsq_weight[context_ptr->blk_geom->depth][PART_H4][band_idx])))/100;
                         min_dist = MIN(part_dist[17],MIN(part_dist[18],MIN(part_dist[19],part_dist[20])));
                         for (part_idx = 17; part_idx <= 20; part_idx++) {
                             distance_dist = part_dist[part_idx] - min_dist;
@@ -10065,6 +10168,7 @@ void md_encode_block(PictureControlSet *pcs_ptr,
                                 mark_part_to_process[PART_H4] = 1;
                         }
                         // PART_V4 decision
+                        part_theshold = (part_theshold * (100 - (emp_nsq_weight[context_ptr->blk_geom->depth][PART_V4][band_idx])))/100;
                         min_dist = MIN(part_dist[21],MIN(part_dist[22],MIN(part_dist[23],part_dist[24])));
                         for (part_idx = 21; part_idx <= 24; part_idx++) {
                             distance_dist = part_dist[part_idx] - min_dist;
@@ -10092,6 +10196,7 @@ void md_encode_block(PictureControlSet *pcs_ptr,
                         part_dist[16] = part_dist[10];
 
                          // PART_H decision
+                        part_theshold = (part_theshold * (100 - (emp_nsq_weight[context_ptr->blk_geom->depth][PART_H][band_idx])))/100;
                         uint8_t min_idx = part_dist[1] < part_dist[2] ? 1 : 2;
                         uint8_t max_idx = part_dist[1] < part_dist[2] ? 2 : 1;
                         uint64_t distance_dist = part_dist[max_idx] - part_dist[min_idx];
@@ -10099,6 +10204,7 @@ void md_encode_block(PictureControlSet *pcs_ptr,
                             mark_part_to_process[PART_H] = 1;
 
                         // PART_V decision
+                        part_theshold = (part_theshold * (100 - (emp_nsq_weight[context_ptr->blk_geom->depth][PART_V][band_idx])))/100;
                         min_idx = part_dist[3] < part_dist[4] ? 3 : 4;
                         max_idx = part_dist[3] < part_dist[4] ? 4 : 3;
                         distance_dist = part_dist[max_idx] - part_dist[min_idx];
@@ -10106,6 +10212,7 @@ void md_encode_block(PictureControlSet *pcs_ptr,
                             mark_part_to_process[PART_V] = 1;
                         if (sq_size == 128) {
                             // PART_HA decision
+                            part_theshold = (part_theshold * (100 - (emp_nsq_weight[context_ptr->blk_geom->depth][PART_HA][band_idx])))/100;
                             min_idx = part_dist[5] < part_dist[6] ? 5 : 6;
                             max_idx = part_dist[5] < part_dist[6] ? 6 : 5;
                             distance_dist = part_dist[max_idx] - part_dist[min_idx];
@@ -10113,6 +10220,7 @@ void md_encode_block(PictureControlSet *pcs_ptr,
                                 mark_part_to_process[PART_HA] = 1;
 
                             // PART_HB decision
+                            part_theshold = (part_theshold * (100 - (emp_nsq_weight[context_ptr->blk_geom->depth][PART_HB][band_idx])))/100;
                             min_idx = part_dist[9] < part_dist[10] ? 9 : 10;
                             max_idx = part_dist[9] < part_dist[10] ? 10 : 9;
                             distance_dist = part_dist[max_idx] - part_dist[min_idx];
@@ -10120,6 +10228,7 @@ void md_encode_block(PictureControlSet *pcs_ptr,
                                 mark_part_to_process[PART_HB] = 1;
 
                             // PART_VA decision
+                            part_theshold = (part_theshold * (100 - (emp_nsq_weight[context_ptr->blk_geom->depth][PART_VA][band_idx])))/100;
                             min_idx = part_dist[11] < part_dist[12] ? 11 : 12;
                             max_idx = part_dist[11] < part_dist[12] ? 12 : 11;
                             distance_dist = part_dist[max_idx] - part_dist[min_idx];
@@ -10127,6 +10236,7 @@ void md_encode_block(PictureControlSet *pcs_ptr,
                                 mark_part_to_process[PART_VA] = 1;
 
                             // PART_VB decision
+                            part_theshold = (part_theshold * (100 - (emp_nsq_weight[context_ptr->blk_geom->depth][PART_VB][band_idx])))/100;
                             min_idx = part_dist[15] < part_dist[16] ? 15 : 16;
                             max_idx = part_dist[15] < part_dist[16] ? 16 : 15;
                             distance_dist = part_dist[max_idx] - part_dist[min_idx];

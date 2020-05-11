@@ -390,6 +390,7 @@ extern "C" {
 #define SSE_BASED_SPLIT_TH          0 // TH%
 #define NSQ_STAT                    0 
 #define STAT_TH                     0 // TH%
+#define MIXED_STAT_SSE              0
 #endif
 // END  SVT_01 /////////////////////////////////////////////////////////
 #define COMMON_16BIT 1 // 16Bit pipeline support for common
