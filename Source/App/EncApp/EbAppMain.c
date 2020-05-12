@@ -416,7 +416,7 @@ int32_t main(int32_t argc, char *argv[]) {
             if (app_callbacks[inst_cnt]) free(app_callbacks[inst_cnt]);
         }
 
-        fprintf(stderr, "Encoder finished\n");
+        //fprintf(stderr, "Encoder finished\n");
     }
 
     return (return_error == 0) ? 0 : 1;
