@@ -10018,7 +10018,7 @@ void md_encode_block(PictureControlSet *pcs_ptr,
                     uint64_t min_blk_dist[4][4] = { { 0,0,0,0}, {0,0,0,0} };
 
                     uint64_t part_dist[25] = { 0 };
-                    uint8_t mark_part_to_process[NUMBER_OF_SHAPES] = { 0 };
+                    uint64_t mark_part_to_process[NUMBER_OF_SHAPES] = { 0 };
                     mark_part_to_process[0] = 1;
                     uint64_t part_theshold = SSE_BASED_SPLIT_TH;
 
@@ -10118,8 +10118,13 @@ void md_encode_block(PictureControlSet *pcs_ptr,
                         uint8_t min_idx = part_dist[1] < part_dist[2] ? 1 : 2;
                         uint8_t max_idx = part_dist[1] < part_dist[2] ? 2 : 1;
                         uint64_t distance_dist = part_dist[max_idx] - part_dist[min_idx];
+#if MIXED_STAT_SSE_V2
+                        uint64_t per = part_dist[min_idx] ? MIN(1000, (distance_dist * 100 / part_dist[min_idx])) : 1000;
+                            mark_part_to_process[PART_H] = per;
+#else
                         if (distance_dist * 100 > part_theshold * part_dist[min_idx])
                             mark_part_to_process[PART_H] = 1;
+#endif
 
                         // PART_V decision
 #if MIXED_STAT_SSE
@@ -10128,8 +10133,13 @@ void md_encode_block(PictureControlSet *pcs_ptr,
                         min_idx = part_dist[3] < part_dist[4] ? 3 : 4;
                         max_idx = part_dist[3] < part_dist[4] ? 4 : 3;
                         distance_dist = part_dist[max_idx] - part_dist[min_idx];
+#if MIXED_STAT_SSE_V2
+                        per = part_dist[min_idx] ? MIN(1000, (distance_dist * 100 / part_dist[min_idx])) : 1000;
+                            mark_part_to_process[PART_V] = per;
+#else
                         if (distance_dist * 100 > part_theshold * part_dist[min_idx])
                             mark_part_to_process[PART_V] = 1;
+#endif
 
                         // PART_HA decision
 #if MIXED_STAT_SSE
@@ -10138,8 +10148,13 @@ void md_encode_block(PictureControlSet *pcs_ptr,
                         min_idx = part_dist[5] < part_dist[6] ? 5 : 6;
                         max_idx = part_dist[5] < part_dist[6] ? 6 : 5;
                         distance_dist = part_dist[max_idx] - part_dist[min_idx];
+#if MIXED_STAT_SSE_V2
+                        per = part_dist[min_idx] ? MIN(1000, (distance_dist * 100 / part_dist[min_idx])) : 1000;
+                            mark_part_to_process[PART_HA] = per;
+#else
                         if (distance_dist * 100 > part_theshold * part_dist[min_idx])
                             mark_part_to_process[PART_HA] = 1;
+#endif
 
                         // PART_HB decision
 #if MIXED_STAT_SSE
@@ -10148,8 +10163,13 @@ void md_encode_block(PictureControlSet *pcs_ptr,
                         min_idx = part_dist[9] < part_dist[10] ? 9 : 10;
                         max_idx = part_dist[9] < part_dist[10] ? 10 : 9;
                         distance_dist = part_dist[max_idx] - part_dist[min_idx];
+#if MIXED_STAT_SSE_V2
+                        per = part_dist[min_idx] ? MIN(1000, (distance_dist * 100 / part_dist[min_idx])) : 1000;
+                            mark_part_to_process[PART_HB] = per;
+#else
                         if (distance_dist * 100 > part_theshold * part_dist[min_idx])
                             mark_part_to_process[PART_HB] = 1;
+#endif
 
                         // PART_VA decision
 #if MIXED_STAT_SSE
@@ -10158,8 +10178,13 @@ void md_encode_block(PictureControlSet *pcs_ptr,
                         min_idx = part_dist[11] < part_dist[12] ? 11 : 12;
                         max_idx = part_dist[11] < part_dist[12] ? 12 : 11;
                         distance_dist = part_dist[max_idx] - part_dist[min_idx];
+#if MIXED_STAT_SSE_V2
+                        per = part_dist[min_idx] ? MIN(1000, (distance_dist * 100 / part_dist[min_idx])) : 1000;
+                            mark_part_to_process[PART_VA] = per;
+#else
                         if (distance_dist * 100 > part_theshold * part_dist[min_idx])
                             mark_part_to_process[PART_VA] = 1;
+#endif
 
                         // PART_VB decision
 #if MIXED_STAT_SSE
@@ -10168,8 +10193,13 @@ void md_encode_block(PictureControlSet *pcs_ptr,
                         min_idx = part_dist[15] < part_dist[16] ? 15 : 16;
                         max_idx = part_dist[15] < part_dist[16] ? 16 : 15;
                         distance_dist = part_dist[max_idx] - part_dist[min_idx];
+#if MIXED_STAT_SSE_V2
+                        per = part_dist[min_idx] ? MIN(1000, (distance_dist * 100 / part_dist[min_idx])) : 1000;
+                            mark_part_to_process[PART_VB] = per;
+#else
                         if (distance_dist * 100 > part_theshold * part_dist[min_idx])
                             mark_part_to_process[PART_VB] = 1;
+#endif
 
                         // PART_H4 decision
 #if MIXED_STAT_SSE
@@ -10178,8 +10208,13 @@ void md_encode_block(PictureControlSet *pcs_ptr,
                         min_dist = MIN(part_dist[17],MIN(part_dist[18],MIN(part_dist[19],part_dist[20])));
                         for (part_idx = 17; part_idx <= 20; part_idx++) {
                             distance_dist = part_dist[part_idx] - min_dist;
+#if MIXED_STAT_SSE_V2
+                            per = min_dist ? MIN(1000, (distance_dist * 100 / min_dist)) : 1000;
+                            mark_part_to_process[PART_H4] = MAX(mark_part_to_process[PART_H4],per);
+#else
                             if (distance_dist * 100 > part_theshold * min_dist)
                                 mark_part_to_process[PART_H4] = 1;
+#endif
                         }
                         // PART_V4 decision
 #if MIXED_STAT_SSE
@@ -10188,8 +10223,13 @@ void md_encode_block(PictureControlSet *pcs_ptr,
                         min_dist = MIN(part_dist[21],MIN(part_dist[22],MIN(part_dist[23],part_dist[24])));
                         for (part_idx = 21; part_idx <= 24; part_idx++) {
                             distance_dist = part_dist[part_idx] - min_dist;
+#if MIXED_STAT_SSE_V2
+                            per = min_dist ? MIN(1000, (distance_dist * 100 / min_dist)) : 1000;
+                            mark_part_to_process[PART_V4] = MAX(mark_part_to_process[PART_V4],per);
+#else
                             if (distance_dist * 100 > part_theshold * min_dist)
                                 mark_part_to_process[PART_V4] = 1;
+#endif
                         }
 
                     }
@@ -10218,8 +10258,13 @@ void md_encode_block(PictureControlSet *pcs_ptr,
                         uint8_t min_idx = part_dist[1] < part_dist[2] ? 1 : 2;
                         uint8_t max_idx = part_dist[1] < part_dist[2] ? 2 : 1;
                         uint64_t distance_dist = part_dist[max_idx] - part_dist[min_idx];
+#if MIXED_STAT_SSE_V2
+                        uint64_t per = part_dist[min_idx] ? MIN(1000, (distance_dist * 100 / part_dist[min_idx])) : 1000;
+                            mark_part_to_process[PART_H] = per;
+#else
                         if (distance_dist * 100 > part_theshold * part_dist[min_idx])
                             mark_part_to_process[PART_H] = 1;
+#endif
 
                         // PART_V decision
 #if MIXED_STAT_SSE
@@ -10228,8 +10273,13 @@ void md_encode_block(PictureControlSet *pcs_ptr,
                         min_idx = part_dist[3] < part_dist[4] ? 3 : 4;
                         max_idx = part_dist[3] < part_dist[4] ? 4 : 3;
                         distance_dist = part_dist[max_idx] - part_dist[min_idx];
+#if MIXED_STAT_SSE_V2
+                        per = part_dist[min_idx] ? MIN(1000, (distance_dist * 100 / part_dist[min_idx])) : 1000;
+                            mark_part_to_process[PART_V] = per;
+#else
                         if (distance_dist * 100 > part_theshold * part_dist[min_idx])
                             mark_part_to_process[PART_V] = 1;
+#endif
                         if (sq_size == 128) {
                             // PART_HA decision
 #if MIXED_STAT_SSE
@@ -10238,8 +10288,13 @@ void md_encode_block(PictureControlSet *pcs_ptr,
                             min_idx = part_dist[5] < part_dist[6] ? 5 : 6;
                             max_idx = part_dist[5] < part_dist[6] ? 6 : 5;
                             distance_dist = part_dist[max_idx] - part_dist[min_idx];
+#if MIXED_STAT_SSE_V2
+                            per = part_dist[min_idx] ? MIN(1000, (distance_dist * 100 / part_dist[min_idx])) : 1000;
+                            mark_part_to_process[PART_HA] = per;
+#else
                             if (distance_dist * 100 > part_theshold * part_dist[min_idx])
                                 mark_part_to_process[PART_HA] = 1;
+#endif
 
                             // PART_HB decision
 #if MIXED_STAT_SSE
@@ -10248,8 +10303,13 @@ void md_encode_block(PictureControlSet *pcs_ptr,
                             min_idx = part_dist[9] < part_dist[10] ? 9 : 10;
                             max_idx = part_dist[9] < part_dist[10] ? 10 : 9;
                             distance_dist = part_dist[max_idx] - part_dist[min_idx];
+#if MIXED_STAT_SSE_V2
+                            per = part_dist[min_idx] ? MIN(1000, (distance_dist * 100 / part_dist[min_idx])) : 1000;
+                            mark_part_to_process[PART_HB] = per;
+#else
                             if (distance_dist * 100 > part_theshold * part_dist[min_idx])
                                 mark_part_to_process[PART_HB] = 1;
+#endif
 
                             // PART_VA decision
 #if MIXED_STAT_SSE
@@ -10258,8 +10318,13 @@ void md_encode_block(PictureControlSet *pcs_ptr,
                             min_idx = part_dist[11] < part_dist[12] ? 11 : 12;
                             max_idx = part_dist[11] < part_dist[12] ? 12 : 11;
                             distance_dist = part_dist[max_idx] - part_dist[min_idx];
+#if MIXED_STAT_SSE_V2
+                            per = part_dist[min_idx] ? MIN(1000, (distance_dist * 100 / part_dist[min_idx])) : 1000;
+                            mark_part_to_process[PART_VA] = per;
+#else
                             if (distance_dist * 100 > part_theshold * part_dist[min_idx])
                                 mark_part_to_process[PART_VA] = 1;
+#endif
 
                             // PART_VB decision
 #if MIXED_STAT_SSE
@@ -10268,13 +10333,46 @@ void md_encode_block(PictureControlSet *pcs_ptr,
                             min_idx = part_dist[15] < part_dist[16] ? 15 : 16;
                             max_idx = part_dist[15] < part_dist[16] ? 16 : 15;
                             distance_dist = part_dist[max_idx] - part_dist[min_idx];
+#if MIXED_STAT_SSE_V2
+                            per = part_dist[min_idx] ? MIN(1000, (distance_dist * 100 / part_dist[min_idx])) : 1000;
+                            mark_part_to_process[PART_VB] = per;
+#else
                             if (distance_dist * 100 > part_theshold * part_dist[min_idx])
                                 mark_part_to_process[PART_VB] = 1;
+#endif
                         }
                     }
-
+#if MIXED_STAT_SSE_V2
+                    for (uint8_t shape_idx = 0; shape_idx < NUMBER_OF_SHAPES; shape_idx++) {
+                         if(mark_part_to_process[shape_idx] < 10)
+                             context_ptr->mark_part_to_process[shape_idx] = 50;
+                         else if(mark_part_to_process[shape_idx] < 50)
+                             context_ptr->mark_part_to_process[shape_idx] = 70;
+                         else if(mark_part_to_process[shape_idx] < 100)
+                             context_ptr->mark_part_to_process[shape_idx] = 90;
+                         else if(mark_part_to_process[shape_idx] < 200)
+                             context_ptr->mark_part_to_process[shape_idx] = 100;
+                         else if(mark_part_to_process[shape_idx] < 300)
+                             context_ptr->mark_part_to_process[shape_idx] = 102;
+                         else if(mark_part_to_process[shape_idx] < 400)
+                             context_ptr->mark_part_to_process[shape_idx] = 104;
+                         else if(mark_part_to_process[shape_idx] < 500)
+                             context_ptr->mark_part_to_process[shape_idx] = 106;
+                         else if(mark_part_to_process[shape_idx] < 600)
+                             context_ptr->mark_part_to_process[shape_idx] = 108;
+                         else if(mark_part_to_process[shape_idx] < 700)
+                             context_ptr->mark_part_to_process[shape_idx] = 109;
+                         else if(mark_part_to_process[shape_idx] < 800)
+                             context_ptr->mark_part_to_process[shape_idx] = 110;
+                         else if(mark_part_to_process[shape_idx] < 900)
+                             context_ptr->mark_part_to_process[shape_idx] = 115;
+                         else 
+                             context_ptr->mark_part_to_process[shape_idx] = 120;
+                    }
+#else
                     for (uint8_t shape_idx = 0; shape_idx < NUMBER_OF_SHAPES; shape_idx++)
                         context_ptr->mark_part_to_process[shape_idx] = mark_part_to_process[shape_idx];
+#endif
                 }    
             } 
 #endif
@@ -11058,7 +11156,7 @@ void block_based_depth_reduction(
 #endif
 
 #if NSQ_STAT
-uint8_t allowed_part_weight_240pL[5][9][10] = {
+uint64_t allowed_part_weight_240pL[5][9][10] = {
 {
 {77,	0,	0,	0,	0,	0,	0,	0,	0,	0},
 { 8,	0,	0,	0,	0,	0,	0,	0,	0,	0},
@@ -11115,7 +11213,7 @@ uint8_t allowed_part_weight_240pL[5][9][10] = {
 { 0,	0,	0,	0,	0,	0,	0,	0,	0,	0}
 }
 };
-uint8_t allowed_part_weight_overall[5][9][10] = {
+uint64_t allowed_part_weight_overall[5][9][10] = {
     {
 { 79,	34	,0	,0	,0	,0	,0,	0,	0,	0},
 { 7,	10	,0,	0,	0,	0,	0,	0,	0,	0},
@@ -11172,7 +11270,7 @@ uint8_t allowed_part_weight_overall[5][9][10] = {
 { 0,	0	,0,	0,	0,	0,	0,	0,	0,	0 }
 }
 };
-uint8_t allowed_part_weight_1080p[5][9][10] = {
+uint64_t allowed_part_weight_1080p[5][9][10] = {
 {
 { 80, 38, 0, 0, 0, 0, 0, 0, 0, 0},
 { 8, 13, 0, 0, 0, 0, 0, 0, 0, 0},
@@ -11229,7 +11327,7 @@ uint8_t allowed_part_weight_1080p[5][9][10] = {
 { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
 }
 };
-uint8_t allowed_part_weight_720p[5][9][10] = {
+uint64_t allowed_part_weight_720p[5][9][10] = {
 {
 { 78, 30, 0, 0, 0, 0, 0, 0, 0, 0 },
 { 6, 6, 0, 0, 0, 0, 0, 0, 0, 0 },
@@ -11286,7 +11384,7 @@ uint8_t allowed_part_weight_720p[5][9][10] = {
 { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }
 },
 };
-uint8_t allowed_part_weight_360p[5][9][10] = {
+uint64_t allowed_part_weight_360p[5][9][10] = {
 {
 { 80, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
 { 8, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
@@ -11343,7 +11441,7 @@ uint8_t allowed_part_weight_360p[5][9][10] = {
 { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }
 }
 };
-uint8_t allowed_part_weight_240pF[5][9][10] = {
+uint64_t allowed_part_weight_240pF[5][9][10] = {
 {
 { 75, 0, 0, 0, 0, 0, 0, 0, 0, 0},
 { 9, 0, 0, 0, 0, 0, 0, 0, 0, 0},
@@ -11822,7 +11920,7 @@ EB_EXTERN EbErrorType mode_decision_sb(SequenceControlSet *scs_ptr, PictureContr
 #if MIXED_STAT_SSE_V2
                     if (context_ptr->blk_geom->shape == PART_N)
                         for (uint8_t shape_idx = 0; shape_idx < NUMBER_OF_SHAPES; shape_idx++)
-                            context_ptr->mark_part_to_process[shape_idx] = 1;
+                            context_ptr->mark_part_to_process[shape_idx] = 100;
 #endif
 
                     if (context_ptr->blk_geom->shape != PART_N) {
@@ -11860,6 +11958,34 @@ EB_EXTERN EbErrorType mode_decision_sb(SequenceControlSet *scs_ptr, PictureContr
                             band_idx = 0;
                         }
 #if STAT_TABLE_IDX
+#if MIXED_STAT_SSE_V2
+                        uint64_t allow_th;
+                        if (STAT_TABLE_IDX == 1) {
+                            allow_th = (allowed_part_weight_overall[context_ptr->blk_geom->depth][context_ptr->blk_geom->shape][band_idx] * 
+                                context_ptr->mark_part_to_process[context_ptr->blk_geom->shape])/100;
+                        }
+                        else if (STAT_TABLE_IDX == 2) {
+                            if (pcs_ptr->parent_pcs_ptr->input_resolution <= INPUT_SIZE_240p_RANGE) {
+                                 allow_th = (allowed_part_weight_240pF[context_ptr->blk_geom->depth][context_ptr->blk_geom->shape][band_idx] * 
+                                     context_ptr->mark_part_to_process[context_ptr->blk_geom->shape])/100;
+                            }else if (pcs_ptr->parent_pcs_ptr->input_resolution <= INPUT_SIZE_480p_RANGE) {
+                                allow_th = (allowed_part_weight_360p[context_ptr->blk_geom->depth][context_ptr->blk_geom->shape][band_idx] * 
+                                     context_ptr->mark_part_to_process[context_ptr->blk_geom->shape])/100;
+                            }else if (pcs_ptr->parent_pcs_ptr->input_resolution <= INPUT_SIZE_720p_RANGE) {
+                                allow_th = (allowed_part_weight_720p[context_ptr->blk_geom->depth][context_ptr->blk_geom->shape][band_idx] * 
+                                     context_ptr->mark_part_to_process[context_ptr->blk_geom->shape])/100;
+                            }else if (pcs_ptr->parent_pcs_ptr->input_resolution <= INPUT_SIZE_1080p_RANGE) {
+                                allow_th = (allowed_part_weight_1080p[context_ptr->blk_geom->depth][context_ptr->blk_geom->shape][band_idx] * 
+                                     context_ptr->mark_part_to_process[context_ptr->blk_geom->shape])/100;
+                            }
+                        } else if (STAT_TABLE_IDX == 3) {
+                            allow_th = (allowed_part_weight_240pL[context_ptr->blk_geom->depth][context_ptr->blk_geom->shape][band_idx] * 
+                                     context_ptr->mark_part_to_process[context_ptr->blk_geom->shape])/100;
+                        }
+
+                         if (allow_th < STAT_TH)
+                                skip_nsq = 1;
+#else
                         if (STAT_TABLE_IDX == 1) {
                             if (allowed_part_weight_overall[context_ptr->blk_geom->depth][context_ptr->blk_geom->shape][band_idx] < STAT_TH)
                                 skip_nsq = 1;
@@ -11882,10 +12008,8 @@ EB_EXTERN EbErrorType mode_decision_sb(SequenceControlSet *scs_ptr, PictureContr
                             if (allowed_part_weight_240pL[context_ptr->blk_geom->depth][context_ptr->blk_geom->shape][band_idx] < STAT_TH)
                                 skip_nsq = 1;
                         }
-#if MIXED_STAT_SSE_V2
-                        if(skip_nsq)
-                            skip_nsq = context_ptr->mark_part_to_process[context_ptr->blk_geom->shape] ? 0 : skip_nsq;
 #endif
+
 #else
                         if (allowed_part_weight_240pL[context_ptr->blk_geom->depth][context_ptr->blk_geom->shape][band_idx] < STAT_TH)
                             skip_nsq = 1;
