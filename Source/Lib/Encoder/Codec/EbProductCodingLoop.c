@@ -9805,7 +9805,7 @@ void md_encode_block(PictureControlSet *pcs_ptr,
                     uint64_t part_dist[25] = { 0 };
                     uint64_t mark_part_to_process[NUMBER_OF_SHAPES] = { 0 };
                     
-                    mark_part_to_process[0] = 1;
+                    //mark_part_to_process[0] = 1;
 
                     int32_t min_size = sq_size == 128 ? 64 : sq_size == 64 ? 16 : sq_size == 32 ? 8 : 4;
                     int32_t min_size_num = sq_size / min_size;
@@ -9984,82 +9984,6 @@ void md_encode_block(PictureControlSet *pcs_ptr,
                     }
 
                     for (shape_idx = 0; shape_idx < NUMBER_OF_SHAPES; shape_idx++) {
-                        if (MIXED_STAT_SSE_V2 == 1) {
-                            if (mark_part_to_process[shape_idx] < 10)
-                                context_ptr->mark_part_to_process[shape_idx] = 50;
-                            else if (mark_part_to_process[shape_idx] < 50)
-                                context_ptr->mark_part_to_process[shape_idx] = 70;
-                            else if (mark_part_to_process[shape_idx] < 100)
-                                context_ptr->mark_part_to_process[shape_idx] = 90;
-                            else if (mark_part_to_process[shape_idx] < 200)
-                                context_ptr->mark_part_to_process[shape_idx] = 100;
-                            else if (mark_part_to_process[shape_idx] < 300)
-                                context_ptr->mark_part_to_process[shape_idx] = 102;
-                            else if (mark_part_to_process[shape_idx] < 400)
-                                context_ptr->mark_part_to_process[shape_idx] = 104;
-                            else if (mark_part_to_process[shape_idx] < 500)
-                                context_ptr->mark_part_to_process[shape_idx] = 106;
-                            else if (mark_part_to_process[shape_idx] < 600)
-                                context_ptr->mark_part_to_process[shape_idx] = 108;
-                            else if (mark_part_to_process[shape_idx] < 700)
-                                context_ptr->mark_part_to_process[shape_idx] = 109;
-                            else if (mark_part_to_process[shape_idx] < 800)
-                                context_ptr->mark_part_to_process[shape_idx] = 110;
-                            else if (mark_part_to_process[shape_idx] < 900)
-                                context_ptr->mark_part_to_process[shape_idx] = 115;
-                            else
-                                context_ptr->mark_part_to_process[shape_idx] = 120;
-                        }else if (MIXED_STAT_SSE_V2 == 2) {
-                            if (mark_part_to_process[shape_idx] < 10)
-                                context_ptr->mark_part_to_process[shape_idx] = 70;
-                            else if (mark_part_to_process[shape_idx] < 50)
-                                context_ptr->mark_part_to_process[shape_idx] = 90;
-                            else if (mark_part_to_process[shape_idx] < 100)
-                                context_ptr->mark_part_to_process[shape_idx] = 100;
-                            else if (mark_part_to_process[shape_idx] < 200)
-                                context_ptr->mark_part_to_process[shape_idx] = 101;
-                            else if (mark_part_to_process[shape_idx] < 300)
-                                context_ptr->mark_part_to_process[shape_idx] = 102;
-                            else if (mark_part_to_process[shape_idx] < 400)
-                                context_ptr->mark_part_to_process[shape_idx] = 104;
-                            else if (mark_part_to_process[shape_idx] < 500)
-                                context_ptr->mark_part_to_process[shape_idx] = 106;
-                            else if (mark_part_to_process[shape_idx] < 600)
-                                context_ptr->mark_part_to_process[shape_idx] = 108;
-                            else if (mark_part_to_process[shape_idx] < 700)
-                                context_ptr->mark_part_to_process[shape_idx] = 109;
-                            else if (mark_part_to_process[shape_idx] < 800)
-                                context_ptr->mark_part_to_process[shape_idx] = 110;
-                            else if (mark_part_to_process[shape_idx] < 900)
-                                context_ptr->mark_part_to_process[shape_idx] = 115;
-                            else
-                                context_ptr->mark_part_to_process[shape_idx] = 120;
-                        }else if (MIXED_STAT_SSE_V2 == 3) {
-                            if (mark_part_to_process[shape_idx] < 10)
-                                context_ptr->mark_part_to_process[shape_idx] = 90;
-                            else if (mark_part_to_process[shape_idx] < 50)
-                                context_ptr->mark_part_to_process[shape_idx] = 95;
-                            else if (mark_part_to_process[shape_idx] < 100)
-                                context_ptr->mark_part_to_process[shape_idx] = 100;
-                            else if (mark_part_to_process[shape_idx] < 200)
-                                context_ptr->mark_part_to_process[shape_idx] = 101;
-                            else if (mark_part_to_process[shape_idx] < 300)
-                                context_ptr->mark_part_to_process[shape_idx] = 102;
-                            else if (mark_part_to_process[shape_idx] < 400)
-                                context_ptr->mark_part_to_process[shape_idx] = 104;
-                            else if (mark_part_to_process[shape_idx] < 500)
-                                context_ptr->mark_part_to_process[shape_idx] = 106;
-                            else if (mark_part_to_process[shape_idx] < 600)
-                                context_ptr->mark_part_to_process[shape_idx] = 108;
-                            else if (mark_part_to_process[shape_idx] < 700)
-                                context_ptr->mark_part_to_process[shape_idx] = 109;
-                            else if (mark_part_to_process[shape_idx] < 800)
-                                context_ptr->mark_part_to_process[shape_idx] = 110;
-                            else if (mark_part_to_process[shape_idx] < 900)
-                                context_ptr->mark_part_to_process[shape_idx] = 115;
-                            else
-                                context_ptr->mark_part_to_process[shape_idx] = 120;
-                        }else if (MIXED_STAT_SSE_V2 == 4) {
                             if (mark_part_to_process[shape_idx] < 10)
                                 context_ptr->mark_part_to_process[shape_idx] = 1;
                             else if (mark_part_to_process[shape_idx] < 50)
@@ -10085,8 +10009,8 @@ void md_encode_block(PictureControlSet *pcs_ptr,
                             else
                                 context_ptr->mark_part_to_process[shape_idx] = 12;
 
-                             context_ptr->md_local_blk_unit[context_ptr->blk_geom->blkidx_mds].sse_gradian_band[shape_idx];
-                        }    
+                             context_ptr->md_local_blk_unit[context_ptr->blk_geom->sqi_mds].sse_gradian_band[shape_idx] = context_ptr->mark_part_to_process[shape_idx];
+                            
                     }
                 }    
             } 

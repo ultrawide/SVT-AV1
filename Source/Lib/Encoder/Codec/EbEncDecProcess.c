@@ -5815,7 +5815,7 @@ void generate_statistics(
                     total_samples = (blk_geom->bwidth*blk_geom->bheight);
 #if SSE_BASED_SPLITTING
                     uint8_t part_idx = part_to_shape[context_ptr->md_blk_arr_nsq[blk_index].part];
-                    uint8_t sse_g_band = context_ptr->md_local_blk_unit[blk_index].sse_gradian_band[part_idx];
+                    uint8_t sse_g_band = context_ptr->md_local_blk_unit[blk_geom->sqi_mds].sse_gradian_band[part_idx];
                      if (count_non_zero_coeffs >= ((total_samples * 18) / 20)) {
                          part_cnt[blk_geom->depth][part_to_shape[context_ptr->md_blk_arr_nsq[blk_index].part]][18][sse_g_band] +=  (blk_geom->bwidth*blk_geom->bheight);
                          

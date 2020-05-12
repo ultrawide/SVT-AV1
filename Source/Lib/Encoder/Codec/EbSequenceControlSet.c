@@ -33,8 +33,9 @@ static void eb_sequence_control_set_dctor(EbPtr p) {
                             printf("%d\t", obj->part_cnt[depthidx][partidx][band][sse_idx]);
                         }
                     }
-                    printf("\n");
+                   printf("\n");
                 }
+                printf("\n");
             }
             printf("\n");
             printf("Satistics end\n");
