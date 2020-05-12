@@ -10419,6 +10419,31 @@ void md_encode_block(PictureControlSet *pcs_ptr,
                                 context_ptr->mark_part_to_process[shape_idx] = 115;
                             else
                                 context_ptr->mark_part_to_process[shape_idx] = 120;
+                        }else if (MIXED_STAT_SSE_V2 == 4) {
+                            if (mark_part_to_process[shape_idx] < 10)
+                                context_ptr->mark_part_to_process[shape_idx] = 100;
+                            else if (mark_part_to_process[shape_idx] < 50)
+                                context_ptr->mark_part_to_process[shape_idx] = 100;
+                            else if (mark_part_to_process[shape_idx] < 100)
+                                context_ptr->mark_part_to_process[shape_idx] = 100;
+                            else if (mark_part_to_process[shape_idx] < 200)
+                                context_ptr->mark_part_to_process[shape_idx] = 101;
+                            else if (mark_part_to_process[shape_idx] < 300)
+                                context_ptr->mark_part_to_process[shape_idx] = 102;
+                            else if (mark_part_to_process[shape_idx] < 400)
+                                context_ptr->mark_part_to_process[shape_idx] = 104;
+                            else if (mark_part_to_process[shape_idx] < 500)
+                                context_ptr->mark_part_to_process[shape_idx] = 106;
+                            else if (mark_part_to_process[shape_idx] < 600)
+                                context_ptr->mark_part_to_process[shape_idx] = 108;
+                            else if (mark_part_to_process[shape_idx] < 700)
+                                context_ptr->mark_part_to_process[shape_idx] = 109;
+                            else if (mark_part_to_process[shape_idx] < 800)
+                                context_ptr->mark_part_to_process[shape_idx] = 110;
+                            else if (mark_part_to_process[shape_idx] < 900)
+                                context_ptr->mark_part_to_process[shape_idx] = 115;
+                            else
+                                context_ptr->mark_part_to_process[shape_idx] = 120;
                         }
                     }
 #else
