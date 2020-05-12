@@ -140,6 +140,9 @@ typedef struct MdBlkStruct {
 #if DEPTH_STATISTICS
     int8_t block_type;
 #endif
+#if SSE_BASED_SPLITTING
+    uint8_t sse_gradian_band[10];
+#endif
 } MdBlkStruct;
 
 struct ModeDecisionCandidate;
@@ -614,7 +617,14 @@ typedef struct ModeDecisionContext {
     uint8_t md_enc_mode;
 #endif
 #if GEN_STAT
+#if SSE_BASED_SPLITTING
+    uint32_t part_cnt[6][10][20][13];
+#else
     uint32_t part_cnt[6][10][20];
+#endif
+#endif
+#if SSE_BASED_SPLITTING
+    uint8_t mark_part_to_process[NUMBER_OF_SHAPES];
 #endif
 } ModeDecisionContext;
 

@@ -1770,6 +1770,18 @@ void *mode_decision_configuration_kernel(void *input_ptr) {
         pcs_ptr->below32_coded_area = 0;
 #endif
 #if GEN_STAT
+#if SSE_BASED_SPLITTING
+        uint8_t band,depthidx,partidx,sse_idx;
+        for (depthidx = 0; depthidx < 6; depthidx++) {
+            for (partidx = 0; partidx < 10; partidx++) {
+                for (band = 0; band < 20; band+=2) {
+                    for (sse_idx = 0; sse_idx < 13; sse_idx++) {
+                         pcs_ptr->part_cnt[depthidx][partidx][band][sse_idx] = 0;
+                    }
+                }
+            }
+        }
+#else
         uint8_t band,depthidx,partidx;
         // init stat
         for (depthidx = 0; depthidx < 6; depthidx++) {
@@ -1779,6 +1791,7 @@ void *mode_decision_configuration_kernel(void *input_ptr) {
                 }
             }
         }
+#endif
 #endif
         // Compute Tc, and Beta offsets for a given picture
         // Set reference cdef strength

@@ -1293,6 +1293,18 @@ void copy_statistics_to_ref_obj_ect(PictureControlSet *pcs_ptr, SequenceControlS
         (pcs_ptr->parent_pcs_ptr->aligned_width * pcs_ptr->parent_pcs_ptr->aligned_height);
 #endif
 #if GEN_STAT
+#if SSE_BASED_SPLITTING
+    uint8_t band,depthidx,partidx,sse_idx;
+        for (depthidx = 0; depthidx < 6; depthidx++) {
+            for (partidx = 0; partidx < 10; partidx++) {
+                for (band = 0; band < 20; band+=2) {
+                    for (sse_idx = 0; sse_idx < 13; sse_idx++) {
+                        scs_ptr->part_cnt[depthidx][partidx][band][sse_idx] += pcs_ptr->part_cnt[depthidx][partidx][band][sse_idx];
+                    }
+                }
+            }
+        }
+#else
         uint8_t band,depthidx,partidx;
         for (depthidx = 0; depthidx < 6; depthidx++) {
             for (partidx = 0; partidx < 10; partidx++) {
@@ -1301,6 +1313,7 @@ void copy_statistics_to_ref_obj_ect(PictureControlSet *pcs_ptr, SequenceControlS
                 }
             }
         }
+#endif
 #endif
     if (pcs_ptr->slice_type == I_SLICE) pcs_ptr->intra_coded_area = 0;
 #if REDUCE_COMPLEX_CLIP_CYCLES
@@ -5755,8 +5768,22 @@ void generate_statistics(
     uint32_t m1_count[20] = { 0 };
     uint32_t p_count[20] = { 0 };
     uint32_t p1_count[20] = { 0 };
-
+#if SSE_BASED_SPLITTING
+    uint32_t part_cnt[6][10][20][13];
+    uint8_t band,depthidx,partidx,sse_idx;
+    // init stat
+    for (depthidx = 0; depthidx < 6; depthidx++) {
+        for (partidx = 0; partidx < 10; partidx++) {
+            for (band = 0; band < 20; band++) {
+                for (sse_idx = 0; sse_idx < 13; sse_idx++) {
+                    part_cnt[depthidx][partidx][band][sse_idx] = 0;
+                }
+            }
+        }
+    }
+#else
     uint32_t part_cnt[6][10][20];
+
 
     uint8_t band,depthidx,partidx;
 
@@ -5768,7 +5795,7 @@ void generate_statistics(
             }
         }
     }
-    
+#endif    
     SbClassControls *sb_class_ctrls = &context_ptr->sb_class_ctrls;
     EbBool split_flag;
     while (blk_index < scs_ptr->max_block_cnt) {
@@ -5786,7 +5813,33 @@ void generate_statistics(
                     count_non_zero_coeffs = context_ptr->md_local_blk_unit[blk_index].count_non_zero_coeffs;
 
                     total_samples = (blk_geom->bwidth*blk_geom->bheight);
-
+#if SSE_BASED_SPLITTING
+                    uint8_t part_idx = part_to_shape[context_ptr->md_blk_arr_nsq[blk_index].part];
+                    uint8_t sse_g_band = context_ptr->md_local_blk_unit[blk_index].sse_gradian_band[part_idx];
+                     if (count_non_zero_coeffs >= ((total_samples * 18) / 20)) {
+                         part_cnt[blk_geom->depth][part_to_shape[context_ptr->md_blk_arr_nsq[blk_index].part]][18][sse_g_band] +=  (blk_geom->bwidth*blk_geom->bheight);
+                         
+                    }else if (count_non_zero_coeffs >= ((total_samples * 16) / 20)) {
+                        part_cnt[blk_geom->depth][part_to_shape[context_ptr->md_blk_arr_nsq[blk_index].part]][16][sse_g_band] +=  (blk_geom->bwidth*blk_geom->bheight);
+                    }else if (count_non_zero_coeffs >= ((total_samples * 14) / 20)) {
+                         part_cnt[blk_geom->depth][part_to_shape[context_ptr->md_blk_arr_nsq[blk_index].part]][14][sse_g_band] +=  (blk_geom->bwidth*blk_geom->bheight);
+                     }else if (count_non_zero_coeffs >= ((total_samples * 12) / 20)) {
+                        part_cnt[blk_geom->depth][part_to_shape[context_ptr->md_blk_arr_nsq[blk_index].part]][12][sse_g_band] +=  (blk_geom->bwidth*blk_geom->bheight);
+                     }else if (count_non_zero_coeffs >= ((total_samples * 10) / 20)) {
+                         part_cnt[blk_geom->depth][part_to_shape[context_ptr->md_blk_arr_nsq[blk_index].part]][10][sse_g_band] +=  (blk_geom->bwidth*blk_geom->bheight);
+                     }else if (count_non_zero_coeffs >= ((total_samples * 8) / 20)) {
+                         part_cnt[blk_geom->depth][part_to_shape[context_ptr->md_blk_arr_nsq[blk_index].part]][8][sse_g_band] +=  (blk_geom->bwidth*blk_geom->bheight);
+                     }else if (count_non_zero_coeffs >= ((total_samples * 6) / 20)) {
+                         part_cnt[blk_geom->depth][part_to_shape[context_ptr->md_blk_arr_nsq[blk_index].part]][6][sse_g_band] +=  (blk_geom->bwidth*blk_geom->bheight);
+                     }else if (count_non_zero_coeffs >= ((total_samples * 4) / 20)) {
+                         part_cnt[blk_geom->depth][part_to_shape[context_ptr->md_blk_arr_nsq[blk_index].part]][4][sse_g_band] +=  (blk_geom->bwidth*blk_geom->bheight);
+                     }else if (count_non_zero_coeffs >= ((total_samples * 2) / 20)) {
+                        part_cnt[blk_geom->depth][part_to_shape[context_ptr->md_blk_arr_nsq[blk_index].part]][2][sse_g_band] +=  (blk_geom->bwidth*blk_geom->bheight);
+                     }
+                     else {
+                        part_cnt[blk_geom->depth][part_to_shape[context_ptr->md_blk_arr_nsq[blk_index].part]][0][sse_g_band] +=  (blk_geom->bwidth*blk_geom->bheight);
+                     } 
+#else
                     if (count_non_zero_coeffs >= ((total_samples * 18) / 20)) {
                          part_cnt[blk_geom->depth][part_to_shape[context_ptr->md_blk_arr_nsq[blk_index].part]][18] +=  (blk_geom->bwidth*blk_geom->bheight);
                          
@@ -5810,6 +5863,7 @@ void generate_statistics(
                      else {
                         part_cnt[blk_geom->depth][part_to_shape[context_ptr->md_blk_arr_nsq[blk_index].part]][0] +=  (blk_geom->bwidth*blk_geom->bheight);
                      } 
+#endif
                 }
             }
         }
@@ -5818,6 +5872,17 @@ void generate_statistics(
             ns_depth_offset[scs_ptr->seq_header.sb_size == BLOCK_128X128][blk_geom->depth];
     }
   
+#if SSE_BASED_SPLITTING
+    for (depthidx = 0; depthidx < 6; depthidx++) {
+        for (partidx = 0; partidx < 10; partidx++) {
+            for (band = 0; band < 20; band++) {
+                for (sse_idx = 0; sse_idx < 13; sse_idx++) {
+                    context_ptr->part_cnt[depthidx][partidx][band][sse_idx] += part_cnt[depthidx][partidx][band][sse_idx];
+                }
+            }
+        }
+    }
+#else
    for (depthidx = 0; depthidx < 6; depthidx++) {
         for (partidx = 0; partidx < 10; partidx++) {
             for (band = 0; band < 20; band++) {
@@ -5825,6 +5890,7 @@ void generate_statistics(
             }
         }
     }
+#endif
 #if 0
     //Depth 0
     for (band = 0; band < 20; band += 2) {
@@ -6909,6 +6975,18 @@ void *enc_dec_kernel(void *input_ptr) {
         sb_row_index_start = sb_row_index_count = 0;
         context_ptr->tot_intra_coded_area       = 0;
 #if GEN_STAT
+#if SSE_BASED_SPLITTING
+    uint8_t band,depthidx,partidx,sse_idx;
+    for (depthidx = 0; depthidx < 6; depthidx++) {
+        for (partidx = 0; partidx < 10; partidx++) {
+            for (band = 0; band < 20; band+=2) {
+                for (sse_idx = 0; sse_idx < 13; sse_idx++) {
+                     context_ptr->md_context->part_cnt[depthidx][partidx][band][sse_idx] = 0;
+                }
+            }
+        }
+    }
+#else
     uint8_t band,depthidx,partidx;
     // init stat
     for (depthidx = 0; depthidx < 6; depthidx++) {
@@ -6918,6 +6996,7 @@ void *enc_dec_kernel(void *input_ptr) {
             }
         }
     }
+#endif
 #endif
 #if REDUCE_COMPLEX_CLIP_CYCLES
         context_ptr->tot_coef_coded_area = 0;
@@ -7409,6 +7488,17 @@ void *enc_dec_kernel(void *input_ptr) {
 #if GEN_STAT
         //uint8_t band,depthidx,partidx;
         // init stat
+#if SSE_BASED_SPLITTING
+    for (depthidx = 0; depthidx < 6; depthidx++) {
+        for (partidx = 0; partidx < 10; partidx++) {
+            for (band = 0; band < 20; band+=2) {
+                for (sse_idx = 0; sse_idx < 13; sse_idx++) {
+                     pcs_ptr->part_cnt[depthidx][partidx][band][sse_idx] += context_ptr->md_context->part_cnt[depthidx][partidx][band][sse_idx];
+                }
+            }
+        }
+    }
+#else
         for (depthidx = 0; depthidx < 6; depthidx++) {
             for (partidx = 0; partidx < 10; partidx++) {
                 for (band = 0; band < 20; band++) {
@@ -7416,6 +7506,7 @@ void *enc_dec_kernel(void *input_ptr) {
                 }
             }
         }
+#endif
 #endif
         pcs_ptr->enc_dec_coded_sb_count += (uint32_t)context_ptr->coded_sb_count;
         last_sb_flag = (pcs_ptr->sb_total_count_pix == pcs_ptr->enc_dec_coded_sb_count);

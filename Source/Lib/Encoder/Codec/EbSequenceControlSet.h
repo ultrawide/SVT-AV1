@@ -201,7 +201,11 @@ typedef struct SequenceControlSet {
     uint32_t rest_process_init_count;
     uint32_t total_process_init_count;
 #if GEN_STAT
+#if SSE_BASED_SPLITTING
+    uint32_t part_cnt[6][10][20][13];
+#else
     uint32_t part_cnt[6][10][20];
+#endif
 #endif
 } SequenceControlSet;
 

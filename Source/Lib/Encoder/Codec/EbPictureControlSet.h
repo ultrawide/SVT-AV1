@@ -406,7 +406,11 @@ typedef struct PictureControlSet {
     int32_t *                       rst_tmpbuf;
 #endif
 #if GEN_STAT
+#if SSE_BASED_SPLITTING
+    uint32_t part_cnt[6][10][20][13];
+#else
     uint32_t part_cnt[6][10][20];
+#endif
 #endif
 } PictureControlSet;
 
