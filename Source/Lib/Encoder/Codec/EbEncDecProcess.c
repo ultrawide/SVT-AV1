@@ -5453,6 +5453,35 @@ static void build_cand_block_array(SequenceControlSet *scs_ptr, PictureControlSe
                 tot_d1_blocks = MIN(17, tot_d1_blocks);
 #endif
 
+
+
+
+#if NO_V4 
+            tot_d1_blocks = MIN(21, tot_d1_blocks);
+#endif
+#if NO_H4  
+            tot_d1_blocks = MIN(17, tot_d1_blocks);
+#endif
+#if NO_VB 
+            tot_d1_blocks = MIN(14, tot_d1_blocks);
+#endif
+#if NO_VA 
+            tot_d1_blocks = MIN(11, tot_d1_blocks);
+#endif
+#if NO_HB 
+            tot_d1_blocks = MIN(8, tot_d1_blocks);
+#endif
+#if NO_HA
+            tot_d1_blocks = MIN(5, tot_d1_blocks);
+#endif
+#if NO_V 
+            tot_d1_blocks = MIN(3, tot_d1_blocks);
+#endif
+#if NO_H 
+            tot_d1_blocks = MIN(1, tot_d1_blocks);
+#endif
+
+
             d1_blocks_accumlated = 0;
             for (d1_block_idx = 0; d1_block_idx < tot_d1_blocks; d1_block_idx++)
                 d1_blocks_accumlated +=

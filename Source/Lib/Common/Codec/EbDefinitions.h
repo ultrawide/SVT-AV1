@@ -398,6 +398,19 @@ extern "C" {
 #define GRADIAN_STAT                0
 
 #define SHUT_NSQ_REDUCTION_FEATURES 0 // Shut nsq-targeted complexity features
+
+#define NSQ_NOISE  0
+#define NOISE_PERC 0 // 0: OFF   5=0.5%  10=1%  20=2%
+
+#define NO_V4  0
+#define NO_H4  0
+#define NO_VB  0
+#define NO_VA  0
+#define NO_HB  0
+#define NO_HA  0
+#define NO_V   0
+#define NO_H   0
+
 #endif
 // END  SVT_01 /////////////////////////////////////////////////////////
 #define COMMON_16BIT 1 // 16Bit pipeline support for common
