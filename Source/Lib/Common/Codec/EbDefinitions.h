@@ -388,6 +388,7 @@ extern "C" {
 
 #define DISALLOW_NSQ                0
 #define DISALLOW_SQ_WEIGHT          0
+#define DISALLOW_SQ_WEIGHT_FOR_NON_CYCLE 0
 #define SSE_BASED_SPLITTING         0 // Decide on the H/V splitting based on the SSE of the base block
 #define SSE_BASED_SPLIT_TH          0 // TH%
 #define NSQ_STAT                    0 

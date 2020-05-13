@@ -3439,7 +3439,9 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
             else
                 context_ptr->sq_weight =
                 sequence_control_set_ptr->static_config.sq_weight - 5;
-
+#if DISALLOW_SQ_WEIGHT_FOR_NON_CYCLE
+    context_ptr->sq_weight = (uint32_t)~0;
+#endif
 #if NEW_CYCLE_ALLOCATION
     if (context_ptr->enable_area_based_cycles_allocation) {
         if (context_ptr->sb_class == LOW_COMPLEX_CLASS)
