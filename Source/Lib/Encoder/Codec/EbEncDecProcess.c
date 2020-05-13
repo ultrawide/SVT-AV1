@@ -1729,6 +1729,11 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
 #endif
 #endif
 #endif
+
+#if SHUT_NSQ_REDUCTION_FEATURES
+    if (pd_pass == PD_PASS_2)
+        context_ptr->coeffcients_area_based_cycles_allocation_level = 0;
+#endif
     // Tx_search Level                                Settings
     // 0                                              OFF
     // 1                                              Tx search at encdec
@@ -3439,6 +3444,11 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
             else
                 context_ptr->sq_weight =
                 sequence_control_set_ptr->static_config.sq_weight - 5;
+
+#if SHUT_NSQ_REDUCTION_FEATURES
+    if (pd_pass == PD_PASS_2)
+        context_ptr->sq_weight = (uint32_t)~0;
+#endif
 #if DISALLOW_SQ_WEIGHT_FOR_NON_CYCLE
     context_ptr->sq_weight = (uint32_t)~0;
 #endif
@@ -3598,7 +3608,10 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
 #else
         context_ptr->coeff_based_nsq_cand_reduction = EB_TRUE;
 #endif
-
+#if SHUT_NSQ_REDUCTION_FEATURES
+    if (pd_pass == PD_PASS_2)
+        context_ptr->coeff_based_nsq_cand_reduction = EB_FALSE;
+#endif
     // Set pic_obmc_mode @ MD
     if (pd_pass == PD_PASS_0)
         context_ptr->md_pic_obmc_mode = 0;

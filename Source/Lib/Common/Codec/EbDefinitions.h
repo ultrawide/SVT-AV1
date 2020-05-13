@@ -397,6 +397,7 @@ extern "C" {
 #define MIXED_STAT_SSE_V2           0
 #define GRADIAN_STAT                0
 
+#define SHUT_NSQ_REDUCTION_FEATURES 0 // Shut nsq-targeted complexity features
 #endif
 // END  SVT_01 /////////////////////////////////////////////////////////
 #define COMMON_16BIT 1 // 16Bit pipeline support for common

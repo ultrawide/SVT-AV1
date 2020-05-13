@@ -788,6 +788,11 @@ EbErrorType signal_derivation_me_kernel_oq(
     else
         context_ptr->me_context_ptr->inherit_rec_mv_from_sq_block = 2;
 #endif
+
+#if SHUT_NSQ_REDUCTION_FEATURES
+    context_ptr->me_context_ptr->inherit_rec_mv_from_sq_block = 0;
+#endif
+
 #if ME_HME_PRUNING_CLEANUP
 
     // Set hme/me based reference pruning level (0-4)
