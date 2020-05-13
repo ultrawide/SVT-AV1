@@ -140,6 +140,9 @@ typedef struct MdBlkStruct {
 #if NSQ_STAT
     int8_t block_type;
 #endif
+#if GRADIAN_STAT
+    uint8_t sse_gradian_band[10];
+#endif
 } MdBlkStruct;
 
 struct ModeDecisionCandidate;

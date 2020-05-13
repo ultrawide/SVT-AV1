@@ -394,6 +394,7 @@ extern "C" {
 #define STAT_TH                     0 // TH%
 #define STAT_TABLE_IDX              0 // 1: Overall 2: Resolution dependent 3: 240pL
 #define MIXED_STAT_SSE_V2           0
+#define GRADIAN_STAT                0
 
 #endif
 // END  SVT_01 /////////////////////////////////////////////////////////
