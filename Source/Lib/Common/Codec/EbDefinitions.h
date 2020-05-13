@@ -369,7 +369,7 @@ extern "C" {
 #define PD1_MX                      0
 
 #define MIXED_STAT_SSE_V2           1
-#define SSE_BASED_SPLITTING         1
+#define SSE_BASED_SPLITTING         0
 #define DEPTH_STATISTICS            1
 #define GEN_STAT                    1
 #define NEW_CASE                    0
@@ -379,7 +379,8 @@ extern "C" {
 #define TCB1                 0
 #define TCB2                 0
 #endif
-#define NEW_DEPTH_M8               0
+#define NEW_DEPTH_M8                0
+#define SHUT_NSQ_REDUCTION_FEATURES 1 // Shut nsq-targeted complexity features
 #endif
 // END  SVT_01 /////////////////////////////////////////////////////////
 #define COMMON_16BIT 1 // 16Bit pipeline support for common

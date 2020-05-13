@@ -1698,6 +1698,10 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
 #endif
 #endif
 #endif
+#if SHUT_NSQ_REDUCTION_FEATURES
+    if (pd_pass == PD_PASS_2)
+        context_ptr->coeffcients_area_based_cycles_allocation_level = 0;
+#endif
     // Tx_search Level                                Settings
     // 0                                              OFF
     // 1                                              Tx search at encdec
@@ -3441,7 +3445,10 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
 #if GEN_STAT
     context_ptr->sq_weight = (uint32_t)~0;
 #endif
-
+#if SHUT_NSQ_REDUCTION_FEATURES
+    if (pd_pass == PD_PASS_2)
+        context_ptr->sq_weight = (uint32_t)~0;
+#endif
     // nsq_hv_level  needs sq_weight to be ON
     // 0: OFF
     // 1: ON 10% + skip HA/HB/H4  or skip VA/VB/V4
@@ -3587,7 +3594,10 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
 #else
         context_ptr->coeff_based_nsq_cand_reduction = EB_TRUE;
 #endif
-
+#if SHUT_NSQ_REDUCTION_FEATURES
+    if (pd_pass == PD_PASS_2)
+        context_ptr->coeff_based_nsq_cand_reduction = EB_FALSE;
+#endif
     // Set pic_obmc_mode @ MD
     if (pd_pass == PD_PASS_0)
         context_ptr->md_pic_obmc_mode = 0;
@@ -5816,48 +5826,51 @@ void generate_statistics(
 #if SSE_BASED_SPLITTING
                     uint8_t part_idx = part_to_shape[context_ptr->md_blk_arr_nsq[blk_index].part];
                     uint8_t sse_g_band = context_ptr->md_local_blk_unit[blk_geom->sqi_mds].sse_gradian_band[part_idx];
-                     if (count_non_zero_coeffs >= ((total_samples * 18) / 20)) {
+                    uint64_t band_width = (blk_geom->depth == 0) ? 100 : (blk_geom->depth == 1) ? 50 : 20;
+
+                     if (count_non_zero_coeffs >= ((total_samples * 18) / band_width)) {
                          part_cnt[blk_geom->depth][part_to_shape[context_ptr->md_blk_arr_nsq[blk_index].part]][18][sse_g_band] +=  (blk_geom->bwidth*blk_geom->bheight);
                          
-                    }else if (count_non_zero_coeffs >= ((total_samples * 16) / 20)) {
+                    }else if (count_non_zero_coeffs >= ((total_samples * 16) / band_width)) {
                         part_cnt[blk_geom->depth][part_to_shape[context_ptr->md_blk_arr_nsq[blk_index].part]][16][sse_g_band] +=  (blk_geom->bwidth*blk_geom->bheight);
-                    }else if (count_non_zero_coeffs >= ((total_samples * 14) / 20)) {
+                    }else if (count_non_zero_coeffs >= ((total_samples * 14) / band_width)) {
                          part_cnt[blk_geom->depth][part_to_shape[context_ptr->md_blk_arr_nsq[blk_index].part]][14][sse_g_band] +=  (blk_geom->bwidth*blk_geom->bheight);
-                     }else if (count_non_zero_coeffs >= ((total_samples * 12) / 20)) {
+                     }else if (count_non_zero_coeffs >= ((total_samples * 12) / band_width)) {
                         part_cnt[blk_geom->depth][part_to_shape[context_ptr->md_blk_arr_nsq[blk_index].part]][12][sse_g_band] +=  (blk_geom->bwidth*blk_geom->bheight);
-                     }else if (count_non_zero_coeffs >= ((total_samples * 10) / 20)) {
+                     }else if (count_non_zero_coeffs >= ((total_samples * 10) / band_width)) {
                          part_cnt[blk_geom->depth][part_to_shape[context_ptr->md_blk_arr_nsq[blk_index].part]][10][sse_g_band] +=  (blk_geom->bwidth*blk_geom->bheight);
-                     }else if (count_non_zero_coeffs >= ((total_samples * 8) / 20)) {
+                     }else if (count_non_zero_coeffs >= ((total_samples * 8) / band_width)) {
                          part_cnt[blk_geom->depth][part_to_shape[context_ptr->md_blk_arr_nsq[blk_index].part]][8][sse_g_band] +=  (blk_geom->bwidth*blk_geom->bheight);
-                     }else if (count_non_zero_coeffs >= ((total_samples * 6) / 20)) {
+                     }else if (count_non_zero_coeffs >= ((total_samples * 6) / band_width)) {
                          part_cnt[blk_geom->depth][part_to_shape[context_ptr->md_blk_arr_nsq[blk_index].part]][6][sse_g_band] +=  (blk_geom->bwidth*blk_geom->bheight);
-                     }else if (count_non_zero_coeffs >= ((total_samples * 4) / 20)) {
+                     }else if (count_non_zero_coeffs >= ((total_samples * 4) / band_width)) {
                          part_cnt[blk_geom->depth][part_to_shape[context_ptr->md_blk_arr_nsq[blk_index].part]][4][sse_g_band] +=  (blk_geom->bwidth*blk_geom->bheight);
-                     }else if (count_non_zero_coeffs >= ((total_samples * 2) / 20)) {
+                     }else if (count_non_zero_coeffs >= ((total_samples * 2) / band_width)) {
                         part_cnt[blk_geom->depth][part_to_shape[context_ptr->md_blk_arr_nsq[blk_index].part]][2][sse_g_band] +=  (blk_geom->bwidth*blk_geom->bheight);
                      }
                      else {
                         part_cnt[blk_geom->depth][part_to_shape[context_ptr->md_blk_arr_nsq[blk_index].part]][0][sse_g_band] +=  (blk_geom->bwidth*blk_geom->bheight);
                      } 
 #else
-                    if (count_non_zero_coeffs >= ((total_samples * 18) / 20)) {
+                    uint64_t band_width = (blk_geom->depth == 0) ? 100 : (blk_geom->depth == 1) ? 50 : 20;
+                    if (count_non_zero_coeffs >= ((total_samples * 18) / band_width)) {
                          part_cnt[blk_geom->depth][part_to_shape[context_ptr->md_blk_arr_nsq[blk_index].part]][18] +=  (blk_geom->bwidth*blk_geom->bheight);
                          
-                    }else if (count_non_zero_coeffs >= ((total_samples * 16) / 20)) {
+                    }else if (count_non_zero_coeffs >= ((total_samples * 16) / band_width)) {
                         part_cnt[blk_geom->depth][part_to_shape[context_ptr->md_blk_arr_nsq[blk_index].part]][16] +=  (blk_geom->bwidth*blk_geom->bheight);
-                    }else if (count_non_zero_coeffs >= ((total_samples * 14) / 20)) {
+                    }else if (count_non_zero_coeffs >= ((total_samples * 14) / band_width)) {
                          part_cnt[blk_geom->depth][part_to_shape[context_ptr->md_blk_arr_nsq[blk_index].part]][14] +=  (blk_geom->bwidth*blk_geom->bheight);
-                     }else if (count_non_zero_coeffs >= ((total_samples * 12) / 20)) {
+                     }else if (count_non_zero_coeffs >= ((total_samples * 12) / band_width)) {
                         part_cnt[blk_geom->depth][part_to_shape[context_ptr->md_blk_arr_nsq[blk_index].part]][12] +=  (blk_geom->bwidth*blk_geom->bheight);
-                     }else if (count_non_zero_coeffs >= ((total_samples * 10) / 20)) {
+                     }else if (count_non_zero_coeffs >= ((total_samples * 10) / band_width)) {
                          part_cnt[blk_geom->depth][part_to_shape[context_ptr->md_blk_arr_nsq[blk_index].part]][10] +=  (blk_geom->bwidth*blk_geom->bheight);
-                     }else if (count_non_zero_coeffs >= ((total_samples * 8) / 20)) {
+                     }else if (count_non_zero_coeffs >= ((total_samples * 8) / band_width)) {
                          part_cnt[blk_geom->depth][part_to_shape[context_ptr->md_blk_arr_nsq[blk_index].part]][8] +=  (blk_geom->bwidth*blk_geom->bheight);
-                     }else if (count_non_zero_coeffs >= ((total_samples * 6) / 20)) {
+                     }else if (count_non_zero_coeffs >= ((total_samples * 6) / band_width)) {
                          part_cnt[blk_geom->depth][part_to_shape[context_ptr->md_blk_arr_nsq[blk_index].part]][6] +=  (blk_geom->bwidth*blk_geom->bheight);
-                     }else if (count_non_zero_coeffs >= ((total_samples * 4) / 20)) {
+                     }else if (count_non_zero_coeffs >= ((total_samples * 4) / band_width)) {
                          part_cnt[blk_geom->depth][part_to_shape[context_ptr->md_blk_arr_nsq[blk_index].part]][4] +=  (blk_geom->bwidth*blk_geom->bheight);
-                     }else if (count_non_zero_coeffs >= ((total_samples * 2) / 20)) {
+                     }else if (count_non_zero_coeffs >= ((total_samples * 2) / band_width)) {
                         part_cnt[blk_geom->depth][part_to_shape[context_ptr->md_blk_arr_nsq[blk_index].part]][2] +=  (blk_geom->bwidth*blk_geom->bheight);
                      }
                      else {
