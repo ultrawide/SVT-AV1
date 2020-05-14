@@ -12886,7 +12886,13 @@ EB_EXTERN EbErrorType mode_decision_sb(SequenceControlSet *scs_ptr, PictureContr
                         } else if (STAT_TABLE_IDX == 3) {
                             if (allowed_part_weight_240pL[context_ptr->blk_geom->depth][context_ptr->blk_geom->shape][band_idx] < STAT_TH)
                                 skip_nsq = 1;
+                        } 
+#if ADAPTIVE_NSQ_CYCLES_REDUCTION
+                        else if (STAT_TABLE_IDX == 4) {
+                            if(scs_ptr->allowed_part_prob[context_ptr->blk_geom->depth][context_ptr->blk_geom->shape][band_idx] < STAT_TH)
+                                skip_nsq = 1;
                         }
+#endif
 #endif
 #endif
 

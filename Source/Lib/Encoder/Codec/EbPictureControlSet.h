@@ -408,6 +408,9 @@ typedef struct PictureControlSet {
     // pointer to a scratch buffer used by self-guided restoration
     int32_t *                       rst_tmpbuf;
 #endif
+#if ADAPTIVE_NSQ_CYCLES_REDUCTION
+    uint32_t part_cnt[6][10][10];
+#endif
 } PictureControlSet;
 
 // To optimize based on the max input size

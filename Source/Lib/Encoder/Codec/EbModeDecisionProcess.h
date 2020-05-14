@@ -634,6 +634,9 @@ typedef struct ModeDecisionContext {
 #if SSE_BASED_SPLITTING
     uint8_t mark_part_to_process[NUMBER_OF_SHAPES];
 #endif
+#if ADAPTIVE_NSQ_CYCLES_REDUCTION
+    uint32_t part_cnt[6][10][10];
+#endif
 } ModeDecisionContext;
 
 typedef void (*EbAv1LambdaAssignFunc)(uint32_t *fast_lambda, uint32_t *full_lambda,

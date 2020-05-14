@@ -398,6 +398,7 @@ extern "C" {
 #define GRADIAN_STAT                0
 
 #define SHUT_NSQ_REDUCTION_FEATURES 0 // Shut nsq-targeted complexity features
+#define ADAPTIVE_NSQ_CYCLES_REDUCTION 0 
 
 #define NSQ_NOISE  0
 #define NOISE_PERC 0 // 0: OFF   5=0.5%  10=1%  20=2%

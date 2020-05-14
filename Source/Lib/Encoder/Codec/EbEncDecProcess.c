@@ -1306,6 +1306,28 @@ void copy_statistics_to_ref_obj_ect(PictureControlSet *pcs_ptr, SequenceControlS
         (100 * pcs_ptr->below32_coded_area) /
         (pcs_ptr->parent_pcs_ptr->aligned_width * pcs_ptr->parent_pcs_ptr->aligned_height);
 #endif
+#if ADAPTIVE_NSQ_CYCLES_REDUCTION
+    uint8_t band,depthidx,partidx;
+    uint64_t sum_per_depth_and_band[6][10];
+    for (depthidx = 0; depthidx < 6; depthidx++) {
+        for (partidx = 0; partidx < 10; partidx++) {
+            for (band = 0; band < 10; band++) {
+                scs_ptr->part_cnt[depthidx][partidx][band] = (scs_ptr->part_cnt[depthidx][partidx][band] + pcs_ptr->part_cnt[depthidx][partidx][band])/2;
+                
+                sum_per_depth_and_band[depthidx][band] += scs_ptr->part_cnt[depthidx][partidx][band];
+                    
+            }
+        }
+    }
+    for (depthidx = 0; depthidx < 6; depthidx++) {
+        for (partidx = 0; partidx < 10; partidx++) {
+            for (band = 0; band < 10; band++) {
+                scs_ptr->allowed_part_prob[depthidx][partidx][band] = scs_ptr->part_cnt[depthidx][partidx][band]/sum_per_depth_and_band[depthidx][band];
+                    
+            }
+        }
+    }
+#endif
     if (pcs_ptr->slice_type == I_SLICE) pcs_ptr->intra_coded_area = 0;
 #if REDUCE_COMPLEX_CLIP_CYCLES
     if (pcs_ptr->slice_type == I_SLICE) pcs_ptr->coef_coded_area = 0;
@@ -5792,6 +5814,95 @@ static uint64_t generate_best_part_cost(
     return best_part_cost;
 }
 
+#if ADAPTIVE_NSQ_CYCLES_REDUCTION
+Part part_to_shape[10] = {
+    PART_N,
+    PART_H,
+    PART_V,
+    PART_S,
+    PART_HA,
+    PART_HB,
+    PART_VA,
+    PART_VB,
+    PART_H4,
+    PART_V4
+};
+void update_nsq_cycle_reduction_prob(
+    SequenceControlSet  *scs_ptr,
+    PictureControlSet   *pcs_ptr,
+    ModeDecisionContext *context_ptr,
+    uint32_t             sb_index) {
+    uint32_t blk_index = 0;
+    uint32_t total_samples = 0;
+    uint32_t count_non_zero_coeffs = 0;
+
+    uint32_t m1_count[20] = { 0 };
+    uint32_t p_count[20] = { 0 };
+    uint32_t p1_count[20] = { 0 };
+    uint32_t part_cnt[6][10][20];
+    uint8_t band,depthidx,partidx;
+    // init stat
+    for (depthidx = 0; depthidx < 6; depthidx++) {
+        for (partidx = 0; partidx < 10; partidx++) {
+            for (band = 0; band < 20; band++) {
+                part_cnt[depthidx][partidx][band] = 0;
+            }
+        }
+    }
+    SbClassControls *sb_class_ctrls = &context_ptr->sb_class_ctrls;
+    EbBool split_flag;
+    while (blk_index < scs_ptr->max_block_cnt) {
+        const BlockGeom * blk_geom = get_blk_geom_mds(blk_index);
+        uint8_t is_blk_allowed = pcs_ptr->slice_type != I_SLICE ? 1 :
+            (blk_geom->sq_size < 128) ? 1 : 0;
+        split_flag = context_ptr->md_blk_arr_nsq[blk_index].split_flag;
+        if (scs_ptr->sb_geom[sb_index].block_is_inside_md_scan[blk_index] &&
+            is_blk_allowed) {
+            if (blk_geom->shape == PART_N) {
+                if (context_ptr->md_blk_arr_nsq[blk_index].split_flag == EB_FALSE) {
+                    count_non_zero_coeffs = context_ptr->md_local_blk_unit[blk_index].count_non_zero_coeffs;
+                    total_samples = (blk_geom->bwidth*blk_geom->bheight);
+                    uint64_t band_width = (blk_geom->depth == 0) ? 100 : (blk_geom->depth == 1) ? 50 : 20;
+                    if (count_non_zero_coeffs >= ((total_samples * 18) / band_width)) {
+                         part_cnt[blk_geom->depth][part_to_shape[context_ptr->md_blk_arr_nsq[blk_index].part]][9] +=  (blk_geom->bwidth*blk_geom->bheight);
+                         
+                    }else if (count_non_zero_coeffs >= ((total_samples * 16) / band_width)) {
+                        part_cnt[blk_geom->depth][part_to_shape[context_ptr->md_blk_arr_nsq[blk_index].part]][8] +=  (blk_geom->bwidth*blk_geom->bheight);
+                    }else if (count_non_zero_coeffs >= ((total_samples * 14) / band_width)) {
+                         part_cnt[blk_geom->depth][part_to_shape[context_ptr->md_blk_arr_nsq[blk_index].part]][7] +=  (blk_geom->bwidth*blk_geom->bheight);
+                     }else if (count_non_zero_coeffs >= ((total_samples * 12) / band_width)) {
+                        part_cnt[blk_geom->depth][part_to_shape[context_ptr->md_blk_arr_nsq[blk_index].part]][6] +=  (blk_geom->bwidth*blk_geom->bheight);
+                     }else if (count_non_zero_coeffs >= ((total_samples * 10) / band_width)) {
+                         part_cnt[blk_geom->depth][part_to_shape[context_ptr->md_blk_arr_nsq[blk_index].part]][5] +=  (blk_geom->bwidth*blk_geom->bheight);
+                     }else if (count_non_zero_coeffs >= ((total_samples * 8) / band_width)) {
+                         part_cnt[blk_geom->depth][part_to_shape[context_ptr->md_blk_arr_nsq[blk_index].part]][4] +=  (blk_geom->bwidth*blk_geom->bheight);
+                     }else if (count_non_zero_coeffs >= ((total_samples * 6) / band_width)) {
+                         part_cnt[blk_geom->depth][part_to_shape[context_ptr->md_blk_arr_nsq[blk_index].part]][3] +=  (blk_geom->bwidth*blk_geom->bheight);
+                     }else if (count_non_zero_coeffs >= ((total_samples * 4) / band_width)) {
+                         part_cnt[blk_geom->depth][part_to_shape[context_ptr->md_blk_arr_nsq[blk_index].part]][2] +=  (blk_geom->bwidth*blk_geom->bheight);
+                     }else if (count_non_zero_coeffs >= ((total_samples * 2) / band_width)) {
+                        part_cnt[blk_geom->depth][part_to_shape[context_ptr->md_blk_arr_nsq[blk_index].part]][1] +=  (blk_geom->bwidth*blk_geom->bheight);
+                     }
+                     else {
+                        part_cnt[blk_geom->depth][part_to_shape[context_ptr->md_blk_arr_nsq[blk_index].part]][0] +=  (blk_geom->bwidth*blk_geom->bheight);
+                     } 
+                }
+            }
+        }
+        blk_index += split_flag ?
+            d1_depth_offset[scs_ptr->seq_header.sb_size == BLOCK_128X128][blk_geom->depth] :
+            ns_depth_offset[scs_ptr->seq_header.sb_size == BLOCK_128X128][blk_geom->depth];
+    }
+  
+   for (depthidx = 0; depthidx < 6; depthidx++) {
+        for (partidx = 0; partidx < 10; partidx++) {
+            for (band = 0; band < 10; band++) {
+                context_ptr->part_cnt[depthidx][partidx][band] += part_cnt[depthidx][partidx][band];
+            }
+        }
+    }
+}
+#endif
 #if SB_CLASSIFIER
 static uint8_t determine_sb_class(
     SequenceControlSet  *scs_ptr,
@@ -6641,7 +6752,17 @@ void *enc_dec_kernel(void *input_ptr) {
         end_of_row_flag    = EB_FALSE;
         sb_row_index_start = sb_row_index_count = 0;
         context_ptr->tot_intra_coded_area       = 0;
-
+#if ADAPTIVE_NSQ_CYCLES_REDUCTION
+    uint8_t band,depthidx,partidx;
+    // init stat
+    for (depthidx = 0; depthidx < 6; depthidx++) {
+        for (partidx = 0; partidx < 10; partidx++) {
+            for (band = 0; band < 10; band++) {
+                context_ptr->md_context->part_cnt[depthidx][partidx][band] = 0;
+            }
+        }
+    }
+#endif
 #if REDUCE_COMPLEX_CLIP_CYCLES
         context_ptr->tot_coef_coded_area = 0;
         context_ptr->tot_below32_coded_area = 0;
@@ -7094,6 +7215,9 @@ void *enc_dec_kernel(void *input_ptr) {
                                      sb_origin_y,
                                      sb_index,
                                      context_ptr->md_context);
+#if ADAPTIVE_NSQ_CYCLES_REDUCTION
+                    update_nsq_cycle_reduction_prob(scs_ptr, pcs_ptr, context_ptr->md_context, sb_index);
+#endif
 
                     //Jing: Skip configure SB for encdec
                     //      Currently EDcontext only stores frame_level lambda/qp
@@ -7133,6 +7257,16 @@ void *enc_dec_kernel(void *input_ptr) {
 #if REDUCE_COMPLEX_CLIP_CYCLES
         pcs_ptr->coef_coded_area += (uint32_t)context_ptr->tot_coef_coded_area;
         pcs_ptr->below32_coded_area += (uint32_t)context_ptr->tot_below32_coded_area;
+#endif
+#if ADAPTIVE_NSQ_CYCLES_REDUCTION
+
+        for (depthidx = 0; depthidx < 6; depthidx++) {
+            for (partidx = 0; partidx < 10; partidx++) {
+                for (band = 0; band < 10; band++) {
+                    pcs_ptr->part_cnt[depthidx][partidx][band] += context_ptr->md_context->part_cnt[depthidx][partidx][band];    
+                }
+            }
+        }
 #endif
         pcs_ptr->enc_dec_coded_sb_count += (uint32_t)context_ptr->coded_sb_count;
         last_sb_flag = (pcs_ptr->sb_total_count_pix == pcs_ptr->enc_dec_coded_sb_count);
