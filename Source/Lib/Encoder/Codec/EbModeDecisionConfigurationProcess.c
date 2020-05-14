@@ -1772,9 +1772,9 @@ void *mode_decision_configuration_kernel(void *input_ptr) {
 #if ADAPTIVE_NSQ_CYCLES_REDUCTION
         uint8_t band,depthidx,partidx;
         // init stat
-        for (depthidx = 0; depthidx < 6; depthidx++) {
-            for (partidx = 0; partidx < 10; partidx++) {
-                for (band = 0; band < 10; band++) {
+        for (depthidx = 0; depthidx < DEPTH_NUM; depthidx++) {
+            for (partidx = 0; partidx < PART_NUM; partidx++) {
+                for (band = 0; band < COEFF_BAND_NUM; band++) {
                     pcs_ptr->part_cnt[depthidx][partidx][band] = 0;
                 }
             }

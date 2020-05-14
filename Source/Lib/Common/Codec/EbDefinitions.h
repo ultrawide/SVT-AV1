@@ -400,6 +400,9 @@ extern "C" {
 #define NEW_TABLE                   0
 #define NEW_TABLE_MERGED            0
 #define ADAPTIVE_NSQ_CYCLES_REDUCTION 0 
+#define COEFF_BAND_NUM 10
+#define PART_NUM 9
+#define DEPTH_NUM 6
 
 #define NSQ_NOISE  0
 #define NOISE_PERC 0 // 0: OFF   5=0.5%  10=1%  20=2%

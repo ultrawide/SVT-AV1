@@ -201,8 +201,8 @@ typedef struct SequenceControlSet {
     uint32_t rest_process_init_count;
     uint32_t total_process_init_count;
 #if ADAPTIVE_NSQ_CYCLES_REDUCTION
-    uint32_t part_cnt[6][10][10];
-    uint32_t allowed_part_prob[6][10][10];
+    uint64_t part_cnt[DEPTH_NUM][PART_NUM][COEFF_BAND_NUM];
+    uint64_t allowed_part_prob[DEPTH_NUM][PART_NUM][COEFF_BAND_NUM];
 #endif
 } SequenceControlSet;
 

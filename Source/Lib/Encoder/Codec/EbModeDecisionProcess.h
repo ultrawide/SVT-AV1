@@ -635,7 +635,7 @@ typedef struct ModeDecisionContext {
     uint8_t mark_part_to_process[NUMBER_OF_SHAPES];
 #endif
 #if ADAPTIVE_NSQ_CYCLES_REDUCTION
-    uint32_t part_cnt[6][10][10];
+    uint64_t part_cnt[DEPTH_NUM][PART_NUM][COEFF_BAND_NUM];
 #endif
 } ModeDecisionContext;
 

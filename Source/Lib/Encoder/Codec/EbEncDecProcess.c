@@ -1308,21 +1308,21 @@ void copy_statistics_to_ref_obj_ect(PictureControlSet *pcs_ptr, SequenceControlS
 #endif
 #if ADAPTIVE_NSQ_CYCLES_REDUCTION
     uint8_t band,depthidx,partidx;
-    uint64_t sum_per_depth_and_band[6][10];
-    for (depthidx = 0; depthidx < 6; depthidx++) {
-        for (partidx = 0; partidx < 10; partidx++) {
-            for (band = 0; band < 10; band++) {
-                scs_ptr->part_cnt[depthidx][partidx][band] = (scs_ptr->part_cnt[depthidx][partidx][band] + pcs_ptr->part_cnt[depthidx][partidx][band])/2;
+    uint64_t sum_per_depth_and_band[DEPTH_NUM][COEFF_BAND_NUM] = { {0},{0} };
+    for (depthidx = 0; depthidx < DEPTH_NUM; depthidx++) {
+        for (partidx = 0; partidx < PART_NUM; partidx++) {
+            for (band = 0; band < COEFF_BAND_NUM; band++) {
+                scs_ptr->part_cnt[depthidx][partidx][band] = (scs_ptr->part_cnt[depthidx][partidx][band] + pcs_ptr->part_cnt[depthidx][partidx][band] + 1)/2;
                 
                 sum_per_depth_and_band[depthidx][band] += scs_ptr->part_cnt[depthidx][partidx][band];
                     
             }
         }
     }
-    for (depthidx = 0; depthidx < 6; depthidx++) {
-        for (partidx = 0; partidx < 10; partidx++) {
-            for (band = 0; band < 10; band++) {
-                scs_ptr->allowed_part_prob[depthidx][partidx][band] = (scs_ptr->part_cnt[depthidx][partidx][band]*100)/sum_per_depth_and_band[depthidx][band];
+    for (depthidx = 0; depthidx < DEPTH_NUM; depthidx++) {
+        for (partidx = 0; partidx < PART_NUM; partidx++) {
+            for (band = 0; band < COEFF_BAND_NUM; band++) {
+                scs_ptr->allowed_part_prob[depthidx][partidx][band] = sum_per_depth_and_band[depthidx][band] ? (scs_ptr->part_cnt[depthidx][partidx][band]*(uint64_t)100)/sum_per_depth_and_band[depthidx][band] : 0;
                     
             }
         }
@@ -5835,16 +5835,12 @@ void update_nsq_cycle_reduction_prob(
     uint32_t blk_index = 0;
     uint32_t total_samples = 0;
     uint32_t count_non_zero_coeffs = 0;
-
-    uint32_t m1_count[20] = { 0 };
-    uint32_t p_count[20] = { 0 };
-    uint32_t p1_count[20] = { 0 };
-    uint32_t part_cnt[6][10][20];
+    uint32_t part_cnt[DEPTH_NUM][PART_NUM][COEFF_BAND_NUM];
     uint8_t band,depthidx,partidx;
     // init stat
-    for (depthidx = 0; depthidx < 6; depthidx++) {
-        for (partidx = 0; partidx < 10; partidx++) {
-            for (band = 0; band < 20; band++) {
+    for (depthidx = 0; depthidx < DEPTH_NUM; depthidx++) {
+        for (partidx = 0; partidx < PART_NUM; partidx++) {
+            for (band = 0; band < COEFF_BAND_NUM; band++) {
                 part_cnt[depthidx][partidx][band] = 0;
             }
         }
@@ -5863,29 +5859,74 @@ void update_nsq_cycle_reduction_prob(
                     count_non_zero_coeffs = context_ptr->md_local_blk_unit[blk_index].count_non_zero_coeffs;
                     total_samples = (blk_geom->bwidth*blk_geom->bheight);
                     uint64_t band_width = (blk_geom->depth == 0) ? 100 : (blk_geom->depth == 1) ? 50 : 20;
-                    if (count_non_zero_coeffs >= ((total_samples * 18) / band_width)) {
-                         part_cnt[blk_geom->depth][part_to_shape[context_ptr->md_blk_arr_nsq[blk_index].part]][9] +=  (blk_geom->bwidth*blk_geom->bheight);
-                         
-                    }else if (count_non_zero_coeffs >= ((total_samples * 16) / band_width)) {
-                        part_cnt[blk_geom->depth][part_to_shape[context_ptr->md_blk_arr_nsq[blk_index].part]][8] +=  (blk_geom->bwidth*blk_geom->bheight);
-                    }else if (count_non_zero_coeffs >= ((total_samples * 14) / band_width)) {
-                         part_cnt[blk_geom->depth][part_to_shape[context_ptr->md_blk_arr_nsq[blk_index].part]][7] +=  (blk_geom->bwidth*blk_geom->bheight);
-                     }else if (count_non_zero_coeffs >= ((total_samples * 12) / band_width)) {
-                        part_cnt[blk_geom->depth][part_to_shape[context_ptr->md_blk_arr_nsq[blk_index].part]][6] +=  (blk_geom->bwidth*blk_geom->bheight);
-                     }else if (count_non_zero_coeffs >= ((total_samples * 10) / band_width)) {
-                         part_cnt[blk_geom->depth][part_to_shape[context_ptr->md_blk_arr_nsq[blk_index].part]][5] +=  (blk_geom->bwidth*blk_geom->bheight);
-                     }else if (count_non_zero_coeffs >= ((total_samples * 8) / band_width)) {
-                         part_cnt[blk_geom->depth][part_to_shape[context_ptr->md_blk_arr_nsq[blk_index].part]][4] +=  (blk_geom->bwidth*blk_geom->bheight);
-                     }else if (count_non_zero_coeffs >= ((total_samples * 6) / band_width)) {
-                         part_cnt[blk_geom->depth][part_to_shape[context_ptr->md_blk_arr_nsq[blk_index].part]][3] +=  (blk_geom->bwidth*blk_geom->bheight);
-                     }else if (count_non_zero_coeffs >= ((total_samples * 4) / band_width)) {
-                         part_cnt[blk_geom->depth][part_to_shape[context_ptr->md_blk_arr_nsq[blk_index].part]][2] +=  (blk_geom->bwidth*blk_geom->bheight);
-                     }else if (count_non_zero_coeffs >= ((total_samples * 2) / band_width)) {
-                        part_cnt[blk_geom->depth][part_to_shape[context_ptr->md_blk_arr_nsq[blk_index].part]][1] +=  (blk_geom->bwidth*blk_geom->bheight);
-                     }
-                     else {
-                        part_cnt[blk_geom->depth][part_to_shape[context_ptr->md_blk_arr_nsq[blk_index].part]][0] +=  (blk_geom->bwidth*blk_geom->bheight);
-                     } 
+                    if (COEFF_BAND_NUM == 3) {
+                        if (blk_geom->depth == 0) {
+                            if (count_non_zero_coeffs >= ((total_samples * 4) / band_width)) {
+                                part_cnt[blk_geom->depth][part_to_shape[context_ptr->md_blk_arr_nsq[blk_index].part]][2] += (blk_geom->bwidth*blk_geom->bheight);
+                            }
+                            else if (count_non_zero_coeffs >= ((total_samples * 2) / band_width)) {
+                                part_cnt[blk_geom->depth][part_to_shape[context_ptr->md_blk_arr_nsq[blk_index].part]][1] += (blk_geom->bwidth*blk_geom->bheight);
+                            }
+                            else {
+                                part_cnt[blk_geom->depth][part_to_shape[context_ptr->md_blk_arr_nsq[blk_index].part]][0] += (blk_geom->bwidth*blk_geom->bheight);
+                            }
+                        }
+                        else if (blk_geom->depth == 1) {
+                            if (count_non_zero_coeffs >= ((total_samples * 6) / band_width)) {
+                                part_cnt[blk_geom->depth][part_to_shape[context_ptr->md_blk_arr_nsq[blk_index].part]][2] += (blk_geom->bwidth*blk_geom->bheight);
+                            }
+                            else if (count_non_zero_coeffs >= ((total_samples * 2) / band_width)) {
+                                part_cnt[blk_geom->depth][part_to_shape[context_ptr->md_blk_arr_nsq[blk_index].part]][1] += (blk_geom->bwidth*blk_geom->bheight);
+                            }
+                            else {
+                                part_cnt[blk_geom->depth][part_to_shape[context_ptr->md_blk_arr_nsq[blk_index].part]][0] += (blk_geom->bwidth*blk_geom->bheight);
+                            }
+                        }
+                        else{
+                            if (count_non_zero_coeffs >= ((total_samples * 18) / band_width)) {
+                                part_cnt[blk_geom->depth][part_to_shape[context_ptr->md_blk_arr_nsq[blk_index].part]][2] += (blk_geom->bwidth*blk_geom->bheight);
+                            }
+                            else if (count_non_zero_coeffs >= ((total_samples * 2) / band_width)) {
+                                part_cnt[blk_geom->depth][part_to_shape[context_ptr->md_blk_arr_nsq[blk_index].part]][1] += (blk_geom->bwidth*blk_geom->bheight);
+                            }
+                            else {
+                                part_cnt[blk_geom->depth][part_to_shape[context_ptr->md_blk_arr_nsq[blk_index].part]][0] += (blk_geom->bwidth*blk_geom->bheight);
+                            }
+                        }       
+                    }
+                    else {
+                        if (count_non_zero_coeffs >= ((total_samples * 18) / band_width)) {
+                            part_cnt[blk_geom->depth][part_to_shape[context_ptr->md_blk_arr_nsq[blk_index].part]][9] += (blk_geom->bwidth*blk_geom->bheight);
+
+                        }
+                        else if (count_non_zero_coeffs >= ((total_samples * 16) / band_width)) {
+                            part_cnt[blk_geom->depth][part_to_shape[context_ptr->md_blk_arr_nsq[blk_index].part]][8] += (blk_geom->bwidth*blk_geom->bheight);
+                        }
+                        else if (count_non_zero_coeffs >= ((total_samples * 14) / band_width)) {
+                            part_cnt[blk_geom->depth][part_to_shape[context_ptr->md_blk_arr_nsq[blk_index].part]][7] += (blk_geom->bwidth*blk_geom->bheight);
+                        }
+                        else if (count_non_zero_coeffs >= ((total_samples * 12) / band_width)) {
+                            part_cnt[blk_geom->depth][part_to_shape[context_ptr->md_blk_arr_nsq[blk_index].part]][6] += (blk_geom->bwidth*blk_geom->bheight);
+                        }
+                        else if (count_non_zero_coeffs >= ((total_samples * 10) / band_width)) {
+                            part_cnt[blk_geom->depth][part_to_shape[context_ptr->md_blk_arr_nsq[blk_index].part]][5] += (blk_geom->bwidth*blk_geom->bheight);
+                        }
+                        else if (count_non_zero_coeffs >= ((total_samples * 8) / band_width)) {
+                            part_cnt[blk_geom->depth][part_to_shape[context_ptr->md_blk_arr_nsq[blk_index].part]][4] += (blk_geom->bwidth*blk_geom->bheight);
+                        }
+                        else if (count_non_zero_coeffs >= ((total_samples * 6) / band_width)) {
+                            part_cnt[blk_geom->depth][part_to_shape[context_ptr->md_blk_arr_nsq[blk_index].part]][3] += (blk_geom->bwidth*blk_geom->bheight);
+                        }
+                        else if (count_non_zero_coeffs >= ((total_samples * 4) / band_width)) {
+                            part_cnt[blk_geom->depth][part_to_shape[context_ptr->md_blk_arr_nsq[blk_index].part]][2] += (blk_geom->bwidth*blk_geom->bheight);
+                        }
+                        else if (count_non_zero_coeffs >= ((total_samples * 2) / band_width)) {
+                            part_cnt[blk_geom->depth][part_to_shape[context_ptr->md_blk_arr_nsq[blk_index].part]][1] += (blk_geom->bwidth*blk_geom->bheight);
+                        }
+                        else {
+                            part_cnt[blk_geom->depth][part_to_shape[context_ptr->md_blk_arr_nsq[blk_index].part]][0] += (blk_geom->bwidth*blk_geom->bheight);
+                        }
+                    }
                 }
             }
         }
@@ -5894,10 +5935,10 @@ void update_nsq_cycle_reduction_prob(
             ns_depth_offset[scs_ptr->seq_header.sb_size == BLOCK_128X128][blk_geom->depth];
     }
   
-   for (depthidx = 0; depthidx < 6; depthidx++) {
-        for (partidx = 0; partidx < 10; partidx++) {
-            for (band = 0; band < 10; band++) {
-                context_ptr->part_cnt[depthidx][partidx][band] += part_cnt[depthidx][partidx][band];
+   for (depthidx = 0; depthidx < DEPTH_NUM; depthidx++) {
+        for (partidx = 0; partidx < PART_NUM; partidx++) {
+            for (band = 0; band < COEFF_BAND_NUM; band++) {
+                context_ptr->part_cnt[depthidx][partidx][band] += (uint64_t)part_cnt[depthidx][partidx][band];
             }
         }
     }
@@ -6755,9 +6796,9 @@ void *enc_dec_kernel(void *input_ptr) {
 #if ADAPTIVE_NSQ_CYCLES_REDUCTION
     uint8_t band,depthidx,partidx;
     // init stat
-    for (depthidx = 0; depthidx < 6; depthidx++) {
-        for (partidx = 0; partidx < 10; partidx++) {
-            for (band = 0; band < 10; band++) {
+    for (depthidx = 0; depthidx < DEPTH_NUM; depthidx++) {
+        for (partidx = 0; partidx < PART_NUM; partidx++) {
+            for (band = 0; band < COEFF_BAND_NUM; band++) {
                 context_ptr->md_context->part_cnt[depthidx][partidx][band] = 0;
             }
         }
@@ -7259,10 +7300,9 @@ void *enc_dec_kernel(void *input_ptr) {
         pcs_ptr->below32_coded_area += (uint32_t)context_ptr->tot_below32_coded_area;
 #endif
 #if ADAPTIVE_NSQ_CYCLES_REDUCTION
-
-        for (depthidx = 0; depthidx < 6; depthidx++) {
-            for (partidx = 0; partidx < 10; partidx++) {
-                for (band = 0; band < 10; band++) {
+        for (depthidx = 0; depthidx < DEPTH_NUM; depthidx++) {
+            for (partidx = 0; partidx < PART_NUM; partidx++) {
+                for (band = 0; band < COEFF_BAND_NUM; band++) {
                     pcs_ptr->part_cnt[depthidx][partidx][band] += context_ptr->md_context->part_cnt[depthidx][partidx][band];    
                 }
             }

@@ -409,7 +409,7 @@ typedef struct PictureControlSet {
     int32_t *                       rst_tmpbuf;
 #endif
 #if ADAPTIVE_NSQ_CYCLES_REDUCTION
-    uint32_t part_cnt[6][10][10];
+    uint64_t part_cnt[DEPTH_NUM][PART_NUM][COEFF_BAND_NUM];
 #endif
 } PictureControlSet;
 

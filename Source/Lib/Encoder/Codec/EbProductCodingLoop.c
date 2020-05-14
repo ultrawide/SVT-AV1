@@ -13012,8 +13012,20 @@ EB_EXTERN EbErrorType mode_decision_sb(SequenceControlSet *scs_ptr, PictureContr
                         } 
 #if ADAPTIVE_NSQ_CYCLES_REDUCTION
                         else if (STAT_TABLE_IDX == 4) {
-                            if(scs_ptr->allowed_part_prob[context_ptr->blk_geom->depth][context_ptr->blk_geom->shape][band_idx] < STAT_TH)
-                                skip_nsq = 1;
+                            if (COEFF_BAND_NUM == 3) {
+                                if (blk_geom->depth == 0)
+                                    band_idx = band_idx == 0 ? 0 : band_idx <= 2 ? 1 : 2;
+                                else if (blk_geom->depth == 1)
+                                    band_idx = band_idx == 0 ? 0 : band_idx <= 3 ? 1 : 2;
+                                else
+                                    band_idx = band_idx == 0 ? 0 : band_idx <= 8 ? 1 : 2;
+                                if (scs_ptr->allowed_part_prob[context_ptr->blk_geom->depth][context_ptr->blk_geom->shape][band_idx] < STAT_TH)
+                                    skip_nsq = 1;
+                            }
+                            else {
+                                if (scs_ptr->allowed_part_prob[context_ptr->blk_geom->depth][context_ptr->blk_geom->shape][band_idx] < STAT_TH)
+                                    skip_nsq = 1;
+                            }
                         }
 #endif
 #if NEW_TABLE
