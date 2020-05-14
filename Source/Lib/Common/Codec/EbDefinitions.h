@@ -386,12 +386,12 @@ extern "C" {
 #define NICS_CLEANUP                1 // cleanup nics generation (lossy)
 #define CLASS_PRUNE                 1 // new class pruning for stage3: adaptive nics sclings
 #define CAND_PRUN_OPT               0 // new candidate pruning for stage3: adaptive txt/txs levels
-
-
+// To be tested
+#define SQ_WEIGHT_OFF             1
 #define COEFF_BASED_BYPASS_NSQ    0  //coefficient-based nsq bypassing
+#define COEFF_BASED_TH            0
 #define MERGED_COEFF_BAND         0
 
-#define SQ_WEIGHT_OFF 1
 #define CAP_MV_DIFF 1 // Restrict the max. MV diff size to be within the allowable range: fp -2048 < x < 2048
 
 #endif
