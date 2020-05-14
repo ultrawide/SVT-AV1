@@ -12373,6 +12373,124 @@ static const uint64_t allowed_part_weight_sse_gradian_240pL[10][5][9][12] = {
 }
 };
 #endif
+#if NEW_TABLE
+uint64_t new_240pL[5][9][10] = {
+{
+{ 75,46,31,17,0,0,0,0,0,0},
+{ 9,28,31,17,0,0,0,0,0,0},
+{ 7,7,6,17,0,0,0,0,0,0},
+{ 2,6,6,0,0,0,0,0,0,0},
+{ 3,3,12,33,0,0,0,0,0,0},
+{ 1,3,0,0,0,0,0,0,0,0},
+{ 2,7,12,17,0,0,0,0,0,0},
+{ 0,0,0,0,0,0,0,0,0,0},
+{ 0,0,0,0,0,0,0,0,0,0}
+},
+{
+{ 60,43,47,43,5,4,2,6,0,5},
+{ 5,2,1,1,4,4,0,0,0,7},
+{ 10,16,17,17,5,4,14,13,5,5},
+{ 2,3,2,1,5,6,9,3,5,3},
+{ 3,3,1,2,5,4,7,3,5,5},
+{ 2,2,1,1,2,2,5,10,5,10},
+{ 2,2,1,1,9,9,2,3,9,0},
+{ 5,4,7,7,46,53,47,45,59,57},
+{ 11,26,24,27,18,13,14,16,14,7}
+},
+{
+{ 59,11,11,10,13,21,17,14,17,19},
+{ 7,9,9,9,10,15,12,12,11,11},
+{ 8,8,8,7,10,7,5,4,6,8},
+{ 3,10,10,11,9,9,10,11,8,9},
+{ 3,10,11,11,11,10,12,11,11,11},
+{ 4,10,9,9,7,6,6,5,7,8},
+{ 4,10,11,10,10,6,6,8,8,12},
+{ 4,14,16,16,14,18,23,28,25,12},
+{ 7,18,14,15,16,9,8,6,8,10}
+},
+{
+{ 65,15,10,9,10,16,14,16,14,15},
+{ 10,17,18,17,17,18,18,17,16,16},
+{ 12,22,19,17,16,15,14,14,15,16},
+{ 3,8,10,10,10,9,10,10,10,9},
+{ 3,8,10,10,10,9,10,10,11,12},
+{ 3,10,11,12,12,11,11,11,11,10},
+{ 3,10,11,11,12,10,11,11,11,12},
+{ 1,3,4,5,6,6,6,6,6,5},
+{ 1,6,7,8,8,6,7,6,6,5}
+},
+{
+{ 87,63,57,51,50,50,50,52,53,59},
+{ 6,17,19,24,21,24,23,22,20,18},
+{ 7,20,24,25,29,26,28,26,27,22},
+{ 0,0,0,0,0,0,0,0,0,0},
+{ 0,0,0,0,0,0,0,0,0,0},
+{ 0,0,0,0,0,0,0,0,0,0},
+{ 0,0,0,0,0,0,0,0,0,0},
+{ 0,0,0,0,0,0,0,0,0,0},
+{ 0,0,0,0,0,0,0,0,0,0}
+}
+};
+#endif
+#if NEW_TABLE_MERGED
+uint64_t new_240pL_merged[5][9][3] = {
+{
+{ 75,43,17},
+{ 9,29,17},
+{ 7,7,17},
+{ 2,6,0},
+{ 3,5,33},
+{ 1,2,0},
+{ 2,8,17},
+{ 0,0,0},
+{ 0,0,0}
+},
+{
+{ 60,44,4},
+{ 5,1,3},
+{ 10,17,7},
+{ 2,2,5},
+{ 3,2,5},
+{ 2,1,5},
+{ 2,2,5},
+{ 5,6,51},
+{ 11,26,13}
+},
+{
+{ 59,14,19},
+{ 7,11,11},
+{ 8,7,8},
+{ 3,10,9},
+{ 3,11,11},
+{ 4,8,8},
+{ 4,9,12},
+{ 4,18,12},
+{ 7,13,10}
+},
+{
+{ 65,13,15},
+{ 10,17,16},
+{ 12,18,16},
+{ 3,9,9},
+{ 3,10,12},
+{ 3,11,10},
+{ 3,11,12},
+{ 1,5,5},
+{ 1,7,5}
+},
+{
+{ 87,54,59},
+{ 6,21,18},
+{ 7,26,22},
+{ 0,0,0},
+{ 0,0,0},
+{ 0,0,0},
+{ 0,0,0},
+{ 0,0,0},
+{ 0,0,0}
+}
+};
+#endif
 #endif
 EB_EXTERN EbErrorType mode_decision_sb(SequenceControlSet *scs_ptr, PictureControlSet *pcs_ptr,
                                        const MdcSbData *const mdcResultTbPtr, SuperBlock *sb_ptr,
@@ -12799,32 +12917,37 @@ EB_EXTERN EbErrorType mode_decision_sb(SequenceControlSet *scs_ptr, PictureContr
                     if (context_ptr->blk_geom->shape != PART_N) {
                         uint32_t count_non_zero_coeffs = context_ptr->md_local_blk_unit[blk_geom->sqi_mds].count_non_zero_coeffs;
                         uint32_t total_samples = (blk_geom->bwidth*blk_geom->bheight);
+#if NEW_TABLE || NEW_TABLE_MERGED
+                        uint64_t band_width = (blk_geom->depth == 0) ? 100 : (blk_geom->depth == 1) ? 50 : 20;
+#else
+                        uint64_t band_width = 20;
+#endif
                         uint8_t band_idx = 0;
-                        if (count_non_zero_coeffs >= ((total_samples * 18) / 20)) {
+                        if (count_non_zero_coeffs >= ((total_samples * 18) / band_width)) {
                             band_idx = 9;
                         }
-                        else if (count_non_zero_coeffs >= ((total_samples * 16) / 20)) {
+                        else if (count_non_zero_coeffs >= ((total_samples * 16) / band_width)) {
                             band_idx = 8;
                         }
-                        else if (count_non_zero_coeffs >= ((total_samples * 14) / 20)) {
+                        else if (count_non_zero_coeffs >= ((total_samples * 14) / band_width)) {
                             band_idx = 7;
                         }
-                        else if (count_non_zero_coeffs >= ((total_samples * 12) / 20)) {
+                        else if (count_non_zero_coeffs >= ((total_samples * 12) / band_width)) {
                             band_idx = 6;
                         }
-                        else if (count_non_zero_coeffs >= ((total_samples * 10) / 20)) {
+                        else if (count_non_zero_coeffs >= ((total_samples * 10) / band_width)) {
                             band_idx = 5;
                         }
-                        else if (count_non_zero_coeffs >= ((total_samples * 8) / 20)) {
+                        else if (count_non_zero_coeffs >= ((total_samples * 8) / band_width)) {
                             band_idx = 4;
                         }
-                        else if (count_non_zero_coeffs >= ((total_samples * 6) / 20)) {
+                        else if (count_non_zero_coeffs >= ((total_samples * 6) / band_width)) {
                             band_idx = 3;
                         }
-                        else if (count_non_zero_coeffs >= ((total_samples * 4) / 20)) {
+                        else if (count_non_zero_coeffs >= ((total_samples * 4) / band_width)) {
                             band_idx = 2;
                         }
-                        else if (count_non_zero_coeffs >= ((total_samples * 2) / 20)) {
+                        else if (count_non_zero_coeffs >= ((total_samples * 2) / band_width)) {
                             band_idx = 1;
                         }
                         else {
@@ -12890,6 +13013,25 @@ EB_EXTERN EbErrorType mode_decision_sb(SequenceControlSet *scs_ptr, PictureContr
 #if ADAPTIVE_NSQ_CYCLES_REDUCTION
                         else if (STAT_TABLE_IDX == 4) {
                             if(scs_ptr->allowed_part_prob[context_ptr->blk_geom->depth][context_ptr->blk_geom->shape][band_idx] < STAT_TH)
+                                skip_nsq = 1;
+                        }
+#endif
+#if NEW_TABLE
+                        else if (STAT_TABLE_IDX == 5) {
+                            if(new_240pL[context_ptr->blk_geom->depth][context_ptr->blk_geom->shape][band_idx] < STAT_TH)
+                                skip_nsq = 1;
+                        }
+#endif
+#if NEW_TABLE_MERGED
+                        else if (STAT_TABLE_IDX == 6) {
+                            if (blk_geom->depth == 0) 
+                                band_idx = band_idx == 0 ? 0 : band_idx <= 2 ? 1 : 2;
+                            else if (blk_geom->depth == 1) 
+                                band_idx = band_idx == 0 ? 0 : band_idx <= 3 ? 1 : 2;
+                            else  
+                                band_idx = band_idx == 0 ? 0 : band_idx <= 8 ? 1 : 2;
+                            
+                            if(new_240pL_merged[context_ptr->blk_geom->depth][context_ptr->blk_geom->shape][band_idx] < STAT_TH)
                                 skip_nsq = 1;
                         }
 #endif

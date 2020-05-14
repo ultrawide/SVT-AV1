@@ -385,19 +385,20 @@ extern "C" {
 
 // For testing
 #define MIXED_STAT_SSE              0
-
+#define MIXED_STAT_SSE_V2           0
 #define DISALLOW_NSQ                0
 #define DISALLOW_SQ_WEIGHT          0
 #define DISALLOW_SQ_WEIGHT_FOR_NON_CYCLE 0
 #define SSE_BASED_SPLITTING         0 // Decide on the H/V splitting based on the SSE of the base block
 #define SSE_BASED_SPLIT_TH          0 // TH%
-#define NSQ_STAT                    0 
-#define STAT_TH                     0 // TH%
-#define STAT_TABLE_IDX              0 // 1: Overall 2: Resolution dependent 3: 240pL
-#define MIXED_STAT_SSE_V2           0
 #define GRADIAN_STAT                0
 
 #define SHUT_NSQ_REDUCTION_FEATURES 0 // Shut nsq-targeted complexity features
+#define NSQ_STAT                    0 
+#define STAT_TH                     0 // TH%
+#define STAT_TABLE_IDX              0 // 1: Overall 2: Resolution dependent 3: 240pL
+#define NEW_TABLE                   0
+#define NEW_TABLE_MERGED            0
 #define ADAPTIVE_NSQ_CYCLES_REDUCTION 0 
 
 #define NSQ_NOISE  0

@@ -1322,7 +1322,7 @@ void copy_statistics_to_ref_obj_ect(PictureControlSet *pcs_ptr, SequenceControlS
     for (depthidx = 0; depthidx < 6; depthidx++) {
         for (partidx = 0; partidx < 10; partidx++) {
             for (band = 0; band < 10; band++) {
-                scs_ptr->allowed_part_prob[depthidx][partidx][band] = scs_ptr->part_cnt[depthidx][partidx][band]/sum_per_depth_and_band[depthidx][band];
+                scs_ptr->allowed_part_prob[depthidx][partidx][band] = (scs_ptr->part_cnt[depthidx][partidx][band]*100)/sum_per_depth_and_band[depthidx][band];
                     
             }
         }
