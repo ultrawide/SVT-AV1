@@ -11194,37 +11194,53 @@ uint8_t get_allowed_block(PictureControlSet *pcs_ptr, ModeDecisionContext *conte
             uint32_t count_non_zero_coeffs = context_ptr->md_local_blk_unit[context_ptr->blk_geom->sqi_mds].count_non_zero_coeffs;
             uint32_t total_samples = (context_ptr->blk_geom->bwidth*context_ptr->blk_geom->bheight);
             uint8_t band_idx = 0;
-            if (count_non_zero_coeffs >= ((total_samples * 18) / 20)) {
+#if MERGED_COEFF_BAND
+            uint64_t band_width = (context_ptr->blk_geom->depth == 0) ? 100 : (context_ptr->blk_geom->depth == 1) ? 50 : 20;
+#else
+            uint64_t band_width = 20;
+#endif
+            if (count_non_zero_coeffs >= ((total_samples * 18) / band_width)) {
                 band_idx = 9;
             }
-            else if (count_non_zero_coeffs >= ((total_samples * 16) / 20)) {
+            else if (count_non_zero_coeffs >= ((total_samples * 16) / band_width)) {
                 band_idx = 8;
             }
-            else if (count_non_zero_coeffs >= ((total_samples * 14) / 20)) {
+            else if (count_non_zero_coeffs >= ((total_samples * 14) / band_width)) {
                 band_idx = 7;
             }
-            else if (count_non_zero_coeffs >= ((total_samples * 12) / 20)) {
+            else if (count_non_zero_coeffs >= ((total_samples * 12) / band_width)) {
                 band_idx = 6;
             }
-            else if (count_non_zero_coeffs >= ((total_samples * 10) / 20)) {
+            else if (count_non_zero_coeffs >= ((total_samples * 10) / band_width)) {
                 band_idx = 5;
             }
-            else if (count_non_zero_coeffs >= ((total_samples * 8) / 20)) {
+            else if (count_non_zero_coeffs >= ((total_samples * 8) / band_width)) {
                 band_idx = 4;
             }
-            else if (count_non_zero_coeffs >= ((total_samples * 6) / 20)) {
+            else if (count_non_zero_coeffs >= ((total_samples * 6) / band_width)) {
                 band_idx = 3;
             }
-            else if (count_non_zero_coeffs >= ((total_samples * 4) / 20)) {
+            else if (count_non_zero_coeffs >= ((total_samples * 4) / band_width)) {
                 band_idx = 2;
             }
-            else if (count_non_zero_coeffs >= ((total_samples * 2) / 20)) {
+            else if (count_non_zero_coeffs >= ((total_samples * 2) / band_width)) {
                 band_idx = 1;
             }
             else {
                 band_idx = 0;
             }
 
+#if MERGED_COEFF_BAND
+            if (context_ptr->blk_geom->depth == 0) 
+                band_idx = band_idx == 0 ? 0 : band_idx <= 2 ? 1 : 2;
+            else if (context_ptr->blk_geom->depth == 1)
+                band_idx = band_idx == 0 ? 0 : band_idx <= 3 ? 1 : 2;
+            else
+                band_idx = band_idx == 0 ? 0 : band_idx <= 8 ? 1 : 2;
+
+            if (allowed_part_weight[context_ptr->blk_geom->depth][context_ptr->blk_geom->shape][band_idx] < context_ptr->coeff_area_based_bypass_nsq_th)
+                    skip_nsq = 1;
+#else
             if (pcs_ptr->parent_pcs_ptr->input_resolution <= INPUT_SIZE_240p_RANGE) {
                 if (allowed_part_weight_240pF[context_ptr->blk_geom->depth][context_ptr->blk_geom->shape][band_idx] < context_ptr->coeff_area_based_bypass_nsq_th)
                     skip_nsq = 1;
@@ -11241,6 +11257,7 @@ uint8_t get_allowed_block(PictureControlSet *pcs_ptr, ModeDecisionContext *conte
                 if (allowed_part_weight_1080p[context_ptr->blk_geom->depth][context_ptr->blk_geom->shape][band_idx] < context_ptr->coeff_area_based_bypass_nsq_th)
                     skip_nsq = 1;
             }
+#endif
         }
     }
     return skip_nsq;

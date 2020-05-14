@@ -388,8 +388,12 @@ extern "C" {
 #define CAND_PRUN_OPT               0 // new candidate pruning for stage3: adaptive txt/txs levels
 
 
-#define COEFF_BASED_BYPASS_NSQ    1  //coefficient-based nsq bypassing
+#define COEFF_BASED_BYPASS_NSQ    0  //coefficient-based nsq bypassing
+#define MERGED_COEFF_BAND         0
+
+#define SQ_WEIGHT_OFF 1
 #define CAP_MV_DIFF 1 // Restrict the max. MV diff size to be within the allowable range: fp -2048 < x < 2048
+
 #endif
 // END  SVT_01 /////////////////////////////////////////////////////////
 #define COMMON_16BIT 1 // 16Bit pipeline support for common
