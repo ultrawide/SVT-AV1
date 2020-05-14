@@ -13039,8 +13039,15 @@ EB_EXTERN EbErrorType mode_decision_sb(SequenceControlSet *scs_ptr, PictureContr
 #endif
 
 #else
+#if GRADIAN_STAT
+                        uint8_t sse_gradian_band = context_ptr->md_local_blk_unit[blk_geom->sqi_mds].sse_gradian_band[context_ptr->blk_geom->shape];
+                        if (allowed_part_weight_sse_gradian_240pL[band_idx][context_ptr->blk_geom->depth][context_ptr->blk_geom->shape][sse_gradian_band] < STAT_TH) {
+                            skip_nsq = 1;
+                        }
+#else
                         if (allowed_part_weight_240pL[context_ptr->blk_geom->depth][context_ptr->blk_geom->shape][band_idx] < STAT_TH)
                             skip_nsq = 1;
+#endif
 #endif
                     }
                 }
