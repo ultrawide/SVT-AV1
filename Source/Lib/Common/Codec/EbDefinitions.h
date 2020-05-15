@@ -384,6 +384,13 @@ extern "C" {
 #define NEW_CYCLE_ALLOCATION        1 // New cycle allocation where the action of the TXS and NICs was replaced by NSQ
 
 // For testing
+#define DISALLOW_NSQ_IN_PD2          0
+#define ENABLE_NSQ_REDUCTION         0
+#if ENABLE_NSQ_REDUCTION
+#define NSQ_STAT                     1 
+#define STAT_TH                      4 // TH%
+#define STAT_TABLE_IDX               2 
+#else
 #define MIXED_STAT_SSE              0
 #define MIXED_STAT_SSE_V2           0
 #define DISALLOW_NSQ                0
@@ -403,6 +410,7 @@ extern "C" {
 #define COEFF_BAND_NUM 10
 #define PART_NUM 9
 #define DEPTH_NUM 6
+#endif
 
 #define NSQ_NOISE  0
 #define NOISE_PERC 0 // 0: OFF   5=0.5%  10=1%  20=2%
