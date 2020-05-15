@@ -11437,7 +11437,7 @@ uint8_t get_allowed_block(PictureControlSet *pcs_ptr, ModeDecisionContext *conte
 #if SSE_BASED_SPLITTING 
             uint8_t sse_gradian_band = context_ptr->md_local_blk_unit[context_ptr->blk_geom->sqi_mds].sse_gradian_band[context_ptr->blk_geom->shape];
             uint64_t nsq_prob = allowed_part_weight[context_ptr->blk_geom->depth][context_ptr->blk_geom->shape][band_idx];
-            nsq_prob = sse_gradian_band == 0 ? (nsq_prob * sse_grad_weight[context_ptr->blk_geom->depth][context_ptr->blk_geom->shape][band_idx])/(uint64_t)100 : nsq_prob;
+            nsq_prob = sse_gradian_band == 0 ? nsq_prob - ((nsq_prob * sse_grad_weight[context_ptr->blk_geom->depth][context_ptr->blk_geom->shape][band_idx])/(uint64_t)100) : nsq_prob;
 #if SPEED_WEIGHT
             nsq_prob = (nsq_prob * speed_weight[context_ptr->blk_geom->shape])/(uint64_t)100;
 #endif
