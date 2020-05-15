@@ -11439,7 +11439,10 @@ uint8_t get_allowed_block(PictureControlSet *pcs_ptr, ModeDecisionContext *conte
             uint64_t nsq_prob = allowed_part_weight[context_ptr->blk_geom->depth][context_ptr->blk_geom->shape][band_idx];
             nsq_prob = sse_gradian_band == 0 ? nsq_prob - ((nsq_prob * sse_grad_weight[context_ptr->blk_geom->depth][context_ptr->blk_geom->shape][band_idx])/(uint64_t)100) : nsq_prob;
 #if SPEED_WEIGHT
-            nsq_prob = (nsq_prob * speed_weight[context_ptr->blk_geom->shape])/(uint64_t)100;
+            if(SPEED_WEIGHT == 1)
+                nsq_prob = (nsq_prob * speed_weight[context_ptr->blk_geom->shape])/(uint64_t)100;
+            else if(SPEED_WEIGHT == 2)
+                nsq_prob = (nsq_prob * speed_weight2[context_ptr->blk_geom->shape])/(uint64_t)100;
 #endif
             if (nsq_prob < context_ptr->coeff_area_based_bypass_nsq_th) {
                 skip_nsq = 1;
@@ -11447,7 +11450,11 @@ uint8_t get_allowed_block(PictureControlSet *pcs_ptr, ModeDecisionContext *conte
 
 #elif SPEED_WEIGHT
             uint64_t nsq_prob = allowed_part_weight[context_ptr->blk_geom->depth][context_ptr->blk_geom->shape][band_idx];
-            nsq_prob = (nsq_prob * speed_weight[context_ptr->blk_geom->shape])/(uint64_t)100;
+            if(SPEED_WEIGHT == 1)
+                nsq_prob = (nsq_prob * speed_weight[context_ptr->blk_geom->shape])/(uint64_t)100;
+            else if(SPEED_WEIGHT == 2)
+                nsq_prob = (nsq_prob * speed_weight2[context_ptr->blk_geom->shape])/(uint64_t)100;
+
             if (nsq_prob < context_ptr->coeff_area_based_bypass_nsq_th) {
                 skip_nsq = 1;
             }

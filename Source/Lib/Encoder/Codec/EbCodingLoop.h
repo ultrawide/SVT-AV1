@@ -46,6 +46,7 @@ void residual_kernel(uint8_t *input, uint32_t input_offset, uint32_t input_strid
 #if MERGED_COEFF_BAND
 #if SPEED_WEIGHT
 static const uint64_t speed_weight[9] = {100,100,100,50,50,50,50,70,70};
+static const uint64_t speed_weight2[9] = {100,100,100,60,60,60,60,80,80};
 #endif
 #if SSE_BASED_SPLITTING
 static const uint64_t sse_grad_weight[5][9][3] = {

@@ -387,7 +387,7 @@ extern "C" {
 #define CLASS_PRUNE                 1 // new class pruning for stage3: adaptive nics sclings
 #define CAND_PRUN_OPT               0 // new candidate pruning for stage3: adaptive txt/txs levels
 // To be tested
-#define SQ_WEIGHT_OFF             1
+#define SQ_WEIGHT_OFF             0
 #define COEFF_BASED_BYPASS_NSQ    0  //coefficient-based nsq bypassing
 #define COEFF_BASED_TH            0
 #define MERGED_COEFF_BAND         0
