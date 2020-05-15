@@ -3466,7 +3466,7 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
     else if (pd_pass == PD_PASS_1)
         context_ptr->coeff_area_based_bypass_nsq_th = 0;
     else
-        if (MR_MODE || pcs_ptr->slice_type != I_SLICE)
+        if (MR_MODE || pcs_ptr->slice_type == I_SLICE)
             context_ptr->coeff_area_based_bypass_nsq_th = 0;
         else if (enc_mode <= ENC_M0)
             context_ptr->coeff_area_based_bypass_nsq_th = COEFF_BASED_TH;
