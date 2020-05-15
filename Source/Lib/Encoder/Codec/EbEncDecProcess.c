@@ -3507,7 +3507,7 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
 #endif
 #if PRESETS_SHIFT
 #if NEW_M1_CAND
-#if COEFF_BASED_BYPASS_NSQ || SQ_WEIGHT_OFF
+#if SQ_WEIGHT_OFF
                 if (enc_mode <= ENC_M1)
 #else
                 if (enc_mode <= ENC_M0)
@@ -3527,7 +3527,7 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
 #endif
 #endif
 #if MAY12_ADOPTIONS
-#if COEFF_BASED_BYPASS_NSQ || SQ_WEIGHT_OFF
+#if SQ_WEIGHT_OFF
                     context_ptr->sq_weight = (uint32_t)~0;
 #else
                     context_ptr->sq_weight =
@@ -3577,7 +3577,7 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
             if (enc_mode <= ENC_M0 || (enc_mode <= ENC_M1 && !(pcs_ptr->parent_pcs_ptr->sc_content_detected)))
 #endif
 #if MAY12_ADOPTIONS
-#if COEFF_BASED_BYPASS_NSQ || SQ_WEIGHT_OFF
+#if SQ_WEIGHT_OFF
                 context_ptr->sq_weight =(uint32_t)~0;
 #else
                 context_ptr->sq_weight =
@@ -3591,7 +3591,7 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
             else if (enc_mode <= ENC_M1)
                 context_ptr->sq_weight =
 #if M1_COMBO_3 || NEW_M1_CAND
-#if COEFF_BASED_BYPASS_NSQ || SQ_WEIGHT_OFF
+#if SQ_WEIGHT_OFF
                 (uint32_t)~0;
 #else
                 pcs_ptr->parent_pcs_ptr->is_used_as_reference_flag ? sequence_control_set_ptr->static_config.sq_weight : sequence_control_set_ptr->static_config.sq_weight - 5;
