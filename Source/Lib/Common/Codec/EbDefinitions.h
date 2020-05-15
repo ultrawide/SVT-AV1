@@ -400,7 +400,7 @@ extern "C" {
 #define SSE_BASED_SPLITTING         0 // Decide on the H/V splitting based on the SSE of the base block
 #define SSE_BASED_SPLIT_TH          0 // TH%
 #define GRADIAN_STAT                0
-#define NEW_TABLE                    1
+#define NEW_TABLE                   0
 #define SHUT_NSQ_REDUCTION_FEATURES 0 // Shut nsq-targeted complexity features
 #define NSQ_STAT                    0 
 #define STAT_TH                     0 // TH%
