@@ -389,7 +389,8 @@ extern "C" {
 #if ENABLE_NSQ_REDUCTION
 #define NSQ_STAT                     1 
 #define STAT_TH                      4 // TH%
-#define STAT_TABLE_IDX               2 
+#define STAT_TABLE_IDX               6
+#define NEW_TABLE_MERGED             1
 #else
 #define MIXED_STAT_SSE              0
 #define MIXED_STAT_SSE_V2           0
@@ -399,7 +400,7 @@ extern "C" {
 #define SSE_BASED_SPLITTING         0 // Decide on the H/V splitting based on the SSE of the base block
 #define SSE_BASED_SPLIT_TH          0 // TH%
 #define GRADIAN_STAT                0
-
+#define NEW_TABLE                    1
 #define SHUT_NSQ_REDUCTION_FEATURES 0 // Shut nsq-targeted complexity features
 #define NSQ_STAT                    0 
 #define STAT_TH                     0 // TH%
