@@ -137,6 +137,9 @@ typedef struct MdBlkStruct {
     uint64_t cr_quant_coeff_energy;
 #endif
 #endif
+#if SSE_BASED_SPLITTING
+    uint8_t sse_gradian_band[NUMBER_OF_SHAPES];
+#endif
 } MdBlkStruct;
 
 struct ModeDecisionCandidate;

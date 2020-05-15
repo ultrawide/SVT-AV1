@@ -10408,6 +10408,203 @@ void md_encode_block(PictureControlSet *pcs_ptr,
                                     1);
 #if CLEAN_UP_SB_DATA_3
         if (!context_ptr->hbd_mode_decision) {
+#if SSE_BASED_SPLITTING
+            if (context_ptr->blk_geom->shape == PART_N) {
+                uint8_t shape_idx;
+                for (shape_idx = 0; shape_idx < NUMBER_OF_SHAPES; shape_idx++)
+                    context_ptr->md_local_blk_unit[context_ptr->blk_geom->blkidx_mds].sse_gradian_band[shape_idx] = 1;
+                uint32_t sq_size = context_ptr->blk_geom->sq_size;
+                if (sq_size > 4) {
+                    uint8_t r, c;
+                    uint64_t min_blk_dist[4][4] = { { 0,0,0,0}, {0,0,0,0} };
+
+                    uint64_t part_dist[25] = { 0 };
+                    uint64_t mark_part_to_process[NUMBER_OF_SHAPES] = { 0 };
+
+                    int32_t min_size = sq_size == 128 ? 64 : sq_size == 64 ? 16 : sq_size == 32 ? 8 : 4;
+                    int32_t min_size_num = sq_size / min_size;
+
+                    for (r = 0; r < min_size_num; r++) {
+                        for (c = 0; c < min_size_num; c++) {
+
+                            int32_t min_blk_index = (int32_t)blk_origin_index + ((c * min_size) + ((r*min_size) * recon_ptr->stride_y));
+                            EbSpatialFullDistType spatial_full_dist_type_fun = context_ptr->hbd_mode_decision
+                                ? full_distortion_kernel16_bits
+                                : spatial_full_distortion_kernel;
+                            min_blk_dist[r][c] = spatial_full_dist_type_fun(input_picture_ptr->buffer_y,
+                                input_origin_index,
+                                input_picture_ptr->stride_y,
+                                recon_ptr->buffer_y,
+                                min_blk_index,
+                                recon_ptr->stride_y,
+                                min_size,
+                                min_size);
+                            part_dist[0] += min_blk_dist[r][c];
+                        }
+                    }
+                    if (sq_size == 64 || sq_size == 32 || sq_size == 16) {
+                        part_dist[1]  = min_blk_dist[0][0] + min_blk_dist[0][1] + min_blk_dist[0][2] + min_blk_dist[0][3]+
+                                        min_blk_dist[1][0] + min_blk_dist[1][1] + min_blk_dist[1][2] + min_blk_dist[1][3];
+                        part_dist[2]  = min_blk_dist[2][0] + min_blk_dist[2][1] + min_blk_dist[2][2] + min_blk_dist[2][3]+
+                                        min_blk_dist[3][0] + min_blk_dist[3][1] + min_blk_dist[3][2] + min_blk_dist[3][3];
+                        part_dist[3]  = min_blk_dist[0][0] + min_blk_dist[1][0] + min_blk_dist[2][0] + min_blk_dist[3][0]+
+                                        min_blk_dist[0][1] + min_blk_dist[1][1] + min_blk_dist[2][1] + min_blk_dist[3][1];
+                        part_dist[4]  = min_blk_dist[0][2] + min_blk_dist[1][2] + min_blk_dist[2][2] + min_blk_dist[3][2]+
+                                        min_blk_dist[0][3] + min_blk_dist[1][3] + min_blk_dist[2][3] + min_blk_dist[3][3];
+                        part_dist[5]  = min_blk_dist[0][0] + min_blk_dist[0][1] + min_blk_dist[1][0] + min_blk_dist[1][1];
+                        part_dist[6]  = min_blk_dist[0][2] + min_blk_dist[0][3] + min_blk_dist[1][2] + min_blk_dist[1][3];
+                        part_dist[7]  = part_dist[2];
+                        part_dist[8]  = part_dist[1];
+                        part_dist[9]  = min_blk_dist[2][0] + min_blk_dist[2][1] + min_blk_dist[3][0] + min_blk_dist[3][1];
+                        part_dist[10] = min_blk_dist[2][2] + min_blk_dist[2][3] + min_blk_dist[3][2] + min_blk_dist[3][3];
+                        part_dist[11] = part_dist[5];
+                        part_dist[12] = part_dist[9];
+                        part_dist[13] = part_dist[4];
+                        part_dist[14] = part_dist[3];
+                        part_dist[15] = part_dist[6];
+                        part_dist[16] = part_dist[10];
+                        part_dist[17] = min_blk_dist[0][0] + min_blk_dist[0][1] + min_blk_dist[0][2] + min_blk_dist[0][3];
+                        part_dist[18] = min_blk_dist[1][0] + min_blk_dist[1][1] + min_blk_dist[1][2] + min_blk_dist[1][3];
+                        part_dist[19] = min_blk_dist[2][0] + min_blk_dist[2][1] + min_blk_dist[2][2] + min_blk_dist[2][3];
+                        part_dist[20] = min_blk_dist[3][0] + min_blk_dist[3][1] + min_blk_dist[3][2] + min_blk_dist[3][3];
+                        part_dist[21] = min_blk_dist[0][0] + min_blk_dist[1][0] + min_blk_dist[2][0] + min_blk_dist[3][0];
+                        part_dist[22] = min_blk_dist[0][1] + min_blk_dist[1][1] + min_blk_dist[2][1] + min_blk_dist[3][1];
+                        part_dist[23] = min_blk_dist[0][2] + min_blk_dist[1][2] + min_blk_dist[2][2] + min_blk_dist[3][2];
+                        part_dist[24] = min_blk_dist[0][3] + min_blk_dist[1][3] + min_blk_dist[2][3] + min_blk_dist[3][3];
+
+                        // PART_H decision
+                        uint64_t min_dist;
+                        uint8_t part_idx;
+                        uint8_t min_idx = part_dist[1] < part_dist[2] ? 1 : 2;
+                        uint8_t max_idx = part_dist[1] < part_dist[2] ? 2 : 1;
+                        uint64_t distance_dist = part_dist[max_idx] - part_dist[min_idx];
+                        uint64_t per = part_dist[min_idx] ? MIN(1000, (distance_dist * 100 / part_dist[min_idx])) : 1000;
+                            mark_part_to_process[PART_H] = per;
+
+                        // PART_V decision
+                        min_idx = part_dist[3] < part_dist[4] ? 3 : 4;
+                        max_idx = part_dist[3] < part_dist[4] ? 4 : 3;
+                        distance_dist = part_dist[max_idx] - part_dist[min_idx];
+                        per = part_dist[min_idx] ? MIN(1000, (distance_dist * 100 / part_dist[min_idx])) : 1000;
+                            mark_part_to_process[PART_V] = per;
+
+                        // PART_HA decision
+                        min_idx = part_dist[5] < part_dist[6] ? 5 : 6;
+                        max_idx = part_dist[5] < part_dist[6] ? 6 : 5;
+                        distance_dist = part_dist[max_idx] - part_dist[min_idx];
+                        per = part_dist[min_idx] ? MIN(1000, (distance_dist * 100 / part_dist[min_idx])) : 1000;
+                            mark_part_to_process[PART_HA] = per;
+
+                        // PART_HB decision
+                        min_idx = part_dist[9] < part_dist[10] ? 9 : 10;
+                        max_idx = part_dist[9] < part_dist[10] ? 10 : 9;
+                        distance_dist = part_dist[max_idx] - part_dist[min_idx];
+                        per = part_dist[min_idx] ? MIN(1000, (distance_dist * 100 / part_dist[min_idx])) : 1000;
+                            mark_part_to_process[PART_HB] = per;
+
+                        // PART_VA decision
+                        min_idx = part_dist[11] < part_dist[12] ? 11 : 12;
+                        max_idx = part_dist[11] < part_dist[12] ? 12 : 11;
+                        distance_dist = part_dist[max_idx] - part_dist[min_idx];
+                        per = part_dist[min_idx] ? MIN(1000, (distance_dist * 100 / part_dist[min_idx])) : 1000;
+                            mark_part_to_process[PART_VA] = per;
+
+                        // PART_VB decision
+                        min_idx = part_dist[15] < part_dist[16] ? 15 : 16;
+                        max_idx = part_dist[15] < part_dist[16] ? 16 : 15;
+                        distance_dist = part_dist[max_idx] - part_dist[min_idx];
+                        per = part_dist[min_idx] ? MIN(1000, (distance_dist * 100 / part_dist[min_idx])) : 1000;
+                            mark_part_to_process[PART_VB] = per;
+
+                        // PART_H4 decision
+                        min_dist = MIN(part_dist[17],MIN(part_dist[18],MIN(part_dist[19],part_dist[20])));
+                        for (part_idx = 17; part_idx <= 20; part_idx++) {
+                            distance_dist = part_dist[part_idx] - min_dist;
+                            per = min_dist ? MIN(1000, (distance_dist * 100 / min_dist)) : 1000;
+                            mark_part_to_process[PART_H4] = MAX(mark_part_to_process[PART_H4],per);
+                        }
+                        // PART_V4 decision
+                        min_dist = MIN(part_dist[21],MIN(part_dist[22],MIN(part_dist[23],part_dist[24])));
+                        for (part_idx = 21; part_idx <= 24; part_idx++) {
+                            distance_dist = part_dist[part_idx] - min_dist;
+                            per = min_dist ? MIN(1000, (distance_dist * 100 / min_dist)) : 1000;
+                            mark_part_to_process[PART_V4] = MAX(mark_part_to_process[PART_V4],per);
+                        }
+
+                    }
+                    else {
+                        part_dist[1] = min_blk_dist[0][0] + min_blk_dist[0][1];
+                        part_dist[2] = min_blk_dist[1][0] + min_blk_dist[1][1];
+                        part_dist[3] = min_blk_dist[0][0] + min_blk_dist[1][0];
+                        part_dist[4] = min_blk_dist[0][1] + min_blk_dist[1][1];
+                        part_dist[5] = min_blk_dist[0][0];
+                        part_dist[6] = min_blk_dist[0][1];
+                        part_dist[7]  = part_dist[2];
+                        part_dist[8]  = part_dist[1];
+                        part_dist[9] = min_blk_dist[1][0];
+                        part_dist[10] = min_blk_dist[1][1];
+                        part_dist[11] = part_dist[5];
+                        part_dist[12] = part_dist[9];
+                        part_dist[13] = part_dist[4];
+                        part_dist[14] = part_dist[3];
+                        part_dist[15] = part_dist[6];
+                        part_dist[16] = part_dist[10];
+
+                         // PART_H decision
+                        uint8_t min_idx = part_dist[1] < part_dist[2] ? 1 : 2;
+                        uint8_t max_idx = part_dist[1] < part_dist[2] ? 2 : 1;
+                        uint64_t distance_dist = part_dist[max_idx] - part_dist[min_idx];
+                        uint64_t per = part_dist[min_idx] ? MIN(1000, (distance_dist * 100 / part_dist[min_idx])) : 1000;
+                            mark_part_to_process[PART_H] = per;
+
+                        // PART_V decision
+                        min_idx = part_dist[3] < part_dist[4] ? 3 : 4;
+                        max_idx = part_dist[3] < part_dist[4] ? 4 : 3;
+                        distance_dist = part_dist[max_idx] - part_dist[min_idx];
+                        per = part_dist[min_idx] ? MIN(1000, (distance_dist * 100 / part_dist[min_idx])) : 1000;
+                            mark_part_to_process[PART_V] = per;
+                        if (sq_size == 128) {
+                            // PART_HA decision
+                            min_idx = part_dist[5] < part_dist[6] ? 5 : 6;
+                            max_idx = part_dist[5] < part_dist[6] ? 6 : 5;
+                            distance_dist = part_dist[max_idx] - part_dist[min_idx];
+                            per = part_dist[min_idx] ? MIN(1000, (distance_dist * 100 / part_dist[min_idx])) : 1000;
+                            mark_part_to_process[PART_HA] = per;
+
+                            // PART_HB decision
+                            min_idx = part_dist[9] < part_dist[10] ? 9 : 10;
+                            max_idx = part_dist[9] < part_dist[10] ? 10 : 9;
+                            distance_dist = part_dist[max_idx] - part_dist[min_idx];
+                            per = part_dist[min_idx] ? MIN(1000, (distance_dist * 100 / part_dist[min_idx])) : 1000;
+                            mark_part_to_process[PART_HB] = per;
+
+
+                            // PART_VA decision
+                            min_idx = part_dist[11] < part_dist[12] ? 11 : 12;
+                            max_idx = part_dist[11] < part_dist[12] ? 12 : 11;
+                            distance_dist = part_dist[max_idx] - part_dist[min_idx];
+                            per = part_dist[min_idx] ? MIN(1000, (distance_dist * 100 / part_dist[min_idx])) : 1000;
+                            mark_part_to_process[PART_VA] = per;
+
+
+                            // PART_VB decision
+                            min_idx = part_dist[15] < part_dist[16] ? 15 : 16;
+                            max_idx = part_dist[15] < part_dist[16] ? 16 : 15;
+                            distance_dist = part_dist[max_idx] - part_dist[min_idx];
+                            per = part_dist[min_idx] ? MIN(1000, (distance_dist * 100 / part_dist[min_idx])) : 1000;
+                            mark_part_to_process[PART_VB] = per;
+
+                        }
+                    }
+                    for (shape_idx = 0; shape_idx < NUMBER_OF_SHAPES; shape_idx++) {
+                        if (mark_part_to_process[shape_idx] < 10)
+                            context_ptr->md_local_blk_unit[context_ptr->blk_geom->sqi_mds].sse_gradian_band[shape_idx] = 0;
+                        else
+                            context_ptr->md_local_blk_unit[context_ptr->blk_geom->sqi_mds].sse_gradian_band[shape_idx] = 1;   
+                    }
+                }    
+            } 
+#endif
             memcpy(context_ptr->md_local_blk_unit[context_ptr->blk_geom->blkidx_mds].neigh_top_recon[0],
                     recon_ptr->buffer_y + rec_luma_offset +
                         (context_ptr->blk_geom->bheight - 1) * recon_ptr->stride_y,
@@ -11237,9 +11434,27 @@ uint8_t get_allowed_block(PictureControlSet *pcs_ptr, ModeDecisionContext *conte
                 band_idx = band_idx == 0 ? 0 : band_idx <= 3 ? 1 : 2;
             else
                 band_idx = band_idx == 0 ? 0 : band_idx <= 8 ? 1 : 2;
+#if SSE_BASED_SPLITTING 
+            uint8_t sse_gradian_band = context_ptr->md_local_blk_unit[context_ptr->blk_geom->sqi_mds].sse_gradian_band[context_ptr->blk_geom->shape];
+            uint64_t nsq_prob = allowed_part_weight[context_ptr->blk_geom->depth][context_ptr->blk_geom->shape][band_idx];
+            nsq_prob = sse_gradian_band == 0 ? (nsq_prob * sse_grad_weight[context_ptr->blk_geom->depth][context_ptr->blk_geom->shape][band_idx])/(uint64_t)100 : nsq_prob;
+#if SPEED_WEIGHT
+            nsq_prob = (nsq_prob * speed_weight[context_ptr->blk_geom->shape])/(uint64_t)100;
+#endif
+            if (nsq_prob < context_ptr->coeff_area_based_bypass_nsq_th) {
+                skip_nsq = 1;
+            }
 
+#elif SPEED_WEIGHT
+            uint64_t nsq_prob = allowed_part_weight[context_ptr->blk_geom->depth][context_ptr->blk_geom->shape][band_idx];
+            nsq_prob = (nsq_prob * speed_weight[context_ptr->blk_geom->shape])/(uint64_t)100;
+            if (nsq_prob < context_ptr->coeff_area_based_bypass_nsq_th) {
+                skip_nsq = 1;
+            }
+#else
             if (allowed_part_weight[context_ptr->blk_geom->depth][context_ptr->blk_geom->shape][band_idx] < context_ptr->coeff_area_based_bypass_nsq_th)
                     skip_nsq = 1;
+#endif
 #else
             if (pcs_ptr->parent_pcs_ptr->input_resolution <= INPUT_SIZE_240p_RANGE) {
                 if (allowed_part_weight_240pF[context_ptr->blk_geom->depth][context_ptr->blk_geom->shape][band_idx] < context_ptr->coeff_area_based_bypass_nsq_th)
