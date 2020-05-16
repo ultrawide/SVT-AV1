@@ -3553,6 +3553,10 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
                     context_ptr->sq_weight =
                     sequence_control_set_ptr->static_config.sq_weight;
 #endif
+#if SQ_WEIGHT_100_M1
+                else if (enc_mode <= ENC_M1)
+                     sequence_control_set_ptr->static_config.sq_weight;
+#endif
                 else
                     context_ptr->sq_weight =
                     sequence_control_set_ptr->static_config.sq_weight - 5;
@@ -3594,7 +3598,11 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
 #if SQ_WEIGHT_OFF
                 (uint32_t)~0;
 #else
+#if SQ_WEIGHT_100_M1
+                sequence_control_set_ptr->static_config.sq_weight;
+#else
                 pcs_ptr->parent_pcs_ptr->is_used_as_reference_flag ? sequence_control_set_ptr->static_config.sq_weight : sequence_control_set_ptr->static_config.sq_weight - 5;
+#endif
 #endif
 #else
                 sequence_control_set_ptr->static_config.sq_weight;

@@ -802,6 +802,10 @@ void init_sq_nsq_block(SequenceControlSet *scs_ptr, ModeDecisionContext *context
         context_ptr->md_local_blk_unit[blk_idx].avail_blk_flag = EB_FALSE;
         context_ptr->md_local_blk_unit[blk_idx].left_neighbor_partition = INVALID_NEIGHBOR_DATA;
         context_ptr->md_local_blk_unit[blk_idx].above_neighbor_partition = INVALID_NEIGHBOR_DATA;
+#if SSE_BASED_SPLITTING
+        for (uint8_t shape_idx = 0; shape_idx < NUMBER_OF_SHAPES; shape_idx++)
+            context_ptr->md_local_blk_unit[blk_idx].sse_gradian_band[shape_idx] = 1;
+#endif
         if (blk_geom->shape == PART_N) {
             context_ptr->md_blk_arr_nsq[blk_idx].split_flag         = EB_TRUE;
             context_ptr->md_blk_arr_nsq[blk_idx].part               = PARTITION_SPLIT;
@@ -10412,7 +10416,7 @@ void md_encode_block(PictureControlSet *pcs_ptr,
             if (context_ptr->blk_geom->shape == PART_N) {
                 uint8_t shape_idx;
                 for (shape_idx = 0; shape_idx < NUMBER_OF_SHAPES; shape_idx++)
-                    context_ptr->md_local_blk_unit[context_ptr->blk_geom->blkidx_mds].sse_gradian_band[shape_idx] = 1;
+                    context_ptr->md_local_blk_unit[context_ptr->blk_geom->sqi_mds].sse_gradian_band[shape_idx] = 1;
                 uint32_t sq_size = context_ptr->blk_geom->sq_size;
                 if (sq_size > 4) {
                     uint8_t r, c;
@@ -11437,7 +11441,7 @@ uint8_t get_allowed_block(PictureControlSet *pcs_ptr, ModeDecisionContext *conte
 #if SSE_BASED_SPLITTING 
             uint8_t sse_gradian_band = context_ptr->md_local_blk_unit[context_ptr->blk_geom->sqi_mds].sse_gradian_band[context_ptr->blk_geom->shape];
             uint64_t nsq_prob = allowed_part_weight[context_ptr->blk_geom->depth][context_ptr->blk_geom->shape][band_idx];
-            nsq_prob = sse_gradian_band == 0 ? nsq_prob - ((nsq_prob * sse_grad_weight[context_ptr->blk_geom->depth][context_ptr->blk_geom->shape][band_idx])/(uint64_t)100) : nsq_prob;
+            nsq_prob = sse_gradian_band == 0 ? (((100*nsq_prob) - (nsq_prob * sse_grad_weight[context_ptr->blk_geom->depth][context_ptr->blk_geom->shape][band_idx]))/(uint64_t)100) : nsq_prob;
 #if SPEED_WEIGHT
             if(SPEED_WEIGHT == 1)
                 nsq_prob = (nsq_prob * speed_weight[context_ptr->blk_geom->shape])/(uint64_t)100;

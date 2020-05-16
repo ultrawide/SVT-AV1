@@ -393,6 +393,7 @@ extern "C" {
 #define MERGED_COEFF_BAND         0
 #define SSE_BASED_SPLITTING       0
 #define SPEED_WEIGHT              0
+#define SQ_WEIGHT_100_M1          0
 
 #define CAP_MV_DIFF 1 // Restrict the max. MV diff size to be within the allowable range: fp -2048 < x < 2048
 
