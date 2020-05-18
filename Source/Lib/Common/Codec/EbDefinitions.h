@@ -356,6 +356,12 @@ extern "C" {
 #define SVT_01 1
 
 #if SVT_01
+#define GEN_STAT             1
+#if GEN_STAT
+#define DISABLE_CYCLES_ALLOCATION 1
+#define NSQ_NOISE 1
+#define NOISE_PERC 5
+#endif
 #define DISALLOW_ALL_ACTIONS 1
 #define MULTI_BAND_ACTIONS   1
 

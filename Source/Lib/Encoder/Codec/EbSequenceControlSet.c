@@ -10,6 +10,35 @@
 
 static void eb_sequence_control_set_dctor(EbPtr p) {
     SequenceControlSet *obj = (SequenceControlSet *)p;
+#if GEN_STAT
+        uint8_t band,depthidx,partidx,sse_idx;
+        uint64_t total = 0;
+        for (depthidx = 0; depthidx < 6; depthidx++) {
+            for (partidx = 0; partidx < 10; partidx++) {
+                for (band = 0; band < 3; band++) {
+                    for (sse_idx = 0; sse_idx < 2; sse_idx++) {
+                        total += obj->part_cnt[depthidx][partidx][band][sse_idx];
+                    }
+                }
+            }
+        }
+        if (total) {
+            printf("Satistics start\n");
+            for (depthidx = 0; depthidx < 6; depthidx++) {
+                for (partidx = 0; partidx < 9; partidx++) {
+                    for (band = 0; band < 3; band++) {
+                        for (sse_idx = 0; sse_idx < 2; sse_idx++) {
+                            printf("%d\t", obj->part_cnt[depthidx][partidx][band][sse_idx]);
+                        }
+                    }
+                   printf("\n");
+                }
+                printf("\n");
+            }
+            printf("\n");
+            printf("Satistics end\n");
+        }
+#endif
     EB_FREE_ARRAY(obj->sb_params_array);
     EB_FREE_ARRAY(obj->sb_geom);
 }

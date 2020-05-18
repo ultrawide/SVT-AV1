@@ -3363,6 +3363,9 @@ uint64_t d1_non_square_block_decision(ModeDecisionContext *context_ptr, uint32_t
         tot_cost += split_cost;
     }
     if (merge_block_cnt == context_ptr->blk_geom->totns) merge_block_flag = EB_TRUE;
+#if NSQ_NOISE
+    tot_cost = context_ptr->blk_geom->shape!=PART_N ? tot_cost + (tot_cost * NOISE_PERC) / 1000 : tot_cost;
+#endif 
     if (d1_block_itr == 0 ||
         (tot_cost < context_ptr->md_local_blk_unit[context_ptr->blk_geom->sqi_mds].cost &&
          merge_block_flag == EB_FALSE)) {

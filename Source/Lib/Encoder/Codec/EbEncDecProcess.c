@@ -1340,6 +1340,18 @@ void copy_statistics_to_ref_obj_ect(PictureControlSet *pcs_ptr, SequenceControlS
         (100 * pcs_ptr->below32_coded_area) /
         (pcs_ptr->parent_pcs_ptr->aligned_width * pcs_ptr->parent_pcs_ptr->aligned_height);
 #endif
+#if GEN_STAT
+    uint8_t band,depthidx,partidx,sse_idx;
+    for (depthidx = 0; depthidx < 6; depthidx++) {
+        for (partidx = 0; partidx < 10; partidx++) {
+            for (band = 0; band < 3; band++) {
+                for (sse_idx = 0; sse_idx < 2; sse_idx++) {
+                    scs_ptr->part_cnt[depthidx][partidx][band][sse_idx] += pcs_ptr->part_cnt[depthidx][partidx][band][sse_idx];
+                }
+            }
+        }
+    }
+#endif
     if (pcs_ptr->slice_type == I_SLICE) pcs_ptr->intra_coded_area = 0;
 #if REDUCE_COMPLEX_CLIP_CYCLES
     if (pcs_ptr->slice_type == I_SLICE) pcs_ptr->coef_coded_area = 0;
@@ -3754,6 +3766,10 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
             context_ptr->coeff_area_based_bypass_nsq_th = context_ptr->enable_area_based_cycles_allocation ? m1_nsq_cycles_reduction_th [context_ptr->sb_class] : 0;
         else
             context_ptr->coeff_area_based_bypass_nsq_th = context_ptr->enable_area_based_cycles_allocation ? m1_nsq_cycles_reduction_th [context_ptr->sb_class] : 0;
+
+#if DISABLE_CYCLES_ALLOCATION
+    context_ptr->coeff_area_based_bypass_nsq_th = 0;
+#endif
 #endif
     // Weighting (expressed as a percentage) applied to
     // square shape costs for determining if a and b
@@ -6235,6 +6251,109 @@ static uint64_t generate_best_part_cost(
     }
     return best_part_cost;
 }
+#if GEN_STAT
+Part part_to_shape[10] = {
+    PART_N,
+    PART_H,
+    PART_V,
+    PART_S,
+    PART_HA,
+    PART_HB,
+    PART_VA,
+    PART_VB,
+    PART_H4,
+    PART_V4
+};
+void generate_statistics(
+    SequenceControlSet  *scs_ptr,
+    PictureControlSet   *pcs_ptr,
+    ModeDecisionContext *context_ptr,
+    uint32_t             sb_index) {
+    uint32_t blk_index = 0;
+    uint32_t total_samples = 0;
+    uint32_t count_non_zero_coeffs = 0;
+
+    uint32_t part_cnt[6][10][3][2];
+    uint8_t band,depthidx,partidx,sse_idx;
+    // init stat
+    for (depthidx = 0; depthidx < 6; depthidx++) {
+        for (partidx = 0; partidx < 10; partidx++) {
+            for (band = 0; band < 3; band++) {
+                for (sse_idx = 0; sse_idx < 2; sse_idx++) {
+                    part_cnt[depthidx][partidx][band][sse_idx] = 0;
+                }
+            }
+        }
+    }
+    EbBool split_flag;
+    while (blk_index < scs_ptr->max_block_cnt) {
+        const BlockGeom * blk_geom = get_blk_geom_mds(blk_index);
+        uint8_t is_blk_allowed = pcs_ptr->slice_type != I_SLICE ? 1 :
+            (blk_geom->sq_size < 128) ? 1 : 0;
+        split_flag = context_ptr->md_blk_arr_nsq[blk_index].split_flag;
+        if (scs_ptr->sb_geom[sb_index].block_is_inside_md_scan[blk_index] &&
+            is_blk_allowed) {
+            if (blk_geom->shape == PART_N) {
+                if (context_ptr->md_blk_arr_nsq[blk_index].split_flag == EB_FALSE) {
+                    count_non_zero_coeffs = context_ptr->md_local_blk_unit[blk_index].count_non_zero_coeffs;
+                    total_samples = (blk_geom->bwidth*blk_geom->bheight);
+                    uint8_t part_idx = part_to_shape[context_ptr->md_blk_arr_nsq[blk_index].part];
+                    uint8_t sse_g_band =  context_ptr->md_local_blk_unit[blk_geom->sqi_mds].avail_blk_flag ? 
+                        context_ptr->md_local_blk_unit[blk_geom->sqi_mds].sse_gradian_band[part_idx] : 1;
+                    if (sse_g_band < 0 || sse_g_band >1)
+                        printf("sse_g_band error\n");
+                    uint8_t band_idx = 0;
+                    uint64_t band_width = (context_ptr->blk_geom->depth == 0) ? 100 : (context_ptr->blk_geom->depth == 1) ? 50 : 20;
+                    if (context_ptr->blk_geom->depth == 0) {
+                        if (count_non_zero_coeffs >= ((total_samples * 6) / band_width)) {
+                            part_cnt[blk_geom->depth][part_to_shape[context_ptr->md_blk_arr_nsq[blk_index].part]][2][sse_g_band] += (blk_geom->bwidth*blk_geom->bheight);
+                        }
+                        else if (count_non_zero_coeffs >= ((total_samples * 2) / band_width)) {
+                            part_cnt[blk_geom->depth][part_to_shape[context_ptr->md_blk_arr_nsq[blk_index].part]][1][sse_g_band] += (blk_geom->bwidth*blk_geom->bheight);
+                        }
+                        else {
+                            part_cnt[blk_geom->depth][part_to_shape[context_ptr->md_blk_arr_nsq[blk_index].part]][0][sse_g_band] += (blk_geom->bwidth*blk_geom->bheight);
+                        }
+                    } else if (context_ptr->blk_geom->depth == 1) {
+                        if (count_non_zero_coeffs >= ((total_samples * 8) / band_width)) {
+                            part_cnt[blk_geom->depth][part_to_shape[context_ptr->md_blk_arr_nsq[blk_index].part]][2][sse_g_band] += (blk_geom->bwidth*blk_geom->bheight);
+                        }
+                        else if (count_non_zero_coeffs >= ((total_samples * 2) / band_width)) {
+                            part_cnt[blk_geom->depth][part_to_shape[context_ptr->md_blk_arr_nsq[blk_index].part]][1][sse_g_band] += (blk_geom->bwidth*blk_geom->bheight);
+                        }
+                        else {
+                            part_cnt[blk_geom->depth][part_to_shape[context_ptr->md_blk_arr_nsq[blk_index].part]][0][sse_g_band] += (blk_geom->bwidth*blk_geom->bheight);
+                        }
+                    } else {
+                        if (count_non_zero_coeffs >= ((total_samples * 18) / band_width)) {
+                            part_cnt[blk_geom->depth][part_to_shape[context_ptr->md_blk_arr_nsq[blk_index].part]][2][sse_g_band] += (blk_geom->bwidth*blk_geom->bheight);
+                        }
+                        else if (count_non_zero_coeffs >= ((total_samples * 2) / band_width)) {
+                            part_cnt[blk_geom->depth][part_to_shape[context_ptr->md_blk_arr_nsq[blk_index].part]][1][sse_g_band] += (blk_geom->bwidth*blk_geom->bheight);
+                        }
+                        else {
+                            part_cnt[blk_geom->depth][part_to_shape[context_ptr->md_blk_arr_nsq[blk_index].part]][0][sse_g_band] += (blk_geom->bwidth*blk_geom->bheight);
+                        }
+                    }
+                }
+            }
+        }
+        blk_index += split_flag ?
+            d1_depth_offset[scs_ptr->seq_header.sb_size == BLOCK_128X128][blk_geom->depth] :
+            ns_depth_offset[scs_ptr->seq_header.sb_size == BLOCK_128X128][blk_geom->depth];
+    }
+  
+    for (depthidx = 0; depthidx < 6; depthidx++) {
+        for (partidx = 0; partidx < 10; partidx++) {
+            for (band = 0; band < 3; band++) {
+                for (sse_idx = 0; sse_idx < 2; sse_idx++) {
+                    context_ptr->part_cnt[depthidx][partidx][band][sse_idx] += part_cnt[depthidx][partidx][band][sse_idx];
+                }
+            }
+        }
+    }
+}
+#endif
 #if SB_CLASSIFIER
 static uint8_t determine_sb_class(
     SequenceControlSet  *scs_ptr,
@@ -7173,7 +7292,18 @@ void *enc_dec_kernel(void *input_ptr) {
         end_of_row_flag    = EB_FALSE;
         sb_row_index_start = sb_row_index_count = 0;
         context_ptr->tot_intra_coded_area       = 0;
-
+#if GEN_STAT
+    uint8_t band,depthidx,partidx,sse_idx;
+    for (depthidx = 0; depthidx < 6; depthidx++) {
+        for (partidx = 0; partidx < 10; partidx++) {
+            for (band = 0; band < 3; band++) {
+                for (sse_idx = 0; sse_idx < 2; sse_idx++) {
+                     context_ptr->md_context->part_cnt[depthidx][partidx][band][sse_idx] = 0;
+                }
+            }
+        }
+    }
+#endif
 #if REDUCE_COMPLEX_CLIP_CYCLES
         context_ptr->tot_coef_coded_area = 0;
         context_ptr->tot_below32_coded_area = 0;
@@ -7626,6 +7756,9 @@ void *enc_dec_kernel(void *input_ptr) {
                                      sb_origin_y,
                                      sb_index,
                                      context_ptr->md_context);
+#if GEN_STAT
+                    generate_statistics(scs_ptr, pcs_ptr, context_ptr->md_context, sb_index);
+#endif
 
                     //Jing: Skip configure SB for encdec
                     //      Currently EDcontext only stores frame_level lambda/qp
@@ -7665,6 +7798,17 @@ void *enc_dec_kernel(void *input_ptr) {
 #if REDUCE_COMPLEX_CLIP_CYCLES
         pcs_ptr->coef_coded_area += (uint32_t)context_ptr->tot_coef_coded_area;
         pcs_ptr->below32_coded_area += (uint32_t)context_ptr->tot_below32_coded_area;
+#endif
+#if GEN_STAT
+    for (depthidx = 0; depthidx < 6; depthidx++) {
+        for (partidx = 0; partidx < 10; partidx++) {
+            for (band = 0; band < 3; band++) {
+                for (sse_idx = 0; sse_idx < 2; sse_idx++) {
+                     pcs_ptr->part_cnt[depthidx][partidx][band][sse_idx] += context_ptr->md_context->part_cnt[depthidx][partidx][band][sse_idx];
+                }
+            }
+        }
+    }
 #endif
         pcs_ptr->enc_dec_coded_sb_count += (uint32_t)context_ptr->coded_sb_count;
         last_sb_flag = (pcs_ptr->sb_total_count_pix == pcs_ptr->enc_dec_coded_sb_count);
