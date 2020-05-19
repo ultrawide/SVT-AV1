@@ -1825,6 +1825,103 @@ void set_sb_class_controls(ModeDecisionContext *context_ptr) {
 #endif
 
 #if MULTI_BAND_ACTIONS
+#if CR_T0
+uint8_t m0_nsq_cycles_reduction_th[21] = {
+0, // NONE
+35,//[95%;100%]
+ 35,//[90%;95%]
+ 25,//[85%;90%]
+ 20,//[80%;85%]
+ 17,//[75%;80%]
+ 15,//[70%;75%]
+ 14,//[65%;70%]
+ 13,//[60%;65%]
+ 12,//[55%;60%]
+ 11,//[50%;55%]
+ 10,//[45%;50%]
+ 9,//[40%;45%]
+ 8,//[35%;40%]
+ 7,//[30%;35%]
+ 6,//[25%;30%]
+ 5,//[20%;25%]
+ 4,//[15%;20%]
+ 3,//[10%;15%]
+ 2,//[5%;10%]
+1 //[0%;5%]
+};
+#elif CR_T1
+uint8_t m0_nsq_cycles_reduction_th[21] = {
+0, // NONE
+25,//[95%;100%]
+ 25,//[90%;95%]
+ 25,//[85%;90%]
+ 20,//[80%;85%]
+ 17,//[75%;80%]
+ 15,//[70%;75%]
+ 14,//[65%;70%]
+ 13,//[60%;65%]
+ 12,//[55%;60%]
+ 11,//[50%;55%]
+ 10,//[45%;50%]
+ 9,//[40%;45%]
+ 8,//[35%;40%]
+ 7,//[30%;35%]
+ 6,//[25%;30%]
+ 5,//[20%;25%]
+ 4,//[15%;20%]
+ 3,//[10%;15%]
+ 2,//[5%;10%]
+1 //[0%;5%]
+}; 
+#elif CR_T2
+uint8_t m0_nsq_cycles_reduction_th[21] = {
+0, // NONE
+20,//[95%;100%]
+ 20,//[90%;95%]
+ 20,//[85%;90%]
+ 20,//[80%;85%]
+ 17,//[75%;80%]
+ 15,//[70%;75%]
+ 14,//[65%;70%]
+ 13,//[60%;65%]
+ 12,//[55%;60%]
+ 11,//[50%;55%]
+ 10,//[45%;50%]
+ 9,//[40%;45%]
+ 8,//[35%;40%]
+ 7,//[30%;35%]
+ 6,//[25%;30%]
+ 5,//[20%;25%]
+ 4,//[15%;20%]
+ 3,//[10%;15%]
+ 2,//[5%;10%]
+1 //[0%;5%]
+};
+#elif CR_T3
+uint8_t m0_nsq_cycles_reduction_th[21] = {
+0, // NONE
+17,//[95%;100%]
+ 17,//[90%;95%]
+ 17,//[85%;90%]
+ 17,//[80%;85%]
+ 17,//[75%;80%]
+ 15,//[70%;75%]
+ 14,//[65%;70%]
+ 13,//[60%;65%]
+ 12,//[55%;60%]
+ 11,//[50%;55%]
+ 10,//[45%;50%]
+ 9,//[40%;45%]
+ 8,//[35%;40%]
+ 7,//[30%;35%]
+ 6,//[25%;30%]
+ 5,//[20%;25%]
+ 4,//[15%;20%]
+ 3,//[10%;15%]
+ 2,//[5%;10%]
+1 //[0%;5%]
+};
+#else
 uint8_t m0_nsq_cycles_reduction_th[21] = {
 0, // NONE
 50,//[95%;100%]
@@ -1848,6 +1945,7 @@ uint8_t m0_nsq_cycles_reduction_th[21] = {
  2,//[5%;10%]
 1 //[0%;5%]
 };
+#endif
 uint8_t m1_nsq_cycles_reduction_th[21] = {
 0, // NONE
 50,//[95%;100%]
@@ -1871,7 +1969,6 @@ uint8_t m1_nsq_cycles_reduction_th[21] = {
  3,//[5%;10%]
 2 //[0%;5%]
 };
-
 #endif
 /******************************************************
 * Derive EncDec Settings for OQ
@@ -3766,6 +3863,11 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
             context_ptr->coeff_area_based_bypass_nsq_th = context_ptr->enable_area_based_cycles_allocation ? m1_nsq_cycles_reduction_th [context_ptr->sb_class] : 0;
         else
             context_ptr->coeff_area_based_bypass_nsq_th = context_ptr->enable_area_based_cycles_allocation ? m1_nsq_cycles_reduction_th [context_ptr->sb_class] : 0;
+
+#if MIN_NSQ_CR_TH
+    if (pd_pass == PD_PASS_2)
+        context_ptr->coeff_area_based_bypass_nsq_th = MAX(context_ptr->enable_area_based_cycles_allocation,MIN_NSQ_CR_TH);
+#endif
 
 #if DISABLE_CYCLES_ALLOCATION
     context_ptr->coeff_area_based_bypass_nsq_th = 0;

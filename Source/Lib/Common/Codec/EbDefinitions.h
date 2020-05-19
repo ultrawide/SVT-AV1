@@ -356,14 +356,23 @@ extern "C" {
 #define SVT_01 1
 
 #if SVT_01
-#define GEN_STAT             1
+#define GEN_STAT             0
 #if GEN_STAT
 #define DISABLE_CYCLES_ALLOCATION 1
 #define NSQ_NOISE 1
 #define NOISE_PERC 5
 #endif
+#define MIN_NSQ_CR_TH 0
+#define TM25_NSQ_CYCLES_ALLOCATION 0
+#define CR_T0 0
+#define CR_T1 0
+#define CR_T2 0
+#define CR_T3 0
+
+
 #define DISALLOW_ALL_ACTIONS 1
 #define MULTI_BAND_ACTIONS   1
+
 
 #define REU_MEM_OPT                 1 // Memory reduction for rate estimation tables
 #define SB_MEM_OPT                  1 // memory reduction for SB array. Removing memory allocation for av1xd per blk

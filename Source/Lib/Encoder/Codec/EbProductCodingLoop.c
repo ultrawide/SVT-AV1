@@ -11513,8 +11513,13 @@ uint8_t get_allowed_block(PictureControlSet *pcs_ptr, ModeDecisionContext *conte
 #if SSE_BASED_SPLITTING 
                 uint8_t sse_gradian_band = context_ptr->md_local_blk_unit[context_ptr->blk_geom->sqi_mds].avail_blk_flag ?
                     context_ptr->md_local_blk_unit[context_ptr->blk_geom->sqi_mds].sse_gradian_band[context_ptr->blk_geom->shape] : 1;
+#if TM25_NSQ_CYCLES_ALLOCATION
+                uint64_t nsq_prob = !sse_gradian_band ? tm25_allowed_part_sse_b0_prob[context_ptr->blk_geom->depth][context_ptr->blk_geom->shape][band_idx] :
+                    tm25_allowed_part_sse_b1_prob[context_ptr->blk_geom->depth][context_ptr->blk_geom->shape][band_idx];
+#else
                 uint64_t nsq_prob = allowed_part_weight[context_ptr->blk_geom->depth][context_ptr->blk_geom->shape][band_idx];
                 nsq_prob = sse_gradian_band == 0 ? (((100 * nsq_prob) - (nsq_prob * sse_grad_weight[context_ptr->blk_geom->depth][context_ptr->blk_geom->shape][band_idx])) / (uint64_t)100) : nsq_prob;
+#endif
 #if SPEED_WEIGHT
                 if (SPEED_WEIGHT == 1)
                     nsq_prob = (nsq_prob * speed_weight[context_ptr->blk_geom->shape]) / (uint64_t)100;
