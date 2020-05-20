@@ -41,8 +41,8 @@ static void eb_sequence_control_set_dctor(EbPtr p) {
 #endif
 #if PRINT_TX_ENRGY_COUNT
         if (obj->avrg_tx_count || obj->avrg_tx_energy) {
-            printf("\navrg_tx_count %d\n", obj->avrg_tx_count);
-            printf("avrg_tx_energy%d\n", obj->avrg_tx_energy);
+            printf("\navrg_tx_count: %d\n", obj->avrg_tx_count);
+            printf("avrg_tx_energy: %d\n", obj->avrg_tx_energy);
         }
 #endif
     EB_FREE_ARRAY(obj->sb_params_array);
