@@ -1355,6 +1355,11 @@ void copy_statistics_to_ref_obj_ect(PictureControlSet *pcs_ptr, SequenceControlS
 #if PRINT_TX_ENRGY_COUNT
     scs_ptr->avrg_tx_count += pcs_ptr->avrg_tx_count / pcs_ptr->sb_total_count;
     scs_ptr->avrg_tx_energy += (pcs_ptr->avrg_tx_energy / (pcs_ptr->parent_pcs_ptr->aligned_width * pcs_ptr->parent_pcs_ptr->aligned_height));
+#if TX_COUNT_PER_BAND
+    uint8_t band;
+    for (band = 0; band < 21; band++)
+        scs_ptr->tx_count[band] += pcs_ptr->tx_count[band];
+#endif
 #endif
     if (pcs_ptr->slice_type == I_SLICE) pcs_ptr->intra_coded_area = 0;
 #if REDUCE_COMPLEX_CLIP_CYCLES
@@ -6501,7 +6506,9 @@ static uint8_t determine_sb_class(
     }
 #if PRINT_TX_ENRGY_COUNT
     context_ptr->avrg_tx_count = (uint32_t) ((count_non_zero_coeffs * (uint64_t)100) / total_samples);
+#if TX_SSE
     context_ptr->avrg_tx_energy = tx_energy;
+#endif
 #endif
 #if MULTI_BAND_ACTIONS
     if (count_non_zero_coeffs >= ((total_samples * sb_class_ctrls->sb_class_th[SB_CLASS_1]) / 20))
@@ -6555,6 +6562,10 @@ static uint8_t determine_sb_class(
     else if (count_non_zero_coeffs == ((total_samples * sb_class_ctrls->sb_class_th[VERY_LOW_COMPLEX_CLASS]) / 20))
         sb_class = VERY_LOW_COMPLEX_CLASS;
 #endif
+#endif
+
+#if TX_COUNT_PER_BAND
+    context_ptr->tx_count[SB_CLASS_20 - sb_class]++;
 #endif
     return sb_class;
 }
@@ -7422,6 +7433,11 @@ void *enc_dec_kernel(void *input_ptr) {
 #if PRINT_TX_ENRGY_COUNT
     context_ptr->md_context->avrg_tx_count = 0;
     context_ptr->md_context->avrg_tx_energy = 0;
+#if TX_COUNT_PER_BAND
+    uint8_t band;
+    for (band = 0; band < 21; band++)
+        context_ptr->md_context->tx_count[band] = 0;
+#endif
 #endif
 #if REDUCE_COMPLEX_CLIP_CYCLES
         context_ptr->tot_coef_coded_area = 0;
@@ -7932,6 +7948,10 @@ void *enc_dec_kernel(void *input_ptr) {
 #if PRINT_TX_ENRGY_COUNT
     pcs_ptr->avrg_tx_count += context_ptr->md_context->avrg_tx_count;
     pcs_ptr->avrg_tx_energy += context_ptr->md_context->avrg_tx_energy;
+#if TX_COUNT_PER_BAND
+    for (band = 0; band < 21; band++)
+        pcs_ptr->tx_count[band] += context_ptr->md_context->tx_count[band];
+#endif
 #endif
         pcs_ptr->enc_dec_coded_sb_count += (uint32_t)context_ptr->coded_sb_count;
         last_sb_flag = (pcs_ptr->sb_total_count_pix == pcs_ptr->enc_dec_coded_sb_count);

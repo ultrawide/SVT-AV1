@@ -371,7 +371,8 @@ extern "C" {
 
 #define PRINT_TX_ENRGY_COUNT 0 
 #if PRINT_TX_ENRGY_COUNT
-#define TX_SSE 1
+#define TX_SSE 0
+#define TX_COUNT_PER_BAND 1
 #endif
 
 

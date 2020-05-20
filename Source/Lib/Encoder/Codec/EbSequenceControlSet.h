@@ -206,6 +206,9 @@ typedef struct SequenceControlSet {
 #if PRINT_TX_ENRGY_COUNT
     uint32_t avrg_tx_count;
     uint32_t avrg_tx_energy;
+#if TX_COUNT_PER_BAND
+    uint32_t tx_count[21];
+#endif
 #endif
 } SequenceControlSet;
 

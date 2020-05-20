@@ -879,6 +879,11 @@ void *resource_coordination_kernel(void *input_ptr) {
 #if PRINT_TX_ENRGY_COUNT
     scs_ptr->avrg_tx_count = 0;
     scs_ptr->avrg_tx_energy = 0;
+#if TX_COUNT_PER_BAND
+    uint8_t band;
+    for (band = 0; band < 21; band++)
+        scs_ptr->tx_count[band] = 0;
+#endif
 #endif
             derive_input_resolution(&scs_ptr->input_resolution, input_size);
 

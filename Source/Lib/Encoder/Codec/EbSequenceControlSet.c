@@ -44,6 +44,18 @@ static void eb_sequence_control_set_dctor(EbPtr p) {
             printf("\navrg_tx_count: %d\n", obj->avrg_tx_count);
             printf("avrg_tx_energy: %d\n", obj->avrg_tx_energy);
         }
+#if TX_COUNT_PER_BAND
+    uint8_t band;
+    uint32_t sum = 0;
+    for (band = 1; band < 21; band++)
+        sum +=obj->tx_count[band];
+
+    if (sum) {
+        printf("\nsb_number_per_frequency_band:\n");
+        for (band = 1; band < 21; band++)
+             printf("%d\t", obj->tx_count[band]);
+    }
+#endif
 #endif
     EB_FREE_ARRAY(obj->sb_params_array);
     EB_FREE_ARRAY(obj->sb_geom);

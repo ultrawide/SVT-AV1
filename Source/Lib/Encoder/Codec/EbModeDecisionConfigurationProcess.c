@@ -1796,6 +1796,11 @@ void *mode_decision_configuration_kernel(void *input_ptr) {
 #if PRINT_TX_ENRGY_COUNT
     pcs_ptr->avrg_tx_count = 0;
     pcs_ptr->avrg_tx_energy = 0;
+#if TX_COUNT_PER_BAND
+    uint8_t band;
+    for (band = 0; band < 21; band++)
+        pcs_ptr->tx_count[band] = 0;
+#endif
 #endif
         // Compute Tc, and Beta offsets for a given picture
         // Set reference cdef strength
