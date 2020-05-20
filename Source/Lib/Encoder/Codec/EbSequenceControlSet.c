@@ -39,6 +39,12 @@ static void eb_sequence_control_set_dctor(EbPtr p) {
             printf("Satistics end\n");
         }
 #endif
+#if PRINT_TX_ENRGY_COUNT
+        if(obj->avrg_tx_count)
+            printf("\navrg_tx_count %d\t", obj->avrg_tx_count);
+        if(obj->avrg_tx_energy)
+            printf("\navrg_tx_energy%d\t", obj->avrg_tx_energy);
+#endif
     EB_FREE_ARRAY(obj->sb_params_array);
     EB_FREE_ARRAY(obj->sb_geom);
 }

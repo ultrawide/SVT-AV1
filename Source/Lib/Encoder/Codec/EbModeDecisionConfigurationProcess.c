@@ -1793,6 +1793,10 @@ void *mode_decision_configuration_kernel(void *input_ptr) {
             }
         }
 #endif
+#if PRINT_TX_ENRGY_COUNT
+    pcs_ptr->avrg_tx_count = 0;
+    pcs_ptr->avrg_tx_energy = 0;
+#endif
         // Compute Tc, and Beta offsets for a given picture
         // Set reference cdef strength
         set_reference_cdef_strength(pcs_ptr);

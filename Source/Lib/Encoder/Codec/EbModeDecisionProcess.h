@@ -83,6 +83,9 @@ typedef struct MdBlkStruct {
     unsigned             full_distortion : 32;
     unsigned             chroma_distortion : 32;
     unsigned             chroma_distortion_inter_depth : 32;
+#if TX_SSE
+    uint64_t             tx_energy;
+#endif
     PartitionContextType left_neighbor_partition;
     PartitionContextType above_neighbor_partition;
     uint64_t             cost;
@@ -633,6 +636,10 @@ typedef struct ModeDecisionContext {
 #endif
 #if GEN_STAT
     uint32_t part_cnt[6][10][3][2];
+#endif
+#if PRINT_TX_ENRGY_COUNT
+    uint32_t avrg_tx_count;
+    uint32_t avrg_tx_energy;
 #endif
 } ModeDecisionContext;
 

@@ -89,6 +89,12 @@ static INLINE void copy_256x_bytes_avx2(const int32_t *src, int32_t *dst, const 
     } while (--h);
 }
 
+#if TX_SSE
+uint64_t tx_energy_computation(int32_t *coeff_buffer, TxSize  txsize) {
+    const uint64_t three_quad_energy = energy_computation_avx2(coeff_buffer, txsize);
+     return three_quad_energy;
+}
+#endif
 uint64_t handle_transform16x64_avx2(int32_t *output) {
     //bottom 16x32 area.
     const uint64_t three_quad_energy = energy_computation_avx2(output + 16 * 32, 16 * 32);

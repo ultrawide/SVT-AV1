@@ -153,6 +153,9 @@ typedef struct ModeDecisionCandidate {
     uint8_t                txs_level;
     uint8_t                skip_candidate;
 #endif
+#if TX_SSE
+    uint64_t               tx_energy;
+#endif
 } ModeDecisionCandidate;
 
 /**************************************

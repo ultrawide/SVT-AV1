@@ -7776,7 +7776,11 @@ void perform_tx_partitioning(ModeDecisionCandidateBuffer *candidate_buffer,
                              ModeDecisionContext *context_ptr, PictureControlSet *pcs_ptr,
                              uint64_t ref_fast_cost, uint8_t start_tx_depth, uint8_t end_tx_depth,
 #if QP2QINDEX
+#if TX_SSE
+                             uint32_t qindex, uint32_t *y_count_non_zero_coeffs, uint64_t *tx_energy, uint64_t *y_coeff_bits,
+#else
                              uint32_t qindex, uint32_t *y_count_non_zero_coeffs, uint64_t *y_coeff_bits,
+#endif
 #else
                              uint32_t qp, uint32_t *y_count_non_zero_coeffs, uint64_t *y_coeff_bits,
 #endif
@@ -7848,6 +7852,9 @@ void perform_tx_partitioning(ModeDecisionCandidateBuffer *candidate_buffer,
         tx_initialize_neighbor_arrays(pcs_ptr, context_ptr, is_inter);
 
         // Initialize TU Split
+#if TX_SSE
+        uint64_t tx_y_energy[MAX_NUM_OF_TU_PER_CU];
+#endif
         uint32_t tx_y_count_non_zero_coeffs[MAX_NUM_OF_TU_PER_CU];
         uint64_t tx_y_coeff_bits                       = 0;
         uint64_t tx_y_full_distortion[DIST_CALC_TOTAL] = {0};
@@ -7862,6 +7869,7 @@ void perform_tx_partitioning(ModeDecisionCandidateBuffer *candidate_buffer,
         uint16_t txb_count = context_ptr->blk_geom->txb_count[context_ptr->tx_depth];
 
         uint32_t block_has_coeff = EB_FALSE;
+
         for (context_ptr->txb_itr = 0; context_ptr->txb_itr < txb_count; context_ptr->txb_itr++) {
             uint16_t tx_org_x =
                 context_ptr->blk_geom
@@ -7919,6 +7927,9 @@ void perform_tx_partitioning(ModeDecisionCandidateBuffer *candidate_buffer,
                               context_ptr->blk_ptr->qp,
 #endif
                               &(tx_y_count_non_zero_coeffs[0]),
+#if TX_SSE
+                              &(tx_y_energy[0]),
+#endif
                               &tx_y_coeff_bits,
                               &tx_y_full_distortion[0]);
 
@@ -7960,6 +7971,9 @@ void perform_tx_partitioning(ModeDecisionCandidateBuffer *candidate_buffer,
                      context_ptr->txb_itr++) {
                     y_count_non_zero_coeffs[context_ptr->txb_itr] =
                         tx_y_count_non_zero_coeffs[context_ptr->txb_itr];
+#if TX_SSE
+                    tx_energy[context_ptr->txb_itr] = tx_y_energy[context_ptr->txb_itr];
+#endif
                 }
             }
         } else {
@@ -7970,6 +7984,10 @@ void perform_tx_partitioning(ModeDecisionCandidateBuffer *candidate_buffer,
                  context_ptr->txb_itr++) {
                 y_count_non_zero_coeffs[context_ptr->txb_itr] =
                     tx_y_count_non_zero_coeffs[context_ptr->txb_itr];
+#if TX_SSE
+                tx_energy[context_ptr->txb_itr] =
+                    tx_y_energy[context_ptr->txb_itr];
+#endif
             }
         }
     } // Transform Depth Loop
@@ -7985,6 +8003,9 @@ void full_loop_core(PictureControlSet *pcs_ptr, SuperBlock *sb_ptr, BlkStruct *b
                     uint64_t ref_fast_cost) {
     uint64_t y_full_distortion[DIST_CALC_TOTAL];
     uint32_t count_non_zero_coeffs[3][MAX_NUM_OF_TU_PER_CU];
+#if TX_SSE
+    uint64_t tx_energy[3][MAX_NUM_OF_TU_PER_CU] = { {0},{0} };
+#endif
 
     uint64_t cb_full_distortion[DIST_CALC_TOTAL];
     uint64_t cr_full_distortion[DIST_CALC_TOTAL];
@@ -8110,6 +8131,9 @@ void full_loop_core(PictureControlSet *pcs_ptr, SuperBlock *sb_ptr, BlkStruct *b
                                 context_ptr->blk_ptr->qp,
 #endif
                                 &(*count_non_zero_coeffs[0]),
+#if TX_SSE
+                                 &(*tx_energy[0]),
+#endif
                                 &y_coeff_bits,
                                 &y_full_distortion[0]);
 
@@ -8284,6 +8308,11 @@ void full_loop_core(PictureControlSet *pcs_ptr, SuperBlock *sb_ptr, BlkStruct *b
         candidate_ptr->count_non_zero_coeffs = 0;
         for (uint8_t txb_itr = 0; txb_itr < txb_count; txb_itr++)
             candidate_ptr->count_non_zero_coeffs += count_non_zero_coeffs[0][txb_itr];
+#if TX_SSE
+        candidate_ptr->tx_energy = 0;
+        for (uint8_t txb_itr = 0; txb_itr < txb_count; txb_itr++)
+            candidate_ptr->tx_energy += tx_energy[0][txb_itr];
+#endif
 #endif
 }
 void md_stage_1(PictureControlSet *pcs_ptr, SuperBlock *sb_ptr, BlkStruct *blk_ptr,

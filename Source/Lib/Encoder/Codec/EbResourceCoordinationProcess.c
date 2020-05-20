@@ -876,6 +876,10 @@ void *resource_coordination_kernel(void *input_ptr) {
             }
         }
 #endif
+#if PRINT_TX_ENRGY_COUNT
+    scs_ptr->avrg_tx_count = 0;
+    scs_ptr->avrg_tx_energy = 0;
+#endif
             derive_input_resolution(&scs_ptr->input_resolution, input_size);
 
             sb_params_init(scs_ptr);

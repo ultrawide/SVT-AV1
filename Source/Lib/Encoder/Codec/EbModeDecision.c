@@ -6543,6 +6543,10 @@ uint32_t product_full_mode_decision(
     blk_ptr->quantized_dc[2][0] = buffer_ptr_array[lowest_cost_index]->candidate_ptr->quantized_dc[2][0];
 #endif
     context_ptr->md_local_blk_unit[blk_ptr->mds_idx].count_non_zero_coeffs = candidate_ptr->count_non_zero_coeffs;
+#if TX_SSE
+    context_ptr->md_local_blk_unit[blk_ptr->mds_idx].tx_energy = candidate_ptr->tx_energy;
+#endif
+
 #if SB_MEM_OPT
     blk_ptr->use_intrabc = candidate_ptr->use_intrabc;
 #else

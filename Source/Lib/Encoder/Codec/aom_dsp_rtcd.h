@@ -265,6 +265,10 @@ extern "C" {
     uint64_t handle_transform64x64_avx2(int32_t *output);
     RTCD_EXTERN uint64_t(*handle_transform64x64)(int32_t *output);
 
+#if TX_SSE
+    uint64_t tx_energy_computation(int32_t *coeff_buffer, TxSize  txsize);
+#endif
+
     uint64_t search_one_dual_c(int *lev0, int *lev1, int nb_strengths, uint64_t(**mse)[64], int sb_count, int fast, int start_gi, int end_gi);
     uint64_t search_one_dual_avx2(int *lev0, int *lev1, int nb_strengths, uint64_t(**mse)[64], int sb_count, int fast, int start_gi, int end_gi);
     uint64_t search_one_dual_avx512(int *lev0, int *lev1, int nb_strengths, uint64_t(**mse)[64], int sb_count, int fast, int start_gi, int end_gi);

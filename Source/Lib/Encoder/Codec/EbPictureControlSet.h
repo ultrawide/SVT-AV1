@@ -407,6 +407,10 @@ typedef struct PictureControlSet {
 #if GEN_STAT
     uint32_t part_cnt[6][10][3][2];
 #endif
+#if PRINT_TX_ENRGY_COUNT
+    uint32_t avrg_tx_count;
+    uint32_t avrg_tx_energy;
+#endif
 } PictureControlSet;
 
 // To optimize based on the max input size

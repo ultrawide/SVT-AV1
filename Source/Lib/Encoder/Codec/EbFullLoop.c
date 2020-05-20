@@ -1861,7 +1861,11 @@ void product_full_loop(ModeDecisionCandidateBuffer *candidate_buffer,
 #else
                        EbPictureBufferDesc *input_picture_ptr, uint32_t qp,
 #endif
+#if TX_SSE
+                       uint32_t *y_count_non_zero_coeffs, uint64_t *y_tx_energy, uint64_t *y_coeff_bits,
+#else
                        uint32_t *y_count_non_zero_coeffs, uint64_t *y_coeff_bits,
+#endif
                        uint64_t *y_full_distortion) {
     uint32_t            txb_origin_index;
     uint64_t            y_full_cost;
@@ -1915,6 +1919,23 @@ void product_full_loop(ModeDecisionCandidateBuffer *candidate_buffer,
         candidate_buffer->candidate_ptr->transform_type[txb_itr],
         PLANE_TYPE_Y,
         DEFAULT_SHAPE);
+
+#if TX_SSE
+    y_tx_energy[txb_itr] = 0;
+    if (context_ptr->pd_pass == 0) {
+        uint32_t tx_width = context_ptr->blk_geom->tx_width[tx_depth][txb_itr];
+        uint32_t tx_height = context_ptr->blk_geom->tx_height[tx_depth][txb_itr];
+        int32_t *src_ptr = &(((int32_t *)context_ptr->trans_quant_buffers_ptr->txb_trans_coeff2_nx2_n_ptr->buffer_y)[txb_1d_offset]);
+        int32_t *dst_ptr = &(((int32_t *)context_ptr->trans_quant_buffers_ptr->txb_trans_coeff_ptr->buffer_y)[txb_1d_offset]);
+        uint32_t j;
+        for (j = 0; j < tx_height; j++)
+            memcpy(dst_ptr + j * tx_width, src_ptr + j * tx_width, tx_width * sizeof(int32_t));
+
+        y_tx_energy[txb_itr] = tx_energy_computation(
+            &(((int32_t *)context_ptr->trans_quant_buffers_ptr->txb_trans_coeff_ptr->buffer_y)[txb_1d_offset]),
+            context_ptr->blk_geom->txsize[tx_depth][txb_itr]);
+    }
+#endif
 
     int32_t seg_qp = pcs_ptr->parent_pcs_ptr->frm_hdr.segmentation_params.segmentation_enabled
                          ? pcs_ptr->parent_pcs_ptr->frm_hdr.segmentation_params

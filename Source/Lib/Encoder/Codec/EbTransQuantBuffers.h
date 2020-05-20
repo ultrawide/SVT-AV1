@@ -15,6 +15,9 @@ extern "C" {
 typedef struct EbTransQuantBuffers {
     EbDctor              dctor;
     EbPictureBufferDesc *txb_trans_coeff2_nx2_n_ptr;
+#if TX_SSE
+    EbPictureBufferDesc *txb_trans_coeff_ptr;
+#endif
     EbPictureBufferDesc *txb_trans_coeff_nxn_ptr;
     EbPictureBufferDesc *txb_trans_coeff_n2x_n2_ptr;
     EbPictureBufferDesc *txb_quant_coeff_nxn_ptr;

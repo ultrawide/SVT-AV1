@@ -41,7 +41,11 @@ void product_full_loop(ModeDecisionCandidateBuffer *candidate_buffer,
 #else
                        EbPictureBufferDesc *input_picture_ptr, uint32_t qp,
 #endif
+#if TX_SSE
+                       uint32_t *y_count_non_zero_coeffs, uint64_t *y_tx_energy, uint64_t *y_coeff_bits,
+#else
                        uint32_t *y_count_non_zero_coeffs, uint64_t *y_coeff_bits,
+#endif
                        uint64_t *y_full_distortion);
 
 void inv_transform_recon_wrapper(uint8_t *pred_buffer, uint32_t pred_offset, uint32_t pred_stride,

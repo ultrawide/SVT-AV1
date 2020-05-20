@@ -1352,6 +1352,10 @@ void copy_statistics_to_ref_obj_ect(PictureControlSet *pcs_ptr, SequenceControlS
         }
     }
 #endif
+#if PRINT_TX_ENRGY_COUNT
+    scs_ptr->avrg_tx_count += pcs_ptr->avrg_tx_count / pcs_ptr->sb_total_count;
+    scs_ptr->avrg_tx_energy += (pcs_ptr->avrg_tx_energy / (pcs_ptr->parent_pcs_ptr->aligned_width * pcs_ptr->parent_pcs_ptr->aligned_height));
+#endif
     if (pcs_ptr->slice_type == I_SLICE) pcs_ptr->intra_coded_area = 0;
 #if REDUCE_COMPLEX_CLIP_CYCLES
     if (pcs_ptr->slice_type == I_SLICE) pcs_ptr->coef_coded_area = 0;
@@ -6464,6 +6468,9 @@ static uint8_t determine_sb_class(
     uint32_t             sb_index) {
     uint32_t blk_index = 0;
     uint64_t total_samples = 0;
+#if TX_SSE
+    uint64_t tx_energy = 0;
+#endif
     uint64_t count_non_zero_coeffs = 0;
     uint8_t sb_class = NONE_CLASS;
     SbClassControls *sb_class_ctrls = &context_ptr->sb_class_ctrls;
@@ -6481,6 +6488,9 @@ static uint8_t determine_sb_class(
             if (blk_geom->shape == PART_N) {
                 if (context_ptr->md_blk_arr_nsq[blk_index].split_flag == EB_FALSE) {
                     count_non_zero_coeffs += context_ptr->md_local_blk_unit[blk_index].count_non_zero_coeffs;
+#if TX_SSE
+                    tx_energy += context_ptr->md_local_blk_unit[blk_index].tx_energy;
+#endif
                     total_samples += (blk_geom->bwidth*blk_geom->bheight);
                 }
             }
@@ -6489,7 +6499,10 @@ static uint8_t determine_sb_class(
             d1_depth_offset[scs_ptr->seq_header.sb_size == BLOCK_128X128][blk_geom->depth] :
             ns_depth_offset[scs_ptr->seq_header.sb_size == BLOCK_128X128][blk_geom->depth];
     }
-
+#if PRINT_TX_ENRGY_COUNT
+    context_ptr->avrg_tx_count = (uint32_t) ((count_non_zero_coeffs * (uint64_t)100) / total_samples);
+    context_ptr->avrg_tx_energy = tx_energy;
+#endif
 #if MULTI_BAND_ACTIONS
     if (count_non_zero_coeffs >= ((total_samples * sb_class_ctrls->sb_class_th[SB_CLASS_1]) / 20))
         sb_class = SB_CLASS_1;
@@ -7406,6 +7419,10 @@ void *enc_dec_kernel(void *input_ptr) {
         }
     }
 #endif
+#if PRINT_TX_ENRGY_COUNT
+    context_ptr->md_context->avrg_tx_count = 0;
+    context_ptr->md_context->avrg_tx_energy = 0;
+#endif
 #if REDUCE_COMPLEX_CLIP_CYCLES
         context_ptr->tot_coef_coded_area = 0;
         context_ptr->tot_below32_coded_area = 0;
@@ -7911,6 +7928,10 @@ void *enc_dec_kernel(void *input_ptr) {
             }
         }
     }
+#endif
+#if PRINT_TX_ENRGY_COUNT
+    pcs_ptr->avrg_tx_count += context_ptr->md_context->avrg_tx_count;
+    pcs_ptr->avrg_tx_energy += context_ptr->md_context->avrg_tx_energy;
 #endif
         pcs_ptr->enc_dec_coded_sb_count += (uint32_t)context_ptr->coded_sb_count;
         last_sb_flag = (pcs_ptr->sb_total_count_pix == pcs_ptr->enc_dec_coded_sb_count);

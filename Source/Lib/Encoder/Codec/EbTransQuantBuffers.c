@@ -8,6 +8,9 @@
 static void eb_trans_quant_buffers_dctor(EbPtr p) {
     EbTransQuantBuffers* obj = (EbTransQuantBuffers*)p;
     EB_DELETE(obj->txb_trans_coeff2_nx2_n_ptr);
+#if TX_SSE
+    EB_DELETE(obj->txb_trans_coeff_ptr);
+#endif
     EB_DELETE(obj->txb_trans_coeff_nxn_ptr);
     EB_DELETE(obj->txb_trans_coeff_n2x_n2_ptr);
     EB_DELETE(obj->txb_quant_coeff_nxn_ptr);
@@ -41,6 +44,11 @@ EbErrorType eb_trans_quant_buffers_ctor(EbTransQuantBuffers* trans_quant_buffers
     trans_coeff_32bit_init_array.bot_padding        = 0;
     trans_coeff_32bit_init_array.split_mode         = EB_FALSE;
 
+#if TX_SSE
+    EB_NEW(trans_quant_buffers_ptr->txb_trans_coeff_ptr,
+           eb_picture_buffer_desc_ctor,
+           (EbPtr)&trans_coeff_32bit_init_array);
+#endif
     EB_NEW(trans_quant_buffers_ptr->txb_trans_coeff2_nx2_n_ptr,
            eb_picture_buffer_desc_ctor,
            (EbPtr)&trans_coeff_32bit_init_array);

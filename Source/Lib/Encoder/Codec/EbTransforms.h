@@ -133,6 +133,11 @@ extern EbErrorType av1_estimate_transform(int16_t *residual_buffer, uint32_t res
                                           uint32_t bit_increment, TxType transform_type,
                                           PlaneType            component_type,
                                           EB_TRANS_COEFF_SHAPE trans_coeff_shape);
+#if TX_SSE
+extern uint64_t tx_energy_computation(
+    int32_t *coeff_buffer,
+    TxSize  txsize);
+#endif
 
 extern int32_t av1_quantize_inv_quantize(
         PictureControlSet *pcs_ptr, ModeDecisionContext *md_context, int32_t *coeff,

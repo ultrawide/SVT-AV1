@@ -369,6 +369,13 @@ extern "C" {
 #define CR_T2 0
 #define CR_T3 0
 
+#define PRINT_TX_ENRGY_COUNT 0 
+#if PRINT_TX_ENRGY_COUNT
+#define TX_SSE 1
+#endif
+
+
+
 
 #define DISALLOW_ALL_ACTIONS 1
 #define MULTI_BAND_ACTIONS   1
