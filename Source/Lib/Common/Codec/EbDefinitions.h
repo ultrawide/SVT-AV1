@@ -391,6 +391,15 @@ extern "C" {
 #define COMP_0_0 0
 #endif
 
+#define DEPTH_MULTI_BAND_ACTIONS 0
+#if DEPTH_MULTI_BAND_ACTIONS
+#define DEPTH_1_1 0
+#define DEPTH_0_1 0
+#define DEPTH_1_0 0
+#define DEPTH_0_0 0
+#define BAND_TH 9
+#endif
+
 #define FIX_NSQ_OFF 1
 
 #define DISALLOW_ALL_ACTIONS 1

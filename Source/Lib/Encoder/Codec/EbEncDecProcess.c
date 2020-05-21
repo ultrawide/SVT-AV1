@@ -4418,7 +4418,7 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
             context_ptr->coeff_area_based_bypass_nsq_th = 0; // TH to be identified for M2-M8
 #endif
 
-#if MULTI_BAND_ACTIONS && !MRP_MULTI_BAND_ACTIONS && !COMP_MULTI_BAND_ACTIONS
+#if MULTI_BAND_ACTIONS && !MRP_MULTI_BAND_ACTIONS && !COMP_MULTI_BAND_ACTIONS && !DEPTH_MULTI_BAND_ACTIONS
     if (pd_pass == PD_PASS_0)
         context_ptr->coeff_area_based_bypass_nsq_th = 0;
     else if (pd_pass == PD_PASS_1)
@@ -4902,6 +4902,7 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
 #if COMP_MULTI_BAND_ACTIONS
     context_ptr->compound_mode = context_ptr->enable_area_based_cycles_allocation ? m0_compound_cycles_reduction_th[context_ptr->sb_class] : pcs_ptr->parent_pcs_ptr->compound_mode;
 #endif
+
     // Set inter_intra_distortion_based_reference_pruning
     if (pcs_ptr->slice_type != I_SLICE) {
         if (pd_pass == PD_PASS_0)
@@ -7631,6 +7632,24 @@ static void perform_pred_depth_refinement(SequenceControlSet *scs_ptr, PictureCo
                         s_depth = (context_ptr->sb_class == HIGH_COMPLEX_CLASS || context_ptr->sb_class == MEDIUM_COMPLEX_CLASS) ? 0 : s_depth;
                         e_depth = (context_ptr->sb_class == HIGH_COMPLEX_CLASS || context_ptr->sb_class == MEDIUM_COMPLEX_CLASS) ? 0 : e_depth;
                     }
+#endif
+#if DEPTH_MULTI_BAND_ACTIONS
+#if DEPTH_1_1
+                    s_depth = context_ptr->sb_class < BAND_TH ? -1 : -1;
+                    e_depth = context_ptr->sb_class < BAND_TH ?  1 :  1;
+#endif
+#if DEPTH_0_0
+                    s_depth = context_ptr->sb_class < BAND_TH ? 0 : 0;
+                    e_depth = context_ptr->sb_class < BAND_TH ? 0 : 0;
+#endif
+#if DEPTH_0_1
+                    s_depth = context_ptr->sb_class < BAND_TH ? 0 : -1;
+                    e_depth = context_ptr->sb_class < BAND_TH ? 0 : 1;
+#endif
+#if DEPTH_1_0
+                    s_depth = context_ptr->sb_class < BAND_TH ? -1 : 0;
+                    e_depth = context_ptr->sb_class < BAND_TH ? 1 : 0;
+#endif
 #endif
 #if ADOPT_SKIPPING_PD1
                     // Check that the start and end depth are in allowed range, given other features
