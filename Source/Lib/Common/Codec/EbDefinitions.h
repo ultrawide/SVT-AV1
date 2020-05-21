@@ -374,6 +374,7 @@ extern "C" {
 #define TX_SSE 0
 #define TX_COUNT_PER_BAND 1
 #endif
+#define NON_UNIFORM_BANDING 1 
 
 
 
@@ -5810,6 +5811,12 @@ typedef enum ATTRIBUTE_PACKED {
     SB_CLASS_18,
     SB_CLASS_19,
     SB_CLASS_20,
+#if NON_UNIFORM_BANDING
+    SB_CLASS_21,
+    SB_CLASS_22,
+    SB_CLASS_23,
+    SB_CLASS_24,
+#endif
     NUMBER_OF_SB_CLASS, // Total number of SB classes
 } SB_CLASS;
 #else

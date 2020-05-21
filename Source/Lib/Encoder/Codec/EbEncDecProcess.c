@@ -1570,50 +1570,134 @@ void set_sb_class_controls(ModeDecisionContext *context_ptr) {
         sb_class_ctrls->sb_class_th[sb_class_idx] = 20;
     switch (context_ptr->coeffcients_area_based_cycles_allocation_level) {
     case 0:
-        sb_class_ctrls->sb_class_th[SB_CLASS_1] = 20;  // 1.	[95%;100%]
-        sb_class_ctrls->sb_class_th[SB_CLASS_2] = 20;  // 2.	[90%;95%]
-        sb_class_ctrls->sb_class_th[SB_CLASS_3] = 20;  // 3.	[85%;90%]
-        sb_class_ctrls->sb_class_th[SB_CLASS_4] = 20;  // 4.	[80%;85%]
-        sb_class_ctrls->sb_class_th[SB_CLASS_5] = 20;  // 5.	[75%;80%]
-        sb_class_ctrls->sb_class_th[SB_CLASS_6] = 20;  // 6.	[70%;75%]
-        sb_class_ctrls->sb_class_th[SB_CLASS_7] = 20;  // 7.	[65%;70%]
-        sb_class_ctrls->sb_class_th[SB_CLASS_8] = 20;  // 8.	[60%;65%]
-        sb_class_ctrls->sb_class_th[SB_CLASS_9] = 20;  // 9.	[55%;60%]
-        sb_class_ctrls->sb_class_th[SB_CLASS_10] = 20;  //10.	[50%;55%]
-        sb_class_ctrls->sb_class_th[SB_CLASS_11] = 20;  //11.	[45%;50%]
-        sb_class_ctrls->sb_class_th[SB_CLASS_12] = 20;  //12.	[40%;45%]
-        sb_class_ctrls->sb_class_th[SB_CLASS_13] = 20;  //13.	[35%;40%]
-        sb_class_ctrls->sb_class_th[SB_CLASS_14] = 20;  //14.	[30%;35%]
-        sb_class_ctrls->sb_class_th[SB_CLASS_15] = 20;  //15.	[25%;30%]
-        sb_class_ctrls->sb_class_th[SB_CLASS_16] = 20;  //16.	[20%;25%]
-        sb_class_ctrls->sb_class_th[SB_CLASS_17] = 20;  //17.	[15%;20%]
-        sb_class_ctrls->sb_class_th[SB_CLASS_18] = 20;  //18.	[10%;15%]
-        sb_class_ctrls->sb_class_th[SB_CLASS_19] = 20;  //19.	[5%;10%]
-        sb_class_ctrls->sb_class_th[SB_CLASS_20] = 20;  //20.	[0%;5%]
+#if NON_UNIFORM_BANDING
+        sb_class_ctrls->sb_class_th[SB_CLASS_1] = 100;  
+        sb_class_ctrls->sb_class_th[SB_CLASS_2] = 100;  
+        sb_class_ctrls->sb_class_th[SB_CLASS_3] = 100;  
+        sb_class_ctrls->sb_class_th[SB_CLASS_4] = 100;  
+        sb_class_ctrls->sb_class_th[SB_CLASS_5] = 100;  
+        sb_class_ctrls->sb_class_th[SB_CLASS_6] = 100;  
+        sb_class_ctrls->sb_class_th[SB_CLASS_7] = 100;  
+        sb_class_ctrls->sb_class_th[SB_CLASS_8] = 100;  
+        sb_class_ctrls->sb_class_th[SB_CLASS_9] = 100;  
+        sb_class_ctrls->sb_class_th[SB_CLASS_10] = 100; 
+        sb_class_ctrls->sb_class_th[SB_CLASS_11] = 100; 
+        sb_class_ctrls->sb_class_th[SB_CLASS_12] = 100; 
+        sb_class_ctrls->sb_class_th[SB_CLASS_13] = 100; 
+        sb_class_ctrls->sb_class_th[SB_CLASS_14] = 100; 
+        sb_class_ctrls->sb_class_th[SB_CLASS_15] = 100; 
+        sb_class_ctrls->sb_class_th[SB_CLASS_16] = 100; 
+        sb_class_ctrls->sb_class_th[SB_CLASS_17] = 100; 
+        sb_class_ctrls->sb_class_th[SB_CLASS_18] = 100; 
+        sb_class_ctrls->sb_class_th[SB_CLASS_19] = 100; 
+        sb_class_ctrls->sb_class_th[SB_CLASS_20] = 100; 
+        sb_class_ctrls->sb_class_th[SB_CLASS_21] = 100; 
+        sb_class_ctrls->sb_class_th[SB_CLASS_22] = 100; 
+        sb_class_ctrls->sb_class_th[SB_CLASS_23] = 100; 
+        sb_class_ctrls->sb_class_th[SB_CLASS_24] = 100;
+#else
+        sb_class_ctrls->sb_class_th[SB_CLASS_1] = 20;  
+        sb_class_ctrls->sb_class_th[SB_CLASS_2] = 20;  
+        sb_class_ctrls->sb_class_th[SB_CLASS_3] = 20;  
+        sb_class_ctrls->sb_class_th[SB_CLASS_4] = 20;  
+        sb_class_ctrls->sb_class_th[SB_CLASS_5] = 20;  
+        sb_class_ctrls->sb_class_th[SB_CLASS_6] = 20;  
+        sb_class_ctrls->sb_class_th[SB_CLASS_7] = 20;  
+        sb_class_ctrls->sb_class_th[SB_CLASS_8] = 20;  
+        sb_class_ctrls->sb_class_th[SB_CLASS_9] = 20;  
+        sb_class_ctrls->sb_class_th[SB_CLASS_10] = 20; 
+        sb_class_ctrls->sb_class_th[SB_CLASS_11] = 20; 
+        sb_class_ctrls->sb_class_th[SB_CLASS_12] = 20; 
+        sb_class_ctrls->sb_class_th[SB_CLASS_13] = 20; 
+        sb_class_ctrls->sb_class_th[SB_CLASS_14] = 20; 
+        sb_class_ctrls->sb_class_th[SB_CLASS_15] = 20; 
+        sb_class_ctrls->sb_class_th[SB_CLASS_16] = 20; 
+        sb_class_ctrls->sb_class_th[SB_CLASS_17] = 20; 
+        sb_class_ctrls->sb_class_th[SB_CLASS_18] = 20; 
+        sb_class_ctrls->sb_class_th[SB_CLASS_19] = 20; 
+        sb_class_ctrls->sb_class_th[SB_CLASS_20] = 20; 
+#endif
         break;
     case 1: // TH 80%
-        sb_class_ctrls->sb_class_th[SB_CLASS_1] = 19;  // 1.	[95%;100%]
-        sb_class_ctrls->sb_class_th[SB_CLASS_2] = 18;  // 2.	[90%;95%]
-        sb_class_ctrls->sb_class_th[SB_CLASS_3] = 17;  // 3.	[85%;90%]
-        sb_class_ctrls->sb_class_th[SB_CLASS_4] = 16;  // 4.	[80%;85%]
-        sb_class_ctrls->sb_class_th[SB_CLASS_5] = 15;  // 5.	[75%;80%]
-        sb_class_ctrls->sb_class_th[SB_CLASS_6] = 14;  // 6.	[70%;75%]
-        sb_class_ctrls->sb_class_th[SB_CLASS_7] = 13;  // 7.	[65%;70%]
-        sb_class_ctrls->sb_class_th[SB_CLASS_8] = 12;  // 8.	[60%;65%]
-        sb_class_ctrls->sb_class_th[SB_CLASS_9] = 11;  // 9.	[55%;60%]
-        sb_class_ctrls->sb_class_th[SB_CLASS_10] = 10;  //10.	[50%;55%]
-        sb_class_ctrls->sb_class_th[SB_CLASS_11] = 9;  //11.	[45%;50%]
-        sb_class_ctrls->sb_class_th[SB_CLASS_12] = 8;  //12.	[40%;45%]
-        sb_class_ctrls->sb_class_th[SB_CLASS_13] = 7;  //13.	[35%;40%]
-        sb_class_ctrls->sb_class_th[SB_CLASS_14] = 6;  //14.	[30%;35%]
-        sb_class_ctrls->sb_class_th[SB_CLASS_15] = 5;  //15.	[25%;30%]
-        sb_class_ctrls->sb_class_th[SB_CLASS_16] = 4;  //16.	[20%;25%]
-        sb_class_ctrls->sb_class_th[SB_CLASS_17] = 3;  //17.	[15%;20%]
-        sb_class_ctrls->sb_class_th[SB_CLASS_18] = 2;  //18.	[10%;15%]
-        sb_class_ctrls->sb_class_th[SB_CLASS_19] = 1;  //19.	[5%;10%]
-        sb_class_ctrls->sb_class_th[SB_CLASS_20] = 0;  //20.	[0%;5%]
+#if NON_UNIFORM_BANDING
+        sb_class_ctrls->sb_class_th[SB_CLASS_1] = 85; 
+        sb_class_ctrls->sb_class_th[SB_CLASS_2] = 75; 
+        sb_class_ctrls->sb_class_th[SB_CLASS_3] = 65; 
+        sb_class_ctrls->sb_class_th[SB_CLASS_4] = 60; 
+        sb_class_ctrls->sb_class_th[SB_CLASS_5] = 55; 
+        sb_class_ctrls->sb_class_th[SB_CLASS_6] = 50; 
+        sb_class_ctrls->sb_class_th[SB_CLASS_7] = 45; 
+        sb_class_ctrls->sb_class_th[SB_CLASS_8] = 40; 
+        sb_class_ctrls->sb_class_th[SB_CLASS_9] = 35; 
+        sb_class_ctrls->sb_class_th[SB_CLASS_10] = 30;
+        sb_class_ctrls->sb_class_th[SB_CLASS_11] = 25; 
+        sb_class_ctrls->sb_class_th[SB_CLASS_12] = 20; 
+        sb_class_ctrls->sb_class_th[SB_CLASS_13] = 17; 
+        sb_class_ctrls->sb_class_th[SB_CLASS_14] = 14; 
+        sb_class_ctrls->sb_class_th[SB_CLASS_15] = 12; 
+        sb_class_ctrls->sb_class_th[SB_CLASS_16] = 10; 
+        sb_class_ctrls->sb_class_th[SB_CLASS_17] = 8; 
+        sb_class_ctrls->sb_class_th[SB_CLASS_18] = 6; 
+        sb_class_ctrls->sb_class_th[SB_CLASS_19] = 5; 
+        sb_class_ctrls->sb_class_th[SB_CLASS_20] = 4; 
+        sb_class_ctrls->sb_class_th[SB_CLASS_21] = 3; 
+        sb_class_ctrls->sb_class_th[SB_CLASS_22] = 2; 
+        sb_class_ctrls->sb_class_th[SB_CLASS_23] = 1; 
+        sb_class_ctrls->sb_class_th[SB_CLASS_24] = 0; 
+#else
+        sb_class_ctrls->sb_class_th[SB_CLASS_1] = 19; 
+        sb_class_ctrls->sb_class_th[SB_CLASS_2] = 18; 
+        sb_class_ctrls->sb_class_th[SB_CLASS_3] = 17; 
+        sb_class_ctrls->sb_class_th[SB_CLASS_4] = 16; 
+        sb_class_ctrls->sb_class_th[SB_CLASS_5] = 15; 
+        sb_class_ctrls->sb_class_th[SB_CLASS_6] = 14; 
+        sb_class_ctrls->sb_class_th[SB_CLASS_7] = 13; 
+        sb_class_ctrls->sb_class_th[SB_CLASS_8] = 12; 
+        sb_class_ctrls->sb_class_th[SB_CLASS_9] = 11; 
+        sb_class_ctrls->sb_class_th[SB_CLASS_10] = 10;
+        sb_class_ctrls->sb_class_th[SB_CLASS_11] = 9; 
+        sb_class_ctrls->sb_class_th[SB_CLASS_12] = 8; 
+        sb_class_ctrls->sb_class_th[SB_CLASS_13] = 7; 
+        sb_class_ctrls->sb_class_th[SB_CLASS_14] = 6; 
+        sb_class_ctrls->sb_class_th[SB_CLASS_15] = 5; 
+        sb_class_ctrls->sb_class_th[SB_CLASS_16] = 4; 
+        sb_class_ctrls->sb_class_th[SB_CLASS_17] = 3; 
+        sb_class_ctrls->sb_class_th[SB_CLASS_18] = 2; 
+        sb_class_ctrls->sb_class_th[SB_CLASS_19] = 1; 
+        sb_class_ctrls->sb_class_th[SB_CLASS_20] = 0; 
+        sb_class_ctrls->sb_class_th[SB_CLASS_21] = 3; 
+        sb_class_ctrls->sb_class_th[SB_CLASS_22] = 2; 
+        sb_class_ctrls->sb_class_th[SB_CLASS_23] = 1; 
+        sb_class_ctrls->sb_class_th[SB_CLASS_24] = 0; 
+#endif
         break;
     case 2: // TH 70%
+#if NON_UNIFORM_BANDING
+        sb_class_ctrls->sb_class_th[SB_CLASS_1] = 85; 
+        sb_class_ctrls->sb_class_th[SB_CLASS_2] = 75; 
+        sb_class_ctrls->sb_class_th[SB_CLASS_3] = 65; 
+        sb_class_ctrls->sb_class_th[SB_CLASS_4] = 60; 
+        sb_class_ctrls->sb_class_th[SB_CLASS_5] = 55; 
+        sb_class_ctrls->sb_class_th[SB_CLASS_6] = 50; 
+        sb_class_ctrls->sb_class_th[SB_CLASS_7] = 45; 
+        sb_class_ctrls->sb_class_th[SB_CLASS_8] = 40; 
+        sb_class_ctrls->sb_class_th[SB_CLASS_9] = 35; 
+        sb_class_ctrls->sb_class_th[SB_CLASS_10] = 30;
+        sb_class_ctrls->sb_class_th[SB_CLASS_11] = 25; 
+        sb_class_ctrls->sb_class_th[SB_CLASS_12] = 20; 
+        sb_class_ctrls->sb_class_th[SB_CLASS_13] = 17; 
+        sb_class_ctrls->sb_class_th[SB_CLASS_14] = 14; 
+        sb_class_ctrls->sb_class_th[SB_CLASS_15] = 12; 
+        sb_class_ctrls->sb_class_th[SB_CLASS_16] = 10; 
+        sb_class_ctrls->sb_class_th[SB_CLASS_17] = 8; 
+        sb_class_ctrls->sb_class_th[SB_CLASS_18] = 6; 
+        sb_class_ctrls->sb_class_th[SB_CLASS_19] = 5; 
+        sb_class_ctrls->sb_class_th[SB_CLASS_20] = 4; 
+        sb_class_ctrls->sb_class_th[SB_CLASS_21] = 3; 
+        sb_class_ctrls->sb_class_th[SB_CLASS_22] = 2; 
+        sb_class_ctrls->sb_class_th[SB_CLASS_23] = 1; 
+        sb_class_ctrls->sb_class_th[SB_CLASS_24] = 0; 
+#else
         sb_class_ctrls->sb_class_th[SB_CLASS_1] = 19;  // 1.	[95%;100%]
         sb_class_ctrls->sb_class_th[SB_CLASS_2] = 18;  // 2.	[90%;95%]
         sb_class_ctrls->sb_class_th[SB_CLASS_3] = 17;  // 3.	[85%;90%]
@@ -1634,8 +1718,35 @@ void set_sb_class_controls(ModeDecisionContext *context_ptr) {
         sb_class_ctrls->sb_class_th[SB_CLASS_18] = 2;  //18.	[10%;15%]
         sb_class_ctrls->sb_class_th[SB_CLASS_19] = 1;  //19.	[5%;10%]
         sb_class_ctrls->sb_class_th[SB_CLASS_20] = 0;  //20.	[0%;5%]
+#endif
         break;
     case 3: // TH 60%
+#if NON_UNIFORM_BANDING
+        sb_class_ctrls->sb_class_th[SB_CLASS_1] = 85; 
+        sb_class_ctrls->sb_class_th[SB_CLASS_2] = 75; 
+        sb_class_ctrls->sb_class_th[SB_CLASS_3] = 65; 
+        sb_class_ctrls->sb_class_th[SB_CLASS_4] = 60; 
+        sb_class_ctrls->sb_class_th[SB_CLASS_5] = 55; 
+        sb_class_ctrls->sb_class_th[SB_CLASS_6] = 50; 
+        sb_class_ctrls->sb_class_th[SB_CLASS_7] = 45; 
+        sb_class_ctrls->sb_class_th[SB_CLASS_8] = 40; 
+        sb_class_ctrls->sb_class_th[SB_CLASS_9] = 35; 
+        sb_class_ctrls->sb_class_th[SB_CLASS_10] = 30;
+        sb_class_ctrls->sb_class_th[SB_CLASS_11] = 25; 
+        sb_class_ctrls->sb_class_th[SB_CLASS_12] = 20; 
+        sb_class_ctrls->sb_class_th[SB_CLASS_13] = 17; 
+        sb_class_ctrls->sb_class_th[SB_CLASS_14] = 14; 
+        sb_class_ctrls->sb_class_th[SB_CLASS_15] = 12; 
+        sb_class_ctrls->sb_class_th[SB_CLASS_16] = 10; 
+        sb_class_ctrls->sb_class_th[SB_CLASS_17] = 8; 
+        sb_class_ctrls->sb_class_th[SB_CLASS_18] = 6; 
+        sb_class_ctrls->sb_class_th[SB_CLASS_19] = 5; 
+        sb_class_ctrls->sb_class_th[SB_CLASS_20] = 4; 
+        sb_class_ctrls->sb_class_th[SB_CLASS_21] = 3; 
+        sb_class_ctrls->sb_class_th[SB_CLASS_22] = 2; 
+        sb_class_ctrls->sb_class_th[SB_CLASS_23] = 1; 
+        sb_class_ctrls->sb_class_th[SB_CLASS_24] = 0; 
+#else
         sb_class_ctrls->sb_class_th[SB_CLASS_1] = 19;  // 1.	[95%;100%]
         sb_class_ctrls->sb_class_th[SB_CLASS_2] = 18;  // 2.	[90%;95%]
         sb_class_ctrls->sb_class_th[SB_CLASS_3] = 17;  // 3.	[85%;90%]
@@ -1656,8 +1767,35 @@ void set_sb_class_controls(ModeDecisionContext *context_ptr) {
         sb_class_ctrls->sb_class_th[SB_CLASS_18] = 2;  //18.	[10%;15%]
         sb_class_ctrls->sb_class_th[SB_CLASS_19] = 1;  //19.	[5%;10%]
         sb_class_ctrls->sb_class_th[SB_CLASS_20] = 0;  //20.	[0%;5%]
+#endif
         break;
     case 4: // TH 50%
+#if NON_UNIFORM_BANDING
+        sb_class_ctrls->sb_class_th[SB_CLASS_1] = 85; 
+        sb_class_ctrls->sb_class_th[SB_CLASS_2] = 75; 
+        sb_class_ctrls->sb_class_th[SB_CLASS_3] = 65; 
+        sb_class_ctrls->sb_class_th[SB_CLASS_4] = 60; 
+        sb_class_ctrls->sb_class_th[SB_CLASS_5] = 55; 
+        sb_class_ctrls->sb_class_th[SB_CLASS_6] = 50; 
+        sb_class_ctrls->sb_class_th[SB_CLASS_7] = 45; 
+        sb_class_ctrls->sb_class_th[SB_CLASS_8] = 40; 
+        sb_class_ctrls->sb_class_th[SB_CLASS_9] = 35; 
+        sb_class_ctrls->sb_class_th[SB_CLASS_10] = 30;
+        sb_class_ctrls->sb_class_th[SB_CLASS_11] = 25; 
+        sb_class_ctrls->sb_class_th[SB_CLASS_12] = 20; 
+        sb_class_ctrls->sb_class_th[SB_CLASS_13] = 17; 
+        sb_class_ctrls->sb_class_th[SB_CLASS_14] = 14; 
+        sb_class_ctrls->sb_class_th[SB_CLASS_15] = 12; 
+        sb_class_ctrls->sb_class_th[SB_CLASS_16] = 10; 
+        sb_class_ctrls->sb_class_th[SB_CLASS_17] = 8; 
+        sb_class_ctrls->sb_class_th[SB_CLASS_18] = 6; 
+        sb_class_ctrls->sb_class_th[SB_CLASS_19] = 5; 
+        sb_class_ctrls->sb_class_th[SB_CLASS_20] = 4; 
+        sb_class_ctrls->sb_class_th[SB_CLASS_21] = 3; 
+        sb_class_ctrls->sb_class_th[SB_CLASS_22] = 2; 
+        sb_class_ctrls->sb_class_th[SB_CLASS_23] = 1; 
+        sb_class_ctrls->sb_class_th[SB_CLASS_24] = 0; 
+#else
         sb_class_ctrls->sb_class_th[SB_CLASS_1] = 19;  // 1.	[95%;100%]
         sb_class_ctrls->sb_class_th[SB_CLASS_2] = 18;  // 2.	[90%;95%]
         sb_class_ctrls->sb_class_th[SB_CLASS_3] = 17;  // 3.	[85%;90%]
@@ -1678,8 +1816,35 @@ void set_sb_class_controls(ModeDecisionContext *context_ptr) {
         sb_class_ctrls->sb_class_th[SB_CLASS_18] = 2;  //18.	[10%;15%]
         sb_class_ctrls->sb_class_th[SB_CLASS_19] = 1;  //19.	[5%;10%]
         sb_class_ctrls->sb_class_th[SB_CLASS_20] = 0;  //20.	[0%;5%]
+#endif
         break;
     case 5: // TH 40%
+#if NON_UNIFORM_BANDING
+        sb_class_ctrls->sb_class_th[SB_CLASS_1] = 85; 
+        sb_class_ctrls->sb_class_th[SB_CLASS_2] = 75; 
+        sb_class_ctrls->sb_class_th[SB_CLASS_3] = 65; 
+        sb_class_ctrls->sb_class_th[SB_CLASS_4] = 60; 
+        sb_class_ctrls->sb_class_th[SB_CLASS_5] = 55; 
+        sb_class_ctrls->sb_class_th[SB_CLASS_6] = 50; 
+        sb_class_ctrls->sb_class_th[SB_CLASS_7] = 45; 
+        sb_class_ctrls->sb_class_th[SB_CLASS_8] = 40; 
+        sb_class_ctrls->sb_class_th[SB_CLASS_9] = 35; 
+        sb_class_ctrls->sb_class_th[SB_CLASS_10] = 30;
+        sb_class_ctrls->sb_class_th[SB_CLASS_11] = 25; 
+        sb_class_ctrls->sb_class_th[SB_CLASS_12] = 20; 
+        sb_class_ctrls->sb_class_th[SB_CLASS_13] = 17; 
+        sb_class_ctrls->sb_class_th[SB_CLASS_14] = 14; 
+        sb_class_ctrls->sb_class_th[SB_CLASS_15] = 12; 
+        sb_class_ctrls->sb_class_th[SB_CLASS_16] = 10; 
+        sb_class_ctrls->sb_class_th[SB_CLASS_17] = 8; 
+        sb_class_ctrls->sb_class_th[SB_CLASS_18] = 6; 
+        sb_class_ctrls->sb_class_th[SB_CLASS_19] = 5; 
+        sb_class_ctrls->sb_class_th[SB_CLASS_20] = 4; 
+        sb_class_ctrls->sb_class_th[SB_CLASS_21] = 3; 
+        sb_class_ctrls->sb_class_th[SB_CLASS_22] = 2; 
+        sb_class_ctrls->sb_class_th[SB_CLASS_23] = 1; 
+        sb_class_ctrls->sb_class_th[SB_CLASS_24] = 0; 
+#else
         sb_class_ctrls->sb_class_th[SB_CLASS_1] = 19;  // 1.	[95%;100%]
         sb_class_ctrls->sb_class_th[SB_CLASS_2] = 18;  // 2.	[90%;95%]
         sb_class_ctrls->sb_class_th[SB_CLASS_3] = 17;  // 3.	[85%;90%]
@@ -1700,8 +1865,35 @@ void set_sb_class_controls(ModeDecisionContext *context_ptr) {
         sb_class_ctrls->sb_class_th[SB_CLASS_18] = 2;  //18.	[10%;15%]
         sb_class_ctrls->sb_class_th[SB_CLASS_19] = 1;  //19.	[5%;10%]
         sb_class_ctrls->sb_class_th[SB_CLASS_20] = 0;  //20.	[0%;5%]
+#endif
         break;
     case 6:
+#if NON_UNIFORM_BANDING
+        sb_class_ctrls->sb_class_th[SB_CLASS_1] = 85; 
+        sb_class_ctrls->sb_class_th[SB_CLASS_2] = 75; 
+        sb_class_ctrls->sb_class_th[SB_CLASS_3] = 65; 
+        sb_class_ctrls->sb_class_th[SB_CLASS_4] = 60; 
+        sb_class_ctrls->sb_class_th[SB_CLASS_5] = 55; 
+        sb_class_ctrls->sb_class_th[SB_CLASS_6] = 50; 
+        sb_class_ctrls->sb_class_th[SB_CLASS_7] = 45; 
+        sb_class_ctrls->sb_class_th[SB_CLASS_8] = 40; 
+        sb_class_ctrls->sb_class_th[SB_CLASS_9] = 35; 
+        sb_class_ctrls->sb_class_th[SB_CLASS_10] = 30;
+        sb_class_ctrls->sb_class_th[SB_CLASS_11] = 25; 
+        sb_class_ctrls->sb_class_th[SB_CLASS_12] = 20; 
+        sb_class_ctrls->sb_class_th[SB_CLASS_13] = 17; 
+        sb_class_ctrls->sb_class_th[SB_CLASS_14] = 14; 
+        sb_class_ctrls->sb_class_th[SB_CLASS_15] = 12; 
+        sb_class_ctrls->sb_class_th[SB_CLASS_16] = 10; 
+        sb_class_ctrls->sb_class_th[SB_CLASS_17] = 8; 
+        sb_class_ctrls->sb_class_th[SB_CLASS_18] = 6; 
+        sb_class_ctrls->sb_class_th[SB_CLASS_19] = 5; 
+        sb_class_ctrls->sb_class_th[SB_CLASS_20] = 4; 
+        sb_class_ctrls->sb_class_th[SB_CLASS_21] = 3; 
+        sb_class_ctrls->sb_class_th[SB_CLASS_22] = 2; 
+        sb_class_ctrls->sb_class_th[SB_CLASS_23] = 1; 
+        sb_class_ctrls->sb_class_th[SB_CLASS_24] = 0; 
+#else
         sb_class_ctrls->sb_class_th[SB_CLASS_1] = 19;  // 1.	[95%;100%]
         sb_class_ctrls->sb_class_th[SB_CLASS_2] = 18;  // 2.	[90%;95%]
         sb_class_ctrls->sb_class_th[SB_CLASS_3] = 17;  // 3.	[85%;90%]
@@ -1722,6 +1914,7 @@ void set_sb_class_controls(ModeDecisionContext *context_ptr) {
         sb_class_ctrls->sb_class_th[SB_CLASS_18] = 2;  //18.	[10%;15%]
         sb_class_ctrls->sb_class_th[SB_CLASS_19] = 1;  //19.	[5%;10%]
         sb_class_ctrls->sb_class_th[SB_CLASS_20] = 0;  //20.	[0%;5%]
+#endif
         break;
     default:
         printf("Error - Invalid sb_class_level");
@@ -1931,6 +2124,36 @@ uint8_t m0_nsq_cycles_reduction_th[21] = {
 1 //[0%;5%]
 };
 #else
+#if NON_UNIFORM_BANDING
+uint8_t m0_nsq_cycles_reduction_th[26] = {
+0, // NONE
+20, //[85%;100%]
+ 19,//[75%;85%]
+ 18,//[65%;75%]
+ 17,//[60%;65%]
+ 16,//[55%;60%]
+ 15,//[50%;65%]
+ 14,//[45%;50%]
+ 13,//[40%;45%]
+ 12,//[35%;40%]
+ 11,//[30%;35%]
+ 10,//[25%;30%]
+ 9,//[20%;25%]
+ 8,//[17%;20%]
+ 7,//[14%;17%]
+ 6,//[12%;14%]
+ 5,//[10%;12%]
+ 4,//[8%;10%]
+ 3,//[6%;8%]
+ 2,//[5%;6%]
+ 2,//[4%;5%]
+ 2, //[3%;4%]
+ 1, //[2%;3%]
+ 1, //[1%;2%]
+ 1, //[0%;1%]
+ 1  //[0%]
+};
+#else
 uint8_t m0_nsq_cycles_reduction_th[21] = {
 0, // NONE
 50,//[95%;100%]
@@ -1955,6 +2178,37 @@ uint8_t m0_nsq_cycles_reduction_th[21] = {
 1 //[0%;5%]
 };
 #endif
+#endif
+#if NON_UNIFORM_BANDING
+uint8_t m1_nsq_cycles_reduction_th[26] = {
+0, // NONE
+20, //[85%;100%]
+ 19,//[75%;85%]
+ 18,//[65%;75%]
+ 17,//[60%;65%]
+ 16,//[55%;60%]
+ 15,//[50%;65%]
+ 14,//[45%;50%]
+ 13,//[40%;45%]
+ 12,//[35%;40%]
+ 11,//[30%;35%]
+ 10,//[25%;30%]
+ 9,//[20%;25%]
+ 8,//[17%;20%]
+ 7,//[14%;17%]
+ 6,//[12%;14%]
+ 5,//[10%;12%]
+ 4,//[8%;10%]
+ 3,//[6%;8%]
+ 2,//[5%;6%]
+ 2,//[4%;5%]
+ 2, //[3%;4%]
+ 1, //[2%;3%]
+ 1, //[1%;2%]
+ 1, //[0%;1%]
+ 1  //[0%]
+};
+#else
 uint8_t m1_nsq_cycles_reduction_th[21] = {
 0, // NONE
 50,//[95%;100%]
@@ -1978,6 +2232,7 @@ uint8_t m1_nsq_cycles_reduction_th[21] = {
  3,//[5%;10%]
 2 //[0%;5%]
 };
+#endif
 #endif
 /******************************************************
 * Derive EncDec Settings for OQ
@@ -2745,10 +3000,17 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
 #if OPT_BLOCK_INDICES_GEN_2
 
 #if PD0_PD1_NSQ_BLIND
+#if FIX_NSQ_OFF
+     if (pd_pass == PD_PASS_0)
+         context_ptr->md_disallow_nsq = (enc_mode <= ENC_M0) ? pcs_ptr->parent_pcs_ptr->disallow_nsq : 1;
+     else if (pd_pass == PD_PASS_1)
+         context_ptr->md_disallow_nsq = (enc_mode <= ENC_M0) ? pcs_ptr->parent_pcs_ptr->disallow_nsq : 1;
+#else
      if (pd_pass == PD_PASS_0)
          context_ptr->md_disallow_nsq = (enc_mode <= ENC_M0) ? 0 : 1;
      else if (pd_pass == PD_PASS_1)
-         context_ptr->md_disallow_nsq = (enc_mode <= ENC_M0) ? 0 : 1;
+         context_ptr->md_disallow_nsq = (enc_mode <= ENC_M0) ? 0: 1;
+#endif
      else
          // Update nsq settings based on the sb_class
 #if NEW_CYCLE_ALLOCATION
@@ -6511,6 +6773,56 @@ static uint8_t determine_sb_class(
 #endif
 #endif
 #if MULTI_BAND_ACTIONS
+#if NON_UNIFORM_BANDING
+        if (count_non_zero_coeffs >= ((total_samples * sb_class_ctrls->sb_class_th[SB_CLASS_1]) / 100))
+        sb_class = SB_CLASS_1;
+    else if (count_non_zero_coeffs >= ((total_samples * sb_class_ctrls->sb_class_th[SB_CLASS_2]) / 100))
+        sb_class = SB_CLASS_2;
+    else if (count_non_zero_coeffs >= ((total_samples * sb_class_ctrls->sb_class_th[SB_CLASS_3]) / 100))
+        sb_class = SB_CLASS_3;
+    else if (count_non_zero_coeffs >= ((total_samples * sb_class_ctrls->sb_class_th[SB_CLASS_4]) / 100))
+        sb_class = SB_CLASS_4;
+    else if (count_non_zero_coeffs >= ((total_samples * sb_class_ctrls->sb_class_th[SB_CLASS_5]) / 100))
+        sb_class = SB_CLASS_5;
+    else if (count_non_zero_coeffs >= ((total_samples * sb_class_ctrls->sb_class_th[SB_CLASS_6]) / 100))
+        sb_class = SB_CLASS_6;
+    else if (count_non_zero_coeffs >= ((total_samples * sb_class_ctrls->sb_class_th[SB_CLASS_7]) / 100))
+        sb_class = SB_CLASS_7;
+    else if (count_non_zero_coeffs >= ((total_samples * sb_class_ctrls->sb_class_th[SB_CLASS_8]) / 100))
+        sb_class = SB_CLASS_8;
+    else if (count_non_zero_coeffs >= ((total_samples * sb_class_ctrls->sb_class_th[SB_CLASS_9]) / 100))
+        sb_class = SB_CLASS_9;
+     else if (count_non_zero_coeffs >= ((total_samples * sb_class_ctrls->sb_class_th[SB_CLASS_10]) / 100))
+        sb_class = SB_CLASS_10;
+    else if (count_non_zero_coeffs >= ((total_samples * sb_class_ctrls->sb_class_th[SB_CLASS_11]) / 100))
+        sb_class = SB_CLASS_11;
+    else if (count_non_zero_coeffs >= ((total_samples * sb_class_ctrls->sb_class_th[SB_CLASS_12]) / 100))
+        sb_class = SB_CLASS_12;
+    else if (count_non_zero_coeffs >= ((total_samples * sb_class_ctrls->sb_class_th[SB_CLASS_13]) / 100))
+        sb_class = SB_CLASS_13;
+    else if (count_non_zero_coeffs >= ((total_samples * sb_class_ctrls->sb_class_th[SB_CLASS_14]) / 100))
+        sb_class = SB_CLASS_14;
+    else if (count_non_zero_coeffs >= ((total_samples * sb_class_ctrls->sb_class_th[SB_CLASS_15]) / 100))
+        sb_class = SB_CLASS_15;
+    else if (count_non_zero_coeffs >= ((total_samples * sb_class_ctrls->sb_class_th[SB_CLASS_16]) / 100))
+        sb_class = SB_CLASS_16;
+    else if (count_non_zero_coeffs >= ((total_samples * sb_class_ctrls->sb_class_th[SB_CLASS_17]) / 100))
+        sb_class = SB_CLASS_17;
+    else if (count_non_zero_coeffs >= ((total_samples * sb_class_ctrls->sb_class_th[SB_CLASS_18]) / 100))
+        sb_class = SB_CLASS_18;
+    else if (count_non_zero_coeffs >= ((total_samples * sb_class_ctrls->sb_class_th[SB_CLASS_19]) / 100))
+        sb_class = SB_CLASS_19;
+    else if (count_non_zero_coeffs >= ((total_samples * sb_class_ctrls->sb_class_th[SB_CLASS_20]) / 100))
+        sb_class = SB_CLASS_20;
+    else if (count_non_zero_coeffs >= ((total_samples * sb_class_ctrls->sb_class_th[SB_CLASS_21]) / 100))
+        sb_class = SB_CLASS_21;
+    else if (count_non_zero_coeffs >= ((total_samples * sb_class_ctrls->sb_class_th[SB_CLASS_22]) / 100))
+        sb_class = SB_CLASS_22;
+    else if (count_non_zero_coeffs >= ((total_samples * sb_class_ctrls->sb_class_th[SB_CLASS_23]) / 100))
+        sb_class = SB_CLASS_23;
+    else if (count_non_zero_coeffs >= ((total_samples * sb_class_ctrls->sb_class_th[SB_CLASS_24]) / 100))
+        sb_class = SB_CLASS_24;
+#else
     if (count_non_zero_coeffs >= ((total_samples * sb_class_ctrls->sb_class_th[SB_CLASS_1]) / 20))
         sb_class = SB_CLASS_1;
     else if (count_non_zero_coeffs >= ((total_samples * sb_class_ctrls->sb_class_th[SB_CLASS_2]) / 20))
@@ -6551,6 +6863,7 @@ static uint8_t determine_sb_class(
         sb_class = SB_CLASS_19;
     else if (count_non_zero_coeffs >= ((total_samples * sb_class_ctrls->sb_class_th[SB_CLASS_20]) / 20))
         sb_class = SB_CLASS_20;
+#endif
 #else
     if (count_non_zero_coeffs >= ((total_samples * sb_class_ctrls->sb_class_th[HIGH_COMPLEX_CLASS]) / 20))
         sb_class = HIGH_COMPLEX_CLASS;
