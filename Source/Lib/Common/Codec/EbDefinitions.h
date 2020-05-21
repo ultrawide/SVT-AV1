@@ -376,9 +376,22 @@ extern "C" {
 #endif
 #define NON_UNIFORM_BANDING 1 
 #define MRP_MULTI_BAND_ACTIONS 0
+#if MRP_MULTI_BAND_ACTIONS
+#define MRP_5_5 0
+#define MRP_5_0 0
+#define MRP_0_5 0
+#define MRP_0_0 0
+#endif
+
 #define COMP_MULTI_BAND_ACTIONS 0
+#if COMP_MULTI_BAND_ACTIONS
+#define COMP_1_1 0
+#define COMP_0_1 0
+#define COMP_1_0 0
+#define COMP_0_0 0
+#endif
 
-
+#define FIX_NSQ_OFF 1
 
 #define DISALLOW_ALL_ACTIONS 1
 #define MULTI_BAND_ACTIONS   1
