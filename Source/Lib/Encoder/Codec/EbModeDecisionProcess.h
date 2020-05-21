@@ -589,6 +589,9 @@ typedef struct ModeDecisionContext {
 #if INTER_COMP_REDESIGN
     InterCompoundControls inter_comp_ctrls;
 #endif
+#if COMP_MULTI_BAND_ACTIONS
+    uint8_t compound_mode;
+#endif
 #if MD_REFERENCE_MASKING
     RefResults ref_filtering_res[MAX_NUM_OF_REF_PIC_LIST][REF_LIST_MAX_DEPTH];
     RefPruningControls ref_pruning_ctrls;

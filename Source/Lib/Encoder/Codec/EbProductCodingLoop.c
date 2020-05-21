@@ -9098,7 +9098,11 @@ EbErrorType signal_derivation_block(
     else if (context_ptr->pd_pass == PD_PASS_1)
         set_inter_comp_controls(context_ptr,0);
     else
+#if COMP_MULTI_BAND_ACTIONS
+        set_inter_comp_controls(context_ptr,context_ptr->compound_mode);
+#else
         set_inter_comp_controls(context_ptr,pcs->parent_pcs_ptr->compound_mode);
+#endif
 
     context_ptr->compound_types_to_try = context_ptr->inter_comp_ctrls.enabled ? MD_COMP_WEDGE : MD_COMP_AVG;
 #if !MAY12_ADOPTIONS

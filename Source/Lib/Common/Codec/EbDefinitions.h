@@ -375,7 +375,8 @@ extern "C" {
 #define TX_COUNT_PER_BAND 1
 #endif
 #define NON_UNIFORM_BANDING 1 
-
+#define MRP_MULTI_BAND_ACTIONS 0
+#define COMP_MULTI_BAND_ACTIONS 0
 
 
 

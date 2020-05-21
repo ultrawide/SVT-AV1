@@ -2027,6 +2027,66 @@ void set_sb_class_controls(ModeDecisionContext *context_ptr) {
 #endif
 
 #if MULTI_BAND_ACTIONS
+#if COMP_MULTI_BAND_ACTIONS
+uint8_t m0_compound_cycles_reduction_th[26] = {
+ 0, // NONE
+ 0, //[85%;100%]
+ 0,//[75%;85%]
+ 0,//[65%;75%]
+ 0,//[60%;65%]
+ 0,//[55%;60%]
+ 0,//[50%;65%]
+ 0,//[45%;50%]
+ 0,//[40%;45%]
+ 2,//[35%;40%]
+ 2,//[30%;35%]
+ 2,//[25%;30%]
+ 2,//[20%;25%]
+ 2,//[17%;20%]
+ 2,//[14%;17%]
+ 2,//[12%;14%]
+ 2,//[10%;12%]
+ 2,//[8%;10%]
+ 2,//[6%;8%]
+ 1,//[5%;6%]
+ 1,//[4%;5%]
+ 1, //[3%;4%]
+ 1, //[2%;3%]
+ 1, //[1%;2%]
+ 1, //[0%;1%]
+ 1  //[0%]
+};
+#endif
+#if MRP_MULTI_BAND_ACTIONS
+uint8_t m0_mrp_cycles_reduction_th[26] = {
+0, // NONE
+ 5, //[85%;100%]
+ 5,//[75%;85%]
+ 5,//[65%;75%]
+ 5,//[60%;65%]
+ 4,//[55%;60%]
+ 4,//[50%;65%]
+ 4,//[45%;50%]
+ 4,//[40%;45%]
+ 3,//[35%;40%]
+ 3,//[30%;35%]
+ 3,//[25%;30%]
+ 2,//[20%;25%]
+ 2,//[17%;20%]
+ 2,//[14%;17%]
+ 1,//[12%;14%]
+ 1,//[10%;12%]
+ 1,//[8%;10%]
+ 1,//[6%;8%]
+ 0,//[5%;6%]
+ 0,//[4%;5%]
+ 0, //[3%;4%]
+ 0, //[2%;3%]
+ 0, //[1%;2%]
+ 0, //[0%;1%]
+ 0  //[0%]
+};
+#endif
 #if CR_T0
 uint8_t m0_nsq_cycles_reduction_th[21] = {
 0, // NONE
@@ -4122,7 +4182,7 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
             context_ptr->coeff_area_based_bypass_nsq_th = 0; // TH to be identified for M2-M8
 #endif
 
-#if MULTI_BAND_ACTIONS
+#if MULTI_BAND_ACTIONS && !MRP_MULTI_BAND_ACTIONS && !COMP_MULTI_BAND_ACTIONS
     if (pd_pass == PD_PASS_0)
         context_ptr->coeff_area_based_bypass_nsq_th = 0;
     else if (pd_pass == PD_PASS_1)
@@ -4597,8 +4657,15 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
     else {
         context_ptr->inter_inter_distortion_based_reference_pruning = 0;
     }
+#if MRP_MULTI_BAND_ACTIONS
+    if (pd_pass == PD_PASS_2)
+         context_ptr->inter_inter_distortion_based_reference_pruning = context_ptr->enable_area_based_cycles_allocation ? m0_mrp_cycles_reduction_th [context_ptr->sb_class] :  context_ptr->inter_inter_distortion_based_reference_pruning;
+#endif
     set_inter_inter_distortion_based_reference_pruning_controls(context_ptr, context_ptr->inter_inter_distortion_based_reference_pruning);
 
+#if COMP_MULTI_BAND_ACTIONS
+    context_ptr->compound_mode = context_ptr->enable_area_based_cycles_allocation ? m0_compound_cycles_reduction_th[context_ptr->sb_class] : pcs_ptr->parent_pcs_ptr->compound_mode;
+#endif
     // Set inter_intra_distortion_based_reference_pruning
     if (pcs_ptr->slice_type != I_SLICE) {
         if (pd_pass == PD_PASS_0)
