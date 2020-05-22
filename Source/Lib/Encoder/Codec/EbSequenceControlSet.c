@@ -57,6 +57,25 @@ static void eb_sequence_control_set_dctor(EbPtr p) {
     }
 #endif
 #endif
+#if DEPTH_STAT
+    uint8_t pred_depth,band;
+    uint32_t sum = 0;
+     for (band = 0; band < 25; band++)
+        for (pred_depth = 0; pred_depth < 5; pred_depth++)
+            sum+= obj->pred_depth_count[band][pred_depth];
+     if (sum) {
+         printf("\n");
+         printf("start_depth_stat\n");
+         for (pred_depth = 0; pred_depth < 5; pred_depth++) {
+             for (band = 24; band > 0; band--) {
+                 printf("%d\t", obj->pred_depth_count[band][pred_depth]);
+             }
+             printf("\n");
+         }
+        printf("\n");
+        printf("end_depth_stat\n");
+     }
+#endif
     EB_FREE_ARRAY(obj->sb_params_array);
     EB_FREE_ARRAY(obj->sb_geom);
 }

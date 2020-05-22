@@ -885,6 +885,12 @@ void *resource_coordination_kernel(void *input_ptr) {
         scs_ptr->tx_count[band] = 0;
 #endif
 #endif
+#if DEPTH_STAT
+    uint8_t pred_depth,band;
+    for (band = 0; band < 25; band++)
+        for (pred_depth = 0; pred_depth < 5; pred_depth++)
+            scs_ptr->pred_depth_count[band][pred_depth] = 0;
+#endif
             derive_input_resolution(&scs_ptr->input_resolution, input_size);
 
             sb_params_init(scs_ptr);

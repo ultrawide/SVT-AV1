@@ -399,6 +399,7 @@ extern "C" {
 #define DEPTH_0_0 0
 #define BAND_TH 9
 #endif
+#define DEPTH_STAT 0
 
 #define FIX_NSQ_OFF 1
 

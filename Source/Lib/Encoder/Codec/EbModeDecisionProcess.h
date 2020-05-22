@@ -143,6 +143,9 @@ typedef struct MdBlkStruct {
 #if SSE_BASED_SPLITTING
     uint8_t sse_gradian_band[NUMBER_OF_SHAPES];
 #endif
+#if DEPTH_STAT
+    int8_t pred_depth_refinement;
+#endif
 } MdBlkStruct;
 
 struct ModeDecisionCandidate;
@@ -646,6 +649,9 @@ typedef struct ModeDecisionContext {
 #if TX_COUNT_PER_BAND
     uint32_t tx_count[21];
 #endif
+#endif
+#if DEPTH_STAT
+    uint32_t pred_depth_count[25][5];
 #endif
 } ModeDecisionContext;
 

@@ -1361,6 +1361,12 @@ void copy_statistics_to_ref_obj_ect(PictureControlSet *pcs_ptr, SequenceControlS
         scs_ptr->tx_count[band] += pcs_ptr->tx_count[band];
 #endif
 #endif
+#if DEPTH_STAT
+    uint8_t pred_depth,band;
+    for (band = 0; band < 25; band++)
+        for (pred_depth = 0; pred_depth < 5; pred_depth++)
+            scs_ptr->pred_depth_count[band][pred_depth] += pcs_ptr->pred_depth_count[band][pred_depth] ;
+#endif
     if (pcs_ptr->slice_type == I_SLICE) pcs_ptr->intra_coded_area = 0;
 #if REDUCE_COMPLEX_CLIP_CYCLES
     if (pcs_ptr->slice_type == I_SLICE) pcs_ptr->coef_coded_area = 0;
@@ -6435,7 +6441,12 @@ void copy_neighbour_arrays(PictureControlSet *pcs_ptr, ModeDecisionContext *cont
                            uint32_t sb_org_y);
 
 static void set_parent_to_be_considered(MdcSbData *results_ptr, uint32_t blk_index, int32_t sb_size,
+#if DEPTH_STAT     
+                                        int8_t pred_depth,
                                         int8_t depth_step) {
+#else
+                                        int8_t depth_step) {
+#endif
     uint32_t         parent_depth_idx_mds, block_1d_idx;
     const BlockGeom *blk_geom = get_blk_geom_mds(blk_index);
     if (blk_geom->sq_size < ((sb_size == BLOCK_128X128) ? 128 : 64)) {
@@ -6451,15 +6462,27 @@ static void set_parent_to_be_considered(MdcSbData *results_ptr, uint32_t blk_ind
                 : parent_blk_geom->sq_size > 8 ? 25 : parent_blk_geom->sq_size == 8 ? 5 : 1;
         for (block_1d_idx = 0; block_1d_idx < parent_tot_d1_blocks; block_1d_idx++) {
             results_ptr->leaf_data_array[parent_depth_idx_mds + block_1d_idx].consider_block = 1;
+#if DEPTH_STAT
+            results_ptr->leaf_data_array[parent_depth_idx_mds + block_1d_idx].pred_depth_refinement = parent_blk_geom->depth - pred_depth;
+#endif
         }
 
         if (depth_step < -1)
+#if DEPTH_STAT
+            set_parent_to_be_considered(results_ptr, parent_depth_idx_mds, sb_size, pred_depth, depth_step + 1);
+#else
             set_parent_to_be_considered(results_ptr, parent_depth_idx_mds, sb_size, depth_step + 1);
+#endif
     }
 }
 #if MULTI_PASS_PD_FOR_INCOMPLETE
 static void set_child_to_be_considered(PictureControlSet *pcs_ptr, ModeDecisionContext *context_ptr, MdcSbData *results_ptr, uint32_t blk_index, uint32_t sb_index, int32_t sb_size,
+#if DEPTH_STAT 
+    int8_t pred_depth,
     int8_t depth_step) {
+#else
+    int8_t depth_step) {
+#endif
 #else
 static void set_child_to_be_considered(MdcSbData *results_ptr, uint32_t blk_index, int32_t sb_size,
                                        int8_t depth_step) {
@@ -6484,13 +6507,20 @@ static void set_child_to_be_considered(MdcSbData *results_ptr, uint32_t blk_inde
 
         for (block_1d_idx = 0; block_1d_idx < child1_tot_d1_blocks; block_1d_idx++) {
             results_ptr->leaf_data_array[child_block_idx_1 + block_1d_idx].consider_block = 1;
+#if DEPTH_STAT
+            results_ptr->leaf_data_array[child_block_idx_1 + block_1d_idx].pred_depth_refinement = child1_blk_geom->depth - pred_depth;
+#endif
             results_ptr->leaf_data_array[child_block_idx_1 + block_1d_idx].refined_split_flag =
                 EB_FALSE;
         }
 #if MULTI_PASS_PD_FOR_INCOMPLETE
         // Add children blocks if more depth to consider (depth_step is > 1), or block not allowed (add next depth)
         if (depth_step > 1 || !pcs_ptr->parent_pcs_ptr->sb_geom[sb_index].block_is_allowed[child_block_idx_1])
+#if DEPTH_STAT
+            set_child_to_be_considered(pcs_ptr, context_ptr, results_ptr, child_block_idx_1, sb_index, sb_size, pred_depth, depth_step > 1 ? depth_step - 1 : 1);
+#else
             set_child_to_be_considered(pcs_ptr, context_ptr, results_ptr, child_block_idx_1, sb_index, sb_size, depth_step > 1 ? depth_step - 1 : 1);
+#endif
 #else
         if (depth_step > 1)
             set_child_to_be_considered(results_ptr, child_block_idx_1, sb_size, depth_step - 1);
@@ -6505,6 +6535,9 @@ static void set_child_to_be_considered(MdcSbData *results_ptr, uint32_t blk_inde
                 : child2_blk_geom->sq_size > 8 ? 25 : child2_blk_geom->sq_size == 8 ? 5 : 1;
         for (block_1d_idx = 0; block_1d_idx < child2_tot_d1_blocks; block_1d_idx++) {
             results_ptr->leaf_data_array[child_block_idx_2 + block_1d_idx].consider_block = 1;
+#if DEPTH_STAT
+            results_ptr->leaf_data_array[child_block_idx_2 + block_1d_idx].pred_depth_refinement = child2_blk_geom->depth - pred_depth;
+#endif
             results_ptr->leaf_data_array[child_block_idx_2 + block_1d_idx].refined_split_flag =
                 EB_FALSE;
         }
@@ -6512,7 +6545,11 @@ static void set_child_to_be_considered(MdcSbData *results_ptr, uint32_t blk_inde
 #if MULTI_PASS_PD_FOR_INCOMPLETE
         // Add children blocks if more depth to consider (depth_step is > 1), or block not allowed (add next depth)
         if (depth_step > 1 || !pcs_ptr->parent_pcs_ptr->sb_geom[sb_index].block_is_allowed[child_block_idx_2])
+#if DEPTH_STAT
+            set_child_to_be_considered(pcs_ptr, context_ptr, results_ptr, child_block_idx_2, sb_index, sb_size, pred_depth, depth_step > 1 ? depth_step - 1 : 1);
+#else
             set_child_to_be_considered(pcs_ptr, context_ptr, results_ptr, child_block_idx_2, sb_index, sb_size, depth_step > 1 ? depth_step - 1 : 1);
+#endif
 #else
         if (depth_step > 1)
             set_child_to_be_considered(results_ptr, child_block_idx_2, sb_size, depth_step - 1);
@@ -6528,6 +6565,9 @@ static void set_child_to_be_considered(MdcSbData *results_ptr, uint32_t blk_inde
 
         for (block_1d_idx = 0; block_1d_idx < child3_tot_d1_blocks; block_1d_idx++) {
             results_ptr->leaf_data_array[child_block_idx_3 + block_1d_idx].consider_block = 1;
+#if DEPTH_STAT
+            results_ptr->leaf_data_array[child_block_idx_3 + block_1d_idx].pred_depth_refinement = child3_blk_geom->depth - pred_depth;
+#endif
             results_ptr->leaf_data_array[child_block_idx_3 + block_1d_idx].refined_split_flag =
                 EB_FALSE;
         }
@@ -6535,7 +6575,11 @@ static void set_child_to_be_considered(MdcSbData *results_ptr, uint32_t blk_inde
 #if MULTI_PASS_PD_FOR_INCOMPLETE
         // Add children blocks if more depth to consider (depth_step is > 1), or block not allowed (add next depth)
         if (depth_step > 1 || !pcs_ptr->parent_pcs_ptr->sb_geom[sb_index].block_is_allowed[child_block_idx_3])
+#if DEPTH_STAT
+            set_child_to_be_considered(pcs_ptr, context_ptr, results_ptr, child_block_idx_3, sb_index, sb_size, pred_depth, depth_step > 1 ? depth_step - 1 : 1);
+#else
             set_child_to_be_considered(pcs_ptr, context_ptr, results_ptr, child_block_idx_3, sb_index, sb_size, depth_step > 1 ? depth_step - 1 : 1);
+#endif
 #else
         if (depth_step > 1)
             set_child_to_be_considered(results_ptr, child_block_idx_3, sb_size, depth_step - 1);
@@ -6550,13 +6594,20 @@ static void set_child_to_be_considered(MdcSbData *results_ptr, uint32_t blk_inde
                 : child4_blk_geom->sq_size > 8 ? 25 : child4_blk_geom->sq_size == 8 ? 5 : 1;
         for (block_1d_idx = 0; block_1d_idx < child4_tot_d1_blocks; block_1d_idx++) {
             results_ptr->leaf_data_array[child_block_idx_4 + block_1d_idx].consider_block = 1;
+#if DEPTH_STAT
+            results_ptr->leaf_data_array[child_block_idx_4 + block_1d_idx].pred_depth_refinement = child4_blk_geom->depth - pred_depth;
+#endif
             results_ptr->leaf_data_array[child_block_idx_4 + block_1d_idx].refined_split_flag =
                 EB_FALSE;
         }
 #if MULTI_PASS_PD_FOR_INCOMPLETE
         // Add children blocks if more depth to consider (depth_step is > 1), or block not allowed (add next depth)
         if (depth_step > 1 || !pcs_ptr->parent_pcs_ptr->sb_geom[sb_index].block_is_allowed[child_block_idx_4])
+#if DEPTH_STAT
+            set_child_to_be_considered(pcs_ptr, context_ptr, results_ptr, child_block_idx_4, sb_index, sb_size, pred_depth, depth_step > 1 ? depth_step - 1 : 1);
+#else
             set_child_to_be_considered(pcs_ptr, context_ptr, results_ptr, child_block_idx_4, sb_index, sb_size, depth_step > 1 ? depth_step - 1 : 1);
+#endif
 #else
         if (depth_step > 1)
             set_child_to_be_considered(results_ptr, child_block_idx_4, sb_size, depth_step - 1);
@@ -6634,6 +6685,11 @@ static void build_cand_block_array(SequenceControlSet *scs_ptr, PictureControlSe
 
                     results_ptr->leaf_data_array[results_ptr->leaf_count].mds_idx = blk_index;
                     results_ptr->leaf_data_array[results_ptr->leaf_count].tot_d1_blocks = tot_d1_blocks;
+#if DEPTH_STAT
+                    results_ptr->leaf_data_array[results_ptr->leaf_count].final_pred_depth_refinement = results_ptr->leaf_data_array[blk_index].pred_depth_refinement; 
+                    if (results_ptr->leaf_data_array[results_ptr->leaf_count].final_pred_depth_refinement == -8)
+                        printf("b_type error\n");
+#endif
                     results_ptr->leaf_data_array[results_ptr->leaf_count++].split_flag = results_ptr->leaf_data_array[blk_index].refined_split_flag;
 
                 }
@@ -6928,7 +6984,7 @@ static uint64_t generate_best_part_cost(
     }
     return best_part_cost;
 }
-#if GEN_STAT
+#if GEN_STAT || DEPTH_STAT
 Part part_to_shape[10] = {
     PART_N,
     PART_H,
@@ -6972,45 +7028,56 @@ void generate_statistics(
             is_blk_allowed) {
             if (blk_geom->shape == PART_N) {
                 if (context_ptr->md_blk_arr_nsq[blk_index].split_flag == EB_FALSE) {
-                    count_non_zero_coeffs = context_ptr->md_local_blk_unit[blk_index].count_non_zero_coeffs;
-                    total_samples = (blk_geom->bwidth*blk_geom->bheight);
-                    uint8_t part_idx = part_to_shape[context_ptr->md_blk_arr_nsq[blk_index].part];
-                    uint8_t sse_g_band =  context_ptr->md_local_blk_unit[blk_geom->sqi_mds].avail_blk_flag ? 
-                        context_ptr->md_local_blk_unit[blk_geom->sqi_mds].sse_gradian_band[part_idx] : 1;
-                    if (sse_g_band < 0 || sse_g_band >1)
-                        printf("sse_g_band error\n");
-                    uint8_t band_idx = 0;
-                    uint64_t band_width = (context_ptr->blk_geom->depth == 0) ? 100 : (context_ptr->blk_geom->depth == 1) ? 50 : 20;
-                    if (context_ptr->blk_geom->depth == 0) {
-                        if (count_non_zero_coeffs >= ((total_samples * 6) / band_width)) {
-                            part_cnt[blk_geom->depth][part_to_shape[context_ptr->md_blk_arr_nsq[blk_index].part]][2][sse_g_band] += (blk_geom->bwidth*blk_geom->bheight);
+                    if (context_ptr->md_local_blk_unit[blk_index].avail_blk_flag) {
+                        count_non_zero_coeffs = context_ptr->md_local_blk_unit[blk_index].count_non_zero_coeffs;
+                        total_samples = (blk_geom->bwidth*blk_geom->bheight);
+                        uint8_t part_idx = part_to_shape[context_ptr->md_blk_arr_nsq[blk_index].part];
+                        uint8_t sse_g_band = context_ptr->md_local_blk_unit[blk_geom->sqi_mds].avail_blk_flag ?
+                            context_ptr->md_local_blk_unit[blk_geom->sqi_mds].sse_gradian_band[part_idx] : 1;
+                        if (sse_g_band < 0 || sse_g_band >1)
+                            printf("sse_g_band error\n");
+                        int8_t pred_depth_refinement = context_ptr->md_local_blk_unit[blk_geom->sqi_mds].pred_depth_refinement;
+                        if (pred_depth_refinement < -2 || pred_depth_refinement > 3)
+                            printf("pred_depth_refinement error\t%d\n",pred_depth_refinement);
+                        uint8_t band_idx = 0;
+#if DEPTH_STAT
+                        context_ptr->pred_depth_count[context_ptr->sb_class][pred_depth_refinement + 2] += (blk_geom->bwidth*blk_geom->bheight);
+#else
+                        uint64_t band_width = (context_ptr->blk_geom->depth == 0) ? 100 : (context_ptr->blk_geom->depth == 1) ? 50 : 20;
+                        if (context_ptr->blk_geom->depth == 0) {
+                            if (count_non_zero_coeffs >= ((total_samples * 6) / band_width)) {
+                                part_cnt[blk_geom->depth][part_to_shape[context_ptr->md_blk_arr_nsq[blk_index].part]][2][sse_g_band] += (blk_geom->bwidth*blk_geom->bheight);
+                            }
+                            else if (count_non_zero_coeffs >= ((total_samples * 2) / band_width)) {
+                                part_cnt[blk_geom->depth][part_to_shape[context_ptr->md_blk_arr_nsq[blk_index].part]][1][sse_g_band] += (blk_geom->bwidth*blk_geom->bheight);
+                            }
+                            else {
+                                part_cnt[blk_geom->depth][part_to_shape[context_ptr->md_blk_arr_nsq[blk_index].part]][0][sse_g_band] += (blk_geom->bwidth*blk_geom->bheight);
+                            }
                         }
-                        else if (count_non_zero_coeffs >= ((total_samples * 2) / band_width)) {
-                            part_cnt[blk_geom->depth][part_to_shape[context_ptr->md_blk_arr_nsq[blk_index].part]][1][sse_g_band] += (blk_geom->bwidth*blk_geom->bheight);
+                        else if (context_ptr->blk_geom->depth == 1) {
+                            if (count_non_zero_coeffs >= ((total_samples * 8) / band_width)) {
+                                part_cnt[blk_geom->depth][part_to_shape[context_ptr->md_blk_arr_nsq[blk_index].part]][2][sse_g_band] += (blk_geom->bwidth*blk_geom->bheight);
+                            }
+                            else if (count_non_zero_coeffs >= ((total_samples * 2) / band_width)) {
+                                part_cnt[blk_geom->depth][part_to_shape[context_ptr->md_blk_arr_nsq[blk_index].part]][1][sse_g_band] += (blk_geom->bwidth*blk_geom->bheight);
+                            }
+                            else {
+                                part_cnt[blk_geom->depth][part_to_shape[context_ptr->md_blk_arr_nsq[blk_index].part]][0][sse_g_band] += (blk_geom->bwidth*blk_geom->bheight);
+                            }
                         }
                         else {
-                            part_cnt[blk_geom->depth][part_to_shape[context_ptr->md_blk_arr_nsq[blk_index].part]][0][sse_g_band] += (blk_geom->bwidth*blk_geom->bheight);
+                            if (count_non_zero_coeffs >= ((total_samples * 18) / band_width)) {
+                                part_cnt[blk_geom->depth][part_to_shape[context_ptr->md_blk_arr_nsq[blk_index].part]][2][sse_g_band] += (blk_geom->bwidth*blk_geom->bheight);
+                            }
+                            else if (count_non_zero_coeffs >= ((total_samples * 2) / band_width)) {
+                                part_cnt[blk_geom->depth][part_to_shape[context_ptr->md_blk_arr_nsq[blk_index].part]][1][sse_g_band] += (blk_geom->bwidth*blk_geom->bheight);
+                            }
+                            else {
+                                part_cnt[blk_geom->depth][part_to_shape[context_ptr->md_blk_arr_nsq[blk_index].part]][0][sse_g_band] += (blk_geom->bwidth*blk_geom->bheight);
+                            }
                         }
-                    } else if (context_ptr->blk_geom->depth == 1) {
-                        if (count_non_zero_coeffs >= ((total_samples * 8) / band_width)) {
-                            part_cnt[blk_geom->depth][part_to_shape[context_ptr->md_blk_arr_nsq[blk_index].part]][2][sse_g_band] += (blk_geom->bwidth*blk_geom->bheight);
-                        }
-                        else if (count_non_zero_coeffs >= ((total_samples * 2) / band_width)) {
-                            part_cnt[blk_geom->depth][part_to_shape[context_ptr->md_blk_arr_nsq[blk_index].part]][1][sse_g_band] += (blk_geom->bwidth*blk_geom->bheight);
-                        }
-                        else {
-                            part_cnt[blk_geom->depth][part_to_shape[context_ptr->md_blk_arr_nsq[blk_index].part]][0][sse_g_band] += (blk_geom->bwidth*blk_geom->bheight);
-                        }
-                    } else {
-                        if (count_non_zero_coeffs >= ((total_samples * 18) / band_width)) {
-                            part_cnt[blk_geom->depth][part_to_shape[context_ptr->md_blk_arr_nsq[blk_index].part]][2][sse_g_band] += (blk_geom->bwidth*blk_geom->bheight);
-                        }
-                        else if (count_non_zero_coeffs >= ((total_samples * 2) / band_width)) {
-                            part_cnt[blk_geom->depth][part_to_shape[context_ptr->md_blk_arr_nsq[blk_index].part]][1][sse_g_band] += (blk_geom->bwidth*blk_geom->bheight);
-                        }
-                        else {
-                            part_cnt[blk_geom->depth][part_to_shape[context_ptr->md_blk_arr_nsq[blk_index].part]][0][sse_g_band] += (blk_geom->bwidth*blk_geom->bheight);
-                        }
+#endif
                     }
                 }
             }
@@ -7019,7 +7086,7 @@ void generate_statistics(
             d1_depth_offset[scs_ptr->seq_header.sb_size == BLOCK_128X128][blk_geom->depth] :
             ns_depth_offset[scs_ptr->seq_header.sb_size == BLOCK_128X128][blk_geom->depth];
     }
-  
+ #if !DEPTH_STAT
     for (depthidx = 0; depthidx < 6; depthidx++) {
         for (partidx = 0; partidx < 10; partidx++) {
             for (band = 0; band < 3; band++) {
@@ -7029,6 +7096,7 @@ void generate_statistics(
             }
         }
     }
+#endif
 }
 #endif
 #if SB_CLASSIFIER
@@ -7204,6 +7272,9 @@ static void perform_pred_depth_refinement(SequenceControlSet *scs_ptr, PictureCo
             blk_geom->sq_size > 4 ? EB_TRUE : EB_FALSE;
         results_ptr->leaf_data_array[blk_index].refined_split_flag =
             blk_geom->sq_size > 4 ? EB_TRUE : EB_FALSE;
+#if DEPTH_STAT
+        results_ptr->leaf_data_array[blk_index].pred_depth_refinement = -8;
+#endif
         blk_index++;
     }
 
@@ -7651,6 +7722,10 @@ static void perform_pred_depth_refinement(SequenceControlSet *scs_ptr, PictureCo
                     e_depth = context_ptr->sb_class < BAND_TH ? 1 : 0;
 #endif
 #endif
+#if DEPTH_STAT
+                    s_depth = -2;
+                    e_depth =  2;
+#endif
 #if ADOPT_SKIPPING_PD1
                     // Check that the start and end depth are in allowed range, given other features
                     // which restrict allowable depths
@@ -7674,19 +7749,31 @@ static void perform_pred_depth_refinement(SequenceControlSet *scs_ptr, PictureCo
                     // Add current pred depth block(s)
                     for (block_1d_idx = 0; block_1d_idx < tot_d1_blocks; block_1d_idx++) {
                         results_ptr->leaf_data_array[blk_index + block_1d_idx].consider_block = 1;
+#if DEPTH_STAT
+                        results_ptr->leaf_data_array[blk_index + block_1d_idx].pred_depth_refinement = 0;
+#endif
                         results_ptr->leaf_data_array[blk_index + block_1d_idx].refined_split_flag =
                             EB_FALSE;
                     }
 
                     // Add block indices of upper depth(s)
                     if (s_depth != 0)
+#if DEPTH_STAT
+                        set_parent_to_be_considered(
+                            results_ptr, blk_index, scs_ptr->seq_header.sb_size, (int8_t) blk_geom->depth, s_depth);
+#else
                         set_parent_to_be_considered(
                             results_ptr, blk_index, scs_ptr->seq_header.sb_size, s_depth);
+#endif
 
                     // Add block indices of lower depth(s)
                     if (e_depth != 0)
 #if MULTI_PASS_PD_FOR_INCOMPLETE
+#if DEPTH_STAT
+                        set_child_to_be_considered(pcs_ptr, context_ptr, results_ptr, blk_index, sb_index, scs_ptr->seq_header.sb_size,(int8_t) blk_geom->depth, e_depth);
+#else
                         set_child_to_be_considered(pcs_ptr, context_ptr, results_ptr, blk_index, sb_index, scs_ptr->seq_header.sb_size, e_depth);
+#endif
 #else
                         set_child_to_be_considered(
                             results_ptr, blk_index, scs_ptr->seq_header.sb_size, e_depth);
@@ -8073,6 +8160,12 @@ void *enc_dec_kernel(void *input_ptr) {
     for (band = 0; band < 21; band++)
         context_ptr->md_context->tx_count[band] = 0;
 #endif
+#endif
+#if DEPTH_STAT
+    uint8_t pred_depth,band;
+    for (band = 0; band < 25; band++)
+        for (pred_depth = 0; pred_depth < 5; pred_depth++)
+            context_ptr->md_context->pred_depth_count[band][pred_depth] = 0;
 #endif
 #if REDUCE_COMPLEX_CLIP_CYCLES
         context_ptr->tot_coef_coded_area = 0;
@@ -8526,7 +8619,7 @@ void *enc_dec_kernel(void *input_ptr) {
                                      sb_origin_y,
                                      sb_index,
                                      context_ptr->md_context);
-#if GEN_STAT
+#if GEN_STAT || DEPTH_STAT
                     generate_statistics(scs_ptr, pcs_ptr, context_ptr->md_context, sb_index);
 #endif
 
@@ -8587,6 +8680,11 @@ void *enc_dec_kernel(void *input_ptr) {
     for (band = 0; band < 21; band++)
         pcs_ptr->tx_count[band] += context_ptr->md_context->tx_count[band];
 #endif
+#endif
+#if DEPTH_STAT
+    for (band = 0; band < 25; band++)
+        for (pred_depth = 0; pred_depth < 5; pred_depth++)
+            pcs_ptr->pred_depth_count[band][pred_depth] += context_ptr->md_context->pred_depth_count[band][pred_depth];
 #endif
         pcs_ptr->enc_dec_coded_sb_count += (uint32_t)context_ptr->coded_sb_count;
         last_sb_flag = (pcs_ptr->sb_total_count_pix == pcs_ptr->enc_dec_coded_sb_count);

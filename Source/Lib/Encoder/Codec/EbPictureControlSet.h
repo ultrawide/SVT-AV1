@@ -151,6 +151,10 @@ typedef struct EbMdcLeafData {
     EbBool   split_flag;
     uint8_t  consider_block;
     uint8_t  refined_split_flag;
+#if DEPTH_STAT
+    int8_t  pred_depth_refinement;
+    int8_t  final_pred_depth_refinement;
+#endif
 } EbMdcLeafData;
 
 typedef struct MdcSbData {
@@ -413,6 +417,9 @@ typedef struct PictureControlSet {
 #if TX_COUNT_PER_BAND
     uint32_t tx_count[21];
 #endif
+#endif
+#if DEPTH_STAT
+    uint32_t pred_depth_count[25][5];
 #endif
 } PictureControlSet;
 

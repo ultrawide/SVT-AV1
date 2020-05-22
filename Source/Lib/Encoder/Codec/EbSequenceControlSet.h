@@ -210,6 +210,9 @@ typedef struct SequenceControlSet {
     uint32_t tx_count[21];
 #endif
 #endif
+#if DEPTH_STAT
+    uint32_t pred_depth_count[25][5];
+#endif
 } SequenceControlSet;
 
 typedef struct EbSequenceControlSetInitData {

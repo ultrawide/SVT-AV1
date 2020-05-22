@@ -1802,6 +1802,12 @@ void *mode_decision_configuration_kernel(void *input_ptr) {
         pcs_ptr->tx_count[band] = 0;
 #endif
 #endif
+#if DEPTH_STAT
+    uint8_t pred_depth,band;
+    for (band = 0; band < 25; band++)
+        for (pred_depth = 0; pred_depth < 5; pred_depth++)
+            pcs_ptr->pred_depth_count[band][pred_depth] = 0;
+#endif
         // Compute Tc, and Beta offsets for a given picture
         // Set reference cdef strength
         set_reference_cdef_strength(pcs_ptr);
