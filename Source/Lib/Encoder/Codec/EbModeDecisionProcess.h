@@ -145,6 +145,7 @@ typedef struct MdBlkStruct {
 #endif
 #if DEPTH_STAT
     int8_t pred_depth_refinement;
+    int8_t pred_cost_band;
 #endif
 } MdBlkStruct;
 
@@ -651,7 +652,7 @@ typedef struct ModeDecisionContext {
 #endif
 #endif
 #if DEPTH_STAT
-    uint32_t pred_depth_count[25][5];
+    uint32_t pred_depth_count[6][25][5][2];
 #endif
 } ModeDecisionContext;
 

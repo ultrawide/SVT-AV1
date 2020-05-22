@@ -154,6 +154,8 @@ typedef struct EbMdcLeafData {
 #if DEPTH_STAT
     int8_t  pred_depth_refinement;
     int8_t  final_pred_depth_refinement;
+    int8_t  pred_cost_band;
+    int8_t  final_pred_cost_band;
 #endif
 } EbMdcLeafData;
 
@@ -419,7 +421,7 @@ typedef struct PictureControlSet {
 #endif
 #endif
 #if DEPTH_STAT
-    uint32_t pred_depth_count[25][5];
+    uint32_t pred_depth_count[6][25][5][2];
 #endif
 } PictureControlSet;
 

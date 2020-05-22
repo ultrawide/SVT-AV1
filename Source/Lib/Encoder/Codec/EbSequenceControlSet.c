@@ -58,17 +58,23 @@ static void eb_sequence_control_set_dctor(EbPtr p) {
 #endif
 #endif
 #if DEPTH_STAT
-    uint8_t pred_depth,band;
+    uint8_t cur_depth,pred_depth,band,cost_band;
     uint32_t sum = 0;
+    for (cur_depth = 0; cur_depth < 6; cur_depth++)
      for (band = 0; band < 25; band++)
         for (pred_depth = 0; pred_depth < 5; pred_depth++)
-            sum+= obj->pred_depth_count[band][pred_depth];
+            for (cost_band = 0; cost_band < 2; cost_band++)
+            sum+= obj->pred_depth_count[cur_depth][band][pred_depth][cost_band];
      if (sum) {
          printf("\n");
-         printf("start_depth_stat\n");
-         for (pred_depth = 0; pred_depth < 5; pred_depth++) {
-             for (band = 24; band > 0; band--) {
-                 printf("%d\t", obj->pred_depth_count[band][pred_depth]);
+         printf("start_depth_stat\n\n");
+         for (cur_depth = 0; cur_depth < 6; cur_depth++) {
+             for (pred_depth = 0; pred_depth < 5; pred_depth++) {
+                 for (band = 1; band < 25; band++) {
+                     for (cost_band = 0; cost_band < 2; cost_band++)
+                         printf("%d\t", obj->pred_depth_count[cur_depth][band][pred_depth][cost_band]);
+                 }
+                 printf("\n");
              }
              printf("\n");
          }
