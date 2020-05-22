@@ -401,6 +401,11 @@ extern "C" {
 #endif
 #define DEPTH_STAT 0
 
+#define DEPTH_MODULATION 0
+#if DEPTH_MODULATION
+#define DEPTH_TH  1
+#endif
+
 #define FIX_NSQ_OFF 1
 
 #define DISALLOW_ALL_ACTIONS 1

@@ -7255,6 +7255,15 @@ static uint8_t determine_sb_class(
     return sb_class;
 }
 #endif
+#if DEPTH_MODULATION
+uint8_t m0_depth_cycles_reduction_th[5][25] = {
+{100,2,3,4,6,6,6,7,8,8,9,10,13,13,13,14,17,19,18,19,19,19,19,19,14},
+{100,9,12,13,14,17,18,18,19,20,21,25,26,26,26,25,24,23,23,23,22,22,24,23,21},
+{100,44,48,49,50,51,51,51,52,52,52,52,49,49,51,50,48,48,49,49,50,51,50,51,58},
+{100,36,32,29,26,23,22,21,19,17,16,13,11,11,10,10,10,9,9,9,8,8,7,6,7},
+{100,9,5,5,3,3,3,3,2,2,2,1,1,1,1,1,1,1,1,1,1,1,1,0,1}
+};
+#endif
 static void perform_pred_depth_refinement(SequenceControlSet *scs_ptr, PictureControlSet *pcs_ptr,
                                           ModeDecisionContext *context_ptr, uint32_t sb_index) {
 #if DEPTH_PART_CLEAN_UP
@@ -7726,6 +7735,18 @@ static void perform_pred_depth_refinement(SequenceControlSet *scs_ptr, PictureCo
                     s_depth = -2;
                     e_depth =  2;
 #endif
+#if DEPTH_MODULATION
+                    if (context_ptr->sb_class) {
+                        s_depth = m0_depth_cycles_reduction_th[0][context_ptr->sb_class] < DEPTH_TH ? 0: -2;
+                        if(s_depth == 0)
+                            s_depth = m0_depth_cycles_reduction_th[1][context_ptr->sb_class] < DEPTH_TH ? 0: -1;
+
+                        e_depth = m0_depth_cycles_reduction_th[4][context_ptr->sb_class] < DEPTH_TH ? 0: 2;
+                        if(e_depth == 0)
+                            e_depth = m0_depth_cycles_reduction_th[3][context_ptr->sb_class] < DEPTH_TH ? 0: 1;      
+                    }
+#endif
+
 #if ADOPT_SKIPPING_PD1
                     // Check that the start and end depth are in allowed range, given other features
                     // which restrict allowable depths
