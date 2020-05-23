@@ -404,6 +404,7 @@ extern "C" {
 #define DEPTH_MODULATION 0
 #if DEPTH_MODULATION
 #define DEPTH_TH  1
+#define DEPTH_MERGER_TABLE 1
 #endif
 
 #define FIX_NSQ_OFF 1

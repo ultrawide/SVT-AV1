@@ -6881,13 +6881,13 @@ uint64_t  mr_pd_level_tab[2][9][2][3] =
 };
 #endif
 void derive_start_end_depth(PictureControlSet *pcs_ptr, SuperBlock *sb_ptr, uint32_t sb_size,
-                            int8_t *s_depth, int8_t *e_depth, const BlockGeom *blk_geom) {
+    int8_t *s_depth, int8_t *e_depth, const BlockGeom *blk_geom) {
     uint8_t encode_mode = pcs_ptr->parent_pcs_ptr->enc_mode;
 
     int8_t start_depth = sb_size == BLOCK_128X128 ? 0 : 1;
-    int8_t end_depth   = 5;
+    int8_t end_depth = 5;
 
-    int8_t depth       = blk_geom->depth + start_depth;
+    int8_t depth = blk_geom->depth + start_depth;
 
     int8_t depthp1 = MIN(depth + 1, end_depth);
     int8_t depthp2 = MIN(depth + 2, end_depth);
@@ -6902,17 +6902,17 @@ void derive_start_end_depth(PictureControlSet *pcs_ptr, SuperBlock *sb_ptr, uint
     uint64_t mth01, mth02, mth03, pth01, pth02, pth03;
 
     mth01 = pd_level_tab[!pcs_ptr->parent_pcs_ptr->sc_content_detected &&
-                                  pcs_ptr->slice_type != I_SLICE][encode_mode][0][0];
+        pcs_ptr->slice_type != I_SLICE][encode_mode][0][0];
     mth02 = pd_level_tab[!pcs_ptr->parent_pcs_ptr->sc_content_detected &&
-                                  pcs_ptr->slice_type != I_SLICE][encode_mode][0][1];
+        pcs_ptr->slice_type != I_SLICE][encode_mode][0][1];
     mth03 = pd_level_tab[!pcs_ptr->parent_pcs_ptr->sc_content_detected &&
-                                  pcs_ptr->slice_type != I_SLICE][encode_mode][0][2];
+        pcs_ptr->slice_type != I_SLICE][encode_mode][0][2];
     pth01 = pd_level_tab[!pcs_ptr->parent_pcs_ptr->sc_content_detected &&
-                                  pcs_ptr->slice_type != I_SLICE][encode_mode][1][0];
+        pcs_ptr->slice_type != I_SLICE][encode_mode][1][0];
     pth02 = pd_level_tab[!pcs_ptr->parent_pcs_ptr->sc_content_detected &&
-                                  pcs_ptr->slice_type != I_SLICE][encode_mode][1][1];
+        pcs_ptr->slice_type != I_SLICE][encode_mode][1][1];
     pth03 = pd_level_tab[!pcs_ptr->parent_pcs_ptr->sc_content_detected &&
-                                  pcs_ptr->slice_type != I_SLICE][encode_mode][1][2];
+        pcs_ptr->slice_type != I_SLICE][encode_mode][1][2];
 #if FIX_MR_PD1
 #if MR_MODE_FOR_PIC_MULTI_PASS_PD_MODE_1
     if (pcs_ptr->parent_pcs_ptr->multi_pass_pd_level == MULTI_PASS_PD_LEVEL_0 || MR_MODE_MULTI_PASS_PD) {
@@ -6920,72 +6920,72 @@ void derive_start_end_depth(PictureControlSet *pcs_ptr, SuperBlock *sb_ptr, uint
     if (pcs_ptr->parent_pcs_ptr->multi_pass_pd_level == MULTI_PASS_PD_LEVEL_0) {
 #endif
         mth01 = mr_pd_level_tab[!pcs_ptr->parent_pcs_ptr->sc_content_detected &&
-                                  pcs_ptr->slice_type != I_SLICE][encode_mode][0][0];
+            pcs_ptr->slice_type != I_SLICE][encode_mode][0][0];
         mth02 = mr_pd_level_tab[!pcs_ptr->parent_pcs_ptr->sc_content_detected &&
-                                  pcs_ptr->slice_type != I_SLICE][encode_mode][0][1];
+            pcs_ptr->slice_type != I_SLICE][encode_mode][0][1];
         mth03 = mr_pd_level_tab[!pcs_ptr->parent_pcs_ptr->sc_content_detected &&
-                                  pcs_ptr->slice_type != I_SLICE][encode_mode][0][2];
+            pcs_ptr->slice_type != I_SLICE][encode_mode][0][2];
         pth01 = mr_pd_level_tab[!pcs_ptr->parent_pcs_ptr->sc_content_detected &&
-                                  pcs_ptr->slice_type != I_SLICE][encode_mode][1][0];
+            pcs_ptr->slice_type != I_SLICE][encode_mode][1][0];
         pth02 = mr_pd_level_tab[!pcs_ptr->parent_pcs_ptr->sc_content_detected &&
-                                  pcs_ptr->slice_type != I_SLICE][encode_mode][1][1];
+            pcs_ptr->slice_type != I_SLICE][encode_mode][1][1];
         pth03 = mr_pd_level_tab[!pcs_ptr->parent_pcs_ptr->sc_content_detected &&
-                                  pcs_ptr->slice_type != I_SLICE][encode_mode][1][2];
+            pcs_ptr->slice_type != I_SLICE][encode_mode][1][2];
     }
 #endif
     uint64_t dist_001 =
         sb_ptr->depth_cost[depth] == 0
-            ? max_distance
-            : sb_ptr->depth_cost[depthp1] <= sb_ptr->depth_cost[depth]
-                  ? 0
-                  : (((int64_t)sb_ptr->depth_cost[depthp1] - (int64_t)sb_ptr->depth_cost[depth]) *
-                     100) /
-                        sb_ptr->depth_cost[depth];
+        ? max_distance
+        : sb_ptr->depth_cost[depthp1] <= sb_ptr->depth_cost[depth]
+        ? 0
+        : (((int64_t)sb_ptr->depth_cost[depthp1] - (int64_t)sb_ptr->depth_cost[depth]) *
+            100) /
+        sb_ptr->depth_cost[depth];
 
     uint64_t dist_100 =
         sb_ptr->depth_cost[depth] == 0
-            ? max_distance
-            : sb_ptr->depth_cost[depthm1] <= sb_ptr->depth_cost[depth]
-                  ? 0
-                  : (((int64_t)sb_ptr->depth_cost[depthm1] - (int64_t)sb_ptr->depth_cost[depth]) *
-                     100) /
-                        sb_ptr->depth_cost[depth];
+        ? max_distance
+        : sb_ptr->depth_cost[depthm1] <= sb_ptr->depth_cost[depth]
+        ? 0
+        : (((int64_t)sb_ptr->depth_cost[depthm1] - (int64_t)sb_ptr->depth_cost[depth]) *
+            100) /
+        sb_ptr->depth_cost[depth];
 
     uint64_t dist_002 =
         sb_ptr->depth_cost[depth] == 0
-            ? max_distance
-            : sb_ptr->depth_cost[depthp2] <= sb_ptr->depth_cost[depth]
-                  ? 0
-                  : (((int64_t)sb_ptr->depth_cost[depthp2] - (int64_t)sb_ptr->depth_cost[depth]) *
-                     100) /
-                        sb_ptr->depth_cost[depth];
+        ? max_distance
+        : sb_ptr->depth_cost[depthp2] <= sb_ptr->depth_cost[depth]
+        ? 0
+        : (((int64_t)sb_ptr->depth_cost[depthp2] - (int64_t)sb_ptr->depth_cost[depth]) *
+            100) /
+        sb_ptr->depth_cost[depth];
 
     uint64_t dist_200 =
         sb_ptr->depth_cost[depth] == 0
-            ? max_distance
-            : sb_ptr->depth_cost[depthm2] <= sb_ptr->depth_cost[depth]
-                  ? 0
-                  : (((int64_t)sb_ptr->depth_cost[depthm2] - (int64_t)sb_ptr->depth_cost[depth]) *
-                     100) /
-                        sb_ptr->depth_cost[depth];
+        ? max_distance
+        : sb_ptr->depth_cost[depthm2] <= sb_ptr->depth_cost[depth]
+        ? 0
+        : (((int64_t)sb_ptr->depth_cost[depthm2] - (int64_t)sb_ptr->depth_cost[depth]) *
+            100) /
+        sb_ptr->depth_cost[depth];
 
     uint64_t dist_003 =
         sb_ptr->depth_cost[depth] == 0
-            ? max_distance
-            : sb_ptr->depth_cost[depthp3] <= sb_ptr->depth_cost[depth]
-                  ? 0
-                  : (((int64_t)sb_ptr->depth_cost[depthp3] - (int64_t)sb_ptr->depth_cost[depth]) *
-                     100) /
-                        sb_ptr->depth_cost[depth];
+        ? max_distance
+        : sb_ptr->depth_cost[depthp3] <= sb_ptr->depth_cost[depth]
+        ? 0
+        : (((int64_t)sb_ptr->depth_cost[depthp3] - (int64_t)sb_ptr->depth_cost[depth]) *
+            100) /
+        sb_ptr->depth_cost[depth];
 
     uint64_t dist_300 =
         sb_ptr->depth_cost[depth] == 0
-            ? max_distance
-            : sb_ptr->depth_cost[depthm3] <= sb_ptr->depth_cost[depth]
-                  ? 0
-                  : (((int64_t)sb_ptr->depth_cost[depthm3] - (int64_t)sb_ptr->depth_cost[depth]) *
-                     100) /
-                        sb_ptr->depth_cost[depth];
+        ? max_distance
+        : sb_ptr->depth_cost[depthm3] <= sb_ptr->depth_cost[depth]
+        ? 0
+        : (((int64_t)sb_ptr->depth_cost[depthm3] - (int64_t)sb_ptr->depth_cost[depth]) *
+            100) /
+        sb_ptr->depth_cost[depth];
 
     if (dist_300 < mth03)
         *s_depth = -3;
@@ -7005,7 +7005,7 @@ void derive_start_end_depth(PictureControlSet *pcs_ptr, SuperBlock *sb_ptr, uint
     else
         *e_depth = 0;
 #if DEPTH_PART_CLEAN_UP && !OPT_BLOCK_INDICES_GEN_1  // refinement rest
-    *s_depth =  MAX((sb_size == BLOCK_128X128 && pcs_ptr->parent_pcs_ptr->sb_64x64_simulated ? 1 : 0) - blk_geom->depth, *s_depth);
+    *s_depth = MAX((sb_size == BLOCK_128X128 && pcs_ptr->parent_pcs_ptr->sb_64x64_simulated ? 1 : 0) - blk_geom->depth, *s_depth);
     *e_depth = MIN((pcs_ptr->parent_pcs_ptr->disallow_4x4 ? 4 :5) - blk_geom->depth, *e_depth);
 #endif
 }
@@ -7203,7 +7203,7 @@ static uint8_t determine_sb_class(
 #endif
 #if MULTI_BAND_ACTIONS
 #if NON_UNIFORM_BANDING
-        if (count_non_zero_coeffs >= ((total_samples * sb_class_ctrls->sb_class_th[SB_CLASS_1]) / 100))
+    if (count_non_zero_coeffs >= ((total_samples * sb_class_ctrls->sb_class_th[SB_CLASS_1]) / 100))
         sb_class = SB_CLASS_1;
     else if (count_non_zero_coeffs >= ((total_samples * sb_class_ctrls->sb_class_th[SB_CLASS_2]) / 100))
         sb_class = SB_CLASS_2;
@@ -7221,7 +7221,7 @@ static uint8_t determine_sb_class(
         sb_class = SB_CLASS_8;
     else if (count_non_zero_coeffs >= ((total_samples * sb_class_ctrls->sb_class_th[SB_CLASS_9]) / 100))
         sb_class = SB_CLASS_9;
-     else if (count_non_zero_coeffs >= ((total_samples * sb_class_ctrls->sb_class_th[SB_CLASS_10]) / 100))
+    else if (count_non_zero_coeffs >= ((total_samples * sb_class_ctrls->sb_class_th[SB_CLASS_10]) / 100))
         sb_class = SB_CLASS_10;
     else if (count_non_zero_coeffs >= ((total_samples * sb_class_ctrls->sb_class_th[SB_CLASS_11]) / 100))
         sb_class = SB_CLASS_11;
@@ -7270,7 +7270,7 @@ static uint8_t determine_sb_class(
         sb_class = SB_CLASS_8;
     else if (count_non_zero_coeffs >= ((total_samples * sb_class_ctrls->sb_class_th[SB_CLASS_9]) / 20))
         sb_class = SB_CLASS_9;
-     else if (count_non_zero_coeffs >= ((total_samples * sb_class_ctrls->sb_class_th[SB_CLASS_10]) / 20))
+    else if (count_non_zero_coeffs >= ((total_samples * sb_class_ctrls->sb_class_th[SB_CLASS_10]) / 20))
         sb_class = SB_CLASS_10;
     else if (count_non_zero_coeffs >= ((total_samples * sb_class_ctrls->sb_class_th[SB_CLASS_11]) / 20))
         sb_class = SB_CLASS_11;
@@ -7313,6 +7313,15 @@ static uint8_t determine_sb_class(
 }
 #endif
 #if DEPTH_MODULATION
+#if DEPTH_MERGER_TABLE
+uint8_t m0_depth_cycles_reduction_th[5][3] = {
+{2, 6, 21},
+{5, 12, 28},
+{100,100,100},
+{8, 6, 10},
+{1, 1, 1}
+};
+#else
 uint8_t m0_depth_cycles_reduction_th[5][25] = {
 {100,2,3,4,6,6,6,7,8,8,9,10,13,13,13,14,17,19,18,19,19,19,19,19,14},
 {100,9,12,13,14,17,18,18,19,20,21,25,26,26,26,25,24,23,23,23,22,22,24,23,21},
@@ -7320,6 +7329,7 @@ uint8_t m0_depth_cycles_reduction_th[5][25] = {
 {100,36,32,29,26,23,22,21,19,17,16,13,11,11,10,10,10,9,9,9,8,8,7,6,7},
 {100,9,5,5,3,3,3,3,2,2,2,1,1,1,1,1,1,1,1,1,1,1,1,0,1}
 };
+#endif
 #endif
 static void perform_pred_depth_refinement(SequenceControlSet *scs_ptr, PictureControlSet *pcs_ptr,
                                           ModeDecisionContext *context_ptr, uint32_t sb_index) {
@@ -7797,13 +7807,25 @@ static void perform_pred_depth_refinement(SequenceControlSet *scs_ptr, PictureCo
 #endif
 #if DEPTH_MODULATION
                     if (context_ptr->sb_class) {
+#if DEPTH_MERGER_TABLE
+                        uint8_t frequency_band = context_ptr->sb_class <= 8 ? 0 : context_ptr->sb_class <= 16 ? 1 : 2;
+                        s_depth = m0_depth_cycles_reduction_th[0][frequency_band] < DEPTH_TH ? 0: -2;
+                        if(s_depth == 0)
+                            s_depth = m0_depth_cycles_reduction_th[1][frequency_band] < DEPTH_TH ? 0: -1;
+
+                        e_depth = m0_depth_cycles_reduction_th[4][frequency_band] < DEPTH_TH ? 0: 2;
+                        if(e_depth == 0)
+                            e_depth = m0_depth_cycles_reduction_th[3][frequency_band] < DEPTH_TH ? 0: 1;  
+#else
+                 
                         s_depth = m0_depth_cycles_reduction_th[0][context_ptr->sb_class] < DEPTH_TH ? 0: -2;
                         if(s_depth == 0)
                             s_depth = m0_depth_cycles_reduction_th[1][context_ptr->sb_class] < DEPTH_TH ? 0: -1;
 
                         e_depth = m0_depth_cycles_reduction_th[4][context_ptr->sb_class] < DEPTH_TH ? 0: 2;
                         if(e_depth == 0)
-                            e_depth = m0_depth_cycles_reduction_th[3][context_ptr->sb_class] < DEPTH_TH ? 0: 1;      
+                            e_depth = m0_depth_cycles_reduction_th[3][context_ptr->sb_class] < DEPTH_TH ? 0: 1;   
+#endif
                     }
 #endif
 
