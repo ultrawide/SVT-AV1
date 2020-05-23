@@ -143,7 +143,7 @@ typedef struct MdBlkStruct {
 #if SSE_BASED_SPLITTING
     uint8_t sse_gradian_band[NUMBER_OF_SHAPES];
 #endif
-#if DEPTH_STAT
+#if DEPTH_STAT || GEN_STAT
     int8_t pred_depth_refinement;
     int8_t pred_cost_band;
 #endif
@@ -642,7 +642,7 @@ typedef struct ModeDecisionContext {
     uint16_t coeff_area_based_bypass_nsq_th;
 #endif
 #if GEN_STAT
-    uint32_t part_cnt[6][10][3][2];
+    uint32_t part_cnt[6][5][10][3][2];
 #endif
 #if PRINT_TX_ENRGY_COUNT
     uint32_t avrg_tx_count;
@@ -651,7 +651,7 @@ typedef struct ModeDecisionContext {
     uint32_t tx_count[21];
 #endif
 #endif
-#if DEPTH_STAT
+#if DEPTH_STAT 
     uint32_t pred_depth_count[6][25][5][2];
 #endif
 } ModeDecisionContext;

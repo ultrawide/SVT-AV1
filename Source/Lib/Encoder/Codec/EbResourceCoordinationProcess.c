@@ -865,12 +865,14 @@ void *resource_coordination_kernel(void *input_ptr) {
         // Init SB Params
         if (context_ptr->scs_instance_array[instance_index]->encode_context_ptr->initial_picture) {
 #if GEN_STAT
-        uint8_t band,depthidx,partidx,sse_idx;
+        uint8_t band,depthidx,partidx,sse_idx,pred_depth;
         for (depthidx = 0; depthidx < 6; depthidx++) {
-            for (partidx = 0; partidx < 10; partidx++) {
-                for (band = 0; band < 3; band++) {
-                    for (sse_idx = 0; sse_idx < 2; sse_idx++) {
-                         scs_ptr->part_cnt[depthidx][partidx][band][sse_idx] = 0;
+            for (pred_depth = 0; pred_depth < 5; pred_depth++) {
+                for (partidx = 0; partidx < 10; partidx++) {
+                    for (band = 0; band < 3; band++) {
+                        for (sse_idx = 0; sse_idx < 2; sse_idx++) {
+                            scs_ptr->part_cnt[depthidx][pred_depth][partidx][band][sse_idx] = 0;
+                        }
                     }
                 }
             }

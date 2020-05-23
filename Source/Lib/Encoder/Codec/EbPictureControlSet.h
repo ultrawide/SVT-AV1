@@ -151,7 +151,7 @@ typedef struct EbMdcLeafData {
     EbBool   split_flag;
     uint8_t  consider_block;
     uint8_t  refined_split_flag;
-#if DEPTH_STAT
+#if DEPTH_STAT || GEN_STAT
     int8_t  pred_depth_refinement;
     int8_t  final_pred_depth_refinement;
     int8_t  pred_cost_band;
@@ -411,7 +411,7 @@ typedef struct PictureControlSet {
     int32_t *                       rst_tmpbuf;
 #endif
 #if GEN_STAT
-    uint32_t part_cnt[6][10][3][2];
+    uint32_t part_cnt[6][5][10][3][2];
 #endif
 #if PRINT_TX_ENRGY_COUNT
     uint32_t avrg_tx_count;

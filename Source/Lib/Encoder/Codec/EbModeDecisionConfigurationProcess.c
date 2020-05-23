@@ -1782,12 +1782,14 @@ void *mode_decision_configuration_kernel(void *input_ptr) {
         pcs_ptr->below32_coded_area = 0;
 #endif
 #if GEN_STAT
-        uint8_t band,depthidx,partidx,sse_idx;
+        uint8_t band,depthidx,partidx,sse_idx,pred_depth;
         for (depthidx = 0; depthidx < 6; depthidx++) {
-            for (partidx = 0; partidx < 10; partidx++) {
-                for (band = 0; band < 3; band++) {
-                    for (sse_idx = 0; sse_idx < 2; sse_idx++) {
-                         pcs_ptr->part_cnt[depthidx][partidx][band][sse_idx] = 0;
+            for (pred_depth = 0; pred_depth < 5; pred_depth++) {
+                for (partidx = 0; partidx < 10; partidx++) {
+                    for (band = 0; band < 3; band++) {
+                        for (sse_idx = 0; sse_idx < 2; sse_idx++) {
+                            pcs_ptr->part_cnt[depthidx][pred_depth][partidx][band][sse_idx] = 0;
+                        }
                     }
                 }
             }

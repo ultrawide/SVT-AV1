@@ -11,13 +11,15 @@
 static void eb_sequence_control_set_dctor(EbPtr p) {
     SequenceControlSet *obj = (SequenceControlSet *)p;
 #if GEN_STAT
-        uint8_t band,depthidx,partidx,sse_idx;
+        uint8_t band,depthidx,partidx,sse_idx,pred_depth;
         uint64_t total = 0;
         for (depthidx = 0; depthidx < 6; depthidx++) {
-            for (partidx = 0; partidx < 10; partidx++) {
-                for (band = 0; band < 3; band++) {
-                    for (sse_idx = 0; sse_idx < 2; sse_idx++) {
-                        total += obj->part_cnt[depthidx][partidx][band][sse_idx];
+            for (pred_depth = 0; pred_depth < 5; pred_depth++) {
+                for (partidx = 0; partidx < 10; partidx++) {
+                    for (band = 0; band < 3; band++) {
+                        for (sse_idx = 0; sse_idx < 2; sse_idx++) {
+                            total += obj->part_cnt[depthidx][pred_depth][partidx][band][sse_idx];
+                        }
                     }
                 }
             }
@@ -25,13 +27,16 @@ static void eb_sequence_control_set_dctor(EbPtr p) {
         if (total) {
             printf("Satistics start\n");
             for (depthidx = 0; depthidx < 6; depthidx++) {
-                for (partidx = 0; partidx < 9; partidx++) {
-                    for (band = 0; band < 3; band++) {
-                        for (sse_idx = 0; sse_idx < 2; sse_idx++) {
-                            printf("%d\t", obj->part_cnt[depthidx][partidx][band][sse_idx]);
+                for (pred_depth = 0; pred_depth < 5; pred_depth++) {
+                    for (partidx = 0; partidx < 9; partidx++) {
+                        for (band = 0; band < 3; band++) {
+                            for (sse_idx = 0; sse_idx < 2; sse_idx++) {
+                                printf("%d\t", obj->part_cnt[depthidx][pred_depth][partidx][band][sse_idx]);
+                            }
                         }
+                        printf("\n");
                     }
-                   printf("\n");
+                    printf("\n");
                 }
                 printf("\n");
             }

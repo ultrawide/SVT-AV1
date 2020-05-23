@@ -201,7 +201,7 @@ typedef struct SequenceControlSet {
     uint32_t rest_process_init_count;
     uint32_t total_process_init_count;
 #if GEN_STAT
-    uint32_t part_cnt[6][10][3][2];
+    uint32_t part_cnt[6][5][10][3][2];
 #endif
 #if PRINT_TX_ENRGY_COUNT
     uint32_t avrg_tx_count;
