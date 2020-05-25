@@ -11845,6 +11845,7 @@ EB_EXTERN EbErrorType mode_decision_sb(SequenceControlSet *scs_ptr, PictureContr
 #if DEPTH_STAT || GEN_STAT
         context_ptr->md_local_blk_unit[blk_idx_mds].pred_depth_refinement = leaf_data_ptr->final_pred_depth_refinement;
         context_ptr->md_local_blk_unit[blk_idx_mds].pred_cost_band = leaf_data_ptr->final_pred_cost_band;
+        context_ptr->md_local_blk_unit[blk_idx_mds].pred_depth = leaf_data_ptr->final_pred_depth;
 #endif
         context_ptr->md_blk_arr_nsq[blk_geom->sqi_mds].split_flag =
             (uint16_t)leaf_data_ptr->split_flag;

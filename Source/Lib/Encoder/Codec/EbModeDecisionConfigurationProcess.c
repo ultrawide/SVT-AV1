@@ -1809,7 +1809,7 @@ void *mode_decision_configuration_kernel(void *input_ptr) {
     for (cur_depth = 0; cur_depth < 6; cur_depth++)
         for (band = 0; band < 25; band++)
             for (pred_depth = 0; pred_depth < 5; pred_depth++)
-                for (cost_band = 0; cost_band < 2; cost_band++)
+                for (cost_band = 0; cost_band < 4; cost_band++)
                     pcs_ptr->pred_depth_count[cur_depth][band][pred_depth][cost_band] = 0;
 #endif
         // Compute Tc, and Beta offsets for a given picture

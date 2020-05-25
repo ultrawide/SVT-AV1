@@ -211,7 +211,7 @@ typedef struct SequenceControlSet {
 #endif
 #endif
 #if DEPTH_STAT
-    uint32_t pred_depth_count[6][25][5][2];
+    uint32_t pred_depth_count[6][25][5][4];
 #endif
 } SequenceControlSet;
 
