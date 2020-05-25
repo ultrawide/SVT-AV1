@@ -7333,7 +7333,53 @@ static uint8_t determine_sb_class(
 }
 #endif
 #if DEPTH_MODULATION
-#if DEPTH_MERGER_TABLE
+#if DEPTH_MERGER_TABLE || NEW_DEPTH_MERGE
+#if NEW_DEPTH_MERGE
+uint8_t m0_depth_cycles_reduction_th[6][5][4] = {
+{
+{0,0,0,0},
+{0,0,0,0},
+{100,100,100,100},
+{0,3,6,35},
+{0,1,1,3}
+},
+{
+{0,0,0,0},
+{1,6,13,125},
+{100,100,100,100},
+{8,14,10,19},
+{5,2,1,1}
+},
+{
+{0,0,0,0},
+{23,51,64,123},
+{100,100,100,100},
+{43,17,7,5},
+{8,1,0,0}
+},
+{
+{0,0,0,0},
+{39,86,57,36},
+{100,100,100,100},
+{52,10,3,1},
+{4,1,0,0}
+},
+{
+{0,0,0,0},
+{47,33,10,2},
+{100,100,100,100},
+{12,2,0,0},
+{0,0,0,0}
+},
+{
+{0,0,0,0},
+{10,2,0,0},
+{100,100,100,100},
+{0,0,0,0},
+{0,0,0,0}
+}
+};
+#else
 uint8_t m0_depth_cycles_reduction_th[5][3] = {
 {2, 6, 21},
 {5, 12, 28},
@@ -7341,6 +7387,7 @@ uint8_t m0_depth_cycles_reduction_th[5][3] = {
 {8, 6, 10},
 {1, 1, 1}
 };
+#endif
 #else
 uint8_t m0_depth_cycles_reduction_th[5][25] = {
 {100,2,3,4,6,6,6,7,8,8,9,10,13,13,13,14,17,19,18,19,19,19,19,19,14},
@@ -7828,6 +7875,18 @@ static void perform_pred_depth_refinement(SequenceControlSet *scs_ptr, PictureCo
 #if DEPTH_MODULATION
                     if (context_ptr->sb_class) {
 #if DEPTH_MERGER_TABLE
+#if NEW_DEPTH_MERGE
+                         uint8_t frequency_band = context_ptr->sb_class <= 11 ? 0 : context_ptr->sb_class <= 18 ? 1 : context_ptr->sb_class <= 23 ? 2 : 3;
+
+                        s_depth = m0_depth_cycles_reduction_th[blk_geom->depth][0][frequency_band] < DEPTH_TH ? 0: -2;
+                        if(s_depth == 0)
+                            s_depth = m0_depth_cycles_reduction_th[blk_geom->depth][1][frequency_band] < DEPTH_TH ? 0: -1;
+
+                        e_depth = m0_depth_cycles_reduction_th[blk_geom->depth][4][frequency_band] < DEPTH_TH ? 0: 2;
+                        if(e_depth == 0)
+                            e_depth = m0_depth_cycles_reduction_th[blk_geom->depth][3][frequency_band] < DEPTH_TH ? 0: 1;  
+
+#else
                         uint8_t frequency_band = context_ptr->sb_class <= 8 ? 0 : context_ptr->sb_class <= 16 ? 1 : 2;
                         s_depth = m0_depth_cycles_reduction_th[0][frequency_band] < DEPTH_TH ? 0: -2;
                         if(s_depth == 0)
@@ -7836,6 +7895,7 @@ static void perform_pred_depth_refinement(SequenceControlSet *scs_ptr, PictureCo
                         e_depth = m0_depth_cycles_reduction_th[4][frequency_band] < DEPTH_TH ? 0: 2;
                         if(e_depth == 0)
                             e_depth = m0_depth_cycles_reduction_th[3][frequency_band] < DEPTH_TH ? 0: 1;  
+#endif
 #else
                  
                         s_depth = m0_depth_cycles_reduction_th[0][context_ptr->sb_class] < DEPTH_TH ? 0: -2;
